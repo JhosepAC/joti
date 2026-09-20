@@ -11,14 +11,21 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@react-three/fiber": "^9.7.0",
+    "@react-three/postprocessing": "^3.1.1",
     "@repo/ui": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/three": "^0.186.0",
+    "clsx": "^2.1.1",
     "convex": "^1.46.0",
     "next": "16.3.4",
     "postcss": "^8.5.28",
+    "postprocessing": "^6.39.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "tailwindcss": "^4.3.3"
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.3",
+    "three": "^0.186.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

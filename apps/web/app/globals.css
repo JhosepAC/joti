@@ -76,6 +76,42 @@
   --focus-ring: rgba(100, 116, 139, 0.25);
 }
 
+/* ==========================================================================
+   Global Base Rules
+   ========================================================================== */
+
+@layer base {
+  /* Remove shadow globally from all inputs */
+  input,
+  textarea,
+  select {
+    box-shadow: none !important;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    box-shadow: none !important;
+    outline: none;
+  }
+
+  /* Ensure all buttons globally have cursor: pointer */
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  input[type="button"]:disabled,
+  input[type="submit"]:disabled {
+    cursor: not-allowed;
+  }
+}
+
 /* Base Headings Default to Varela Round */
 h1,
 h2,

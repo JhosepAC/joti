@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${lato.variable} ${varelaRound.variable}`}>
+    <html lang="en" className={`${lato.variable} ${varelaRound.variable}`}>
       <body className="font-sans bg-background text-text-primary antialiased">
         {children}
       </body>
