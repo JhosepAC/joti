@@ -52,6 +52,7 @@ export const createUserInternal = internalMutation({
     const userId = await ctx.db.insert("auth_users", {
       email: cleanEmail,
       password_hash: args.password_hash,
+      email_verified_at: Date.now(),
       failed_login_attempts: 0,
     });
 
@@ -64,6 +65,13 @@ export const createUserInternal = internalMutation({
       locale: args.locale ?? "system",
       timezone: args.timezone ?? "system",
     });
+
+    // Clean up verification record after successful registration
+    const verification = await ctx.db
+      .query("auth_email_verifications")
+      .withIndex("by_email", (q) => q.eq("email", cleanEmail))
+      .first();
+    if (verification) await ctx.db.delete(verification._id);
 
     return { userId };
   },

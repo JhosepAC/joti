@@ -13,7 +13,10 @@ import type * as auth_constants from "../auth/constants.js";
 import type * as auth_crypto from "../auth/crypto.js";
 import type * as auth_mutations from "../auth/mutations.js";
 import type * as auth_queries from "../auth/queries.js";
+import type * as auth_storage from "../auth/storage.js";
 import type * as auth_validators from "../auth/validators.js";
+import type * as auth_verification from "../auth/verification.js";
+import type * as auth_verificationInternal from "../auth/verificationInternal.js";
 
 import type {
   ApiFromModules,
@@ -27,7 +30,10 @@ declare const fullApi: ApiFromModules<{
   "auth/crypto": typeof auth_crypto;
   "auth/mutations": typeof auth_mutations;
   "auth/queries": typeof auth_queries;
+  "auth/storage": typeof auth_storage;
   "auth/validators": typeof auth_validators;
+  "auth/verification": typeof auth_verification;
+  "auth/verificationInternal": typeof auth_verificationInternal;
 }>;
 
 /**

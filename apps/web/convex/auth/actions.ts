@@ -42,7 +42,18 @@ export const register = action({
 
     validatePassword(args.password, cleanEmail, cleanUsername);
 
-    // 2. Pre-check uniqueness (fast fail; mutation re-checks for race condition)
+    // 2. Enforce email verification (must be verified within last 30 min)
+    const verification = (await ctx.runQuery(internal.auth.verificationInternal.getByEmail, {
+      email: cleanEmail,
+    })) as { verified_at?: number; expires_at: number } | null;
+    if (!verification?.verified_at) {
+      throw new ConvexError({ code: "EMAIL_NOT_VERIFIED", message: "Email not verified. Please verify your code first." });
+    }
+    if (Date.now() - verification.verified_at > 30 * 60 * 1000) {
+      throw new ConvexError({ code: "EMAIL_NOT_VERIFIED", message: "Verification expired. Please request a new code." });
+    }
+
+    // 3. Pre-check uniqueness (fast fail; mutation re-checks for race condition)
     const emailAvailable: boolean = await ctx.runQuery(api.auth.queries.isEmailAvailable, {
       email: cleanEmail,
     });
@@ -53,11 +64,11 @@ export const register = action({
     });
     if (!usernameAvailable) throw new ConvexError("Username is already taken.");
 
-    // 3. Hash password (bcryptjs — pure JS, Convex-compatible)
+    // 4. Hash password (bcryptjs — pure JS, Convex-compatible)
     const salt = await bcrypt.genSalt(BCRYPT_COST);
     const passwordHash = await bcrypt.hash(args.password, salt);
 
-    // 4. Create user + profile atomically
+    // 5. Create user + profile atomically
     const result: { userId: string } = await ctx.runMutation(internal.auth.mutations.createUserInternal, {
       email: cleanEmail,
       password_hash: passwordHash,
@@ -96,6 +107,7 @@ export const login: ReturnType<typeof action> = action({
       _id: string;
       email: string;
       password_hash?: string;
+      email_verified_at?: number;
       failed_login_attempts: number;
       locked_until?: number;
       deleted_at?: number;
@@ -106,6 +118,9 @@ export const login: ReturnType<typeof action> = action({
 
     if (!user) throw invalidCredentials;
     if (user.deleted_at) throw new ConvexError("Account has been deactivated.");
+    if (!user.email_verified_at) {
+      throw new ConvexError({ code: "EMAIL_NOT_VERIFIED", message: "Please verify your email before signing in. Check your inbox for the code." });
+    }
     if (!user.password_hash) {
       // OAuth-only account without password
       throw new ConvexError("This account uses Google sign-in. Please continue with Google.");

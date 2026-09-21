@@ -47,4 +47,18 @@ export default defineSchema({
     .index("by_user_id", ["user_id"])
     .index("by_provider_and_account", ["provider", "provider_account_id"])
     .index("by_provider_email", ["provider_email"]),
+
+  /**
+   * Email verification codes — ephemeral, for step 1.1 of registration.
+   * Code is 6 digits, expires in 10 min, max 5 attempts.
+   */
+  auth_email_verifications: defineTable({
+    email: v.string(), // normalized lowercase
+    code: v.string(), // 6-digit string, stored plaintext (short-lived) or hash for prod
+    expires_at: v.number(), // ms timestamp
+    attempts: v.number(), // default 0
+    verified_at: v.optional(v.number()),
+  })
+    .index("by_email", ["email"])
+    .index("by_email_and_code", ["email", "code"]),
 });

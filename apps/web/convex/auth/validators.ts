@@ -116,13 +116,20 @@ export function validateBio(bio?: string): string | undefined {
 }
 
 // ──────────────────────────────────────────────────────────
-// Avatar — optional https URL, max length
+// Avatar — optional https URL or Convex storageId, max length
 // ──────────────────────────────────────────────────────────
 export function validateAvatar(avatar?: string): string | undefined {
   if (!avatar) return undefined;
   const trimmed = avatar.trim();
   if (trimmed.length === 0) return undefined;
   if (trimmed.length > AVATAR_MAX_LENGTH) fail("Avatar URL is too long.");
+  // Allow Convex storageId (opaque string) as-is — they are not valid URLs
+  // Heuristic: storageIds are short IDs without :// and not URL-like
+  if (!trimmed.includes("://")) {
+    // Accept as storageId if it looks like Convex Id (alphanumeric)
+    if (/^[a-z0-9]+$/i.test(trimmed) && trimmed.length >= 8) return trimmed;
+    fail("Invalid avatar URL.");
+  }
   try {
     const url = new URL(trimmed);
     if (url.protocol !== "https:") fail("Avatar URL must use https.");
