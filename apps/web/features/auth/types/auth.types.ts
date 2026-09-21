@@ -3,9 +3,23 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  username: string;
+  displayName: string;
+  bio?: string;
+  avatar?: string;
+  locale?: string;
+  timezone?: string;
+}
+
 export interface ValidationErrors {
   email?: string;
   password?: string;
+  username?: string;
+  displayName?: string;
+  bio?: string;
   general?: string;
 }
 
@@ -19,4 +33,12 @@ export interface UserProfile {
   username?: string;
   displayName: string;
   avatar?: string;
+  bio?: string;
+  locale?: string;
+  timezone?: string;
+}
+
+export interface AuthResult {
+  user: { _id: string; email: string };
+  profile: UserProfile | null;
 }

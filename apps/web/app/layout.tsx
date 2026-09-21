@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lato, Varela_Round } from "next/font/google";
 import "./globals.css";
+import { ConvexClientProvider } from "@/providers/convex-provider";
 
 const lato = Lato({
   subsets: ["latin"],
@@ -30,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${lato.variable} ${varelaRound.variable}`}>
       <body className="font-sans bg-background text-text-primary antialiased">
-        {children}
+        <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
   );

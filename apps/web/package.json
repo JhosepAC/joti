@@ -16,6 +16,7 @@
     "@repo/ui": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/three": "^0.186.0",
+    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "convex": "^1.46.0",
     "next": "16.3.4",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "26.4.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
