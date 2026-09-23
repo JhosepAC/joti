@@ -17,6 +17,7 @@ export interface RegisterPayload {
 export interface ValidationErrors {
   email?: string;
   password?: string;
+  confirmPassword?: string;
   username?: string;
   displayName?: string;
   bio?: string;

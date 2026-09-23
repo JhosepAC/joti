@@ -61,4 +61,20 @@ export default defineSchema({
   })
     .index("by_email", ["email"])
     .index("by_email_and_code", ["email", "code"]),
+
+  /**
+   * Password reset tokens — one-time link, expires in 1 hour.
+   * Token is stored hashed (SHA-256 hex) to avoid plaintext leakage.
+   */
+  auth_password_resets: defineTable({
+    user_id: v.id("auth_users"),
+    email: v.string(), // normalized lowercase, denormalized for email dispatch
+    token_hash: v.string(), // SHA-256 hex of raw token
+    expires_at: v.number(), // ms timestamp
+    used_at: v.optional(v.number()),
+    created_at: v.number(),
+  })
+    .index("by_token_hash", ["token_hash"])
+    .index("by_user_id", ["user_id"])
+    .index("by_email", ["email"]),
 });

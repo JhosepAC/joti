@@ -344,6 +344,21 @@ export const upsertOAuthAccount = internalMutation({
   },
 });
 
+// Password reset — update hash and clear lockout
+export const updatePasswordInternal = internalMutation({
+  args: { userId: v.id("auth_users"), password_hash: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user || user.deleted_at) throw new ConvexError("Account not found.");
+    await ctx.db.patch(args.userId, {
+      password_hash: args.password_hash,
+      failed_login_attempts: 0,
+      locked_until: undefined,
+    });
+    return { userId: args.userId };
+  },
+});
+
 // Soft delete / restore (admin or user-initiated)
 export const softDeleteUser = internalMutation({
   args: { userId: v.id("auth_users") },
