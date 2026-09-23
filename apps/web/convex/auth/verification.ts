@@ -24,11 +24,11 @@ export const requestEmailCode: ReturnType<typeof action> = action({
   handler: async (ctx, args): Promise<{ sent: boolean; expiresAt: number }> => {
     const cleanEmail = validateEmail(args.email);
 
-    // Prevent spamming already registered emails
-    const available: boolean = await ctx.runQuery(api.auth.queries.isEmailAvailable, {
+    // Block only if already fully verified (active account)
+    const existing = (await ctx.runQuery(api.auth.queries.getUserByEmail, {
       email: cleanEmail,
-    });
-    if (!available) throw new ConvexError("Email is already registered.");
+    })) as { email_verified_at?: number } | null;
+    if (existing?.email_verified_at) throw new ConvexError("Email is already registered.");
 
     const code = generateCode();
     const expiresAt = Date.now() + CODE_EXPIRY_MS;
@@ -94,6 +94,9 @@ export const confirmEmailCode: ReturnType<typeof action> = action({
     );
 
     if (!result.verified) throw new ConvexError("Invalid or expired code.");
+
+    // Activate pending account (set email_verified_at)
+    await ctx.runMutation(internal.auth.mutations.activateUser, { email: cleanEmail });
 
     return { verified: true };
   },

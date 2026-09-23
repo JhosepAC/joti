@@ -85,6 +85,97 @@ export const register = action({
 });
 
 // ──────────────────────────────────────────────────────────
+// Register Pending — creates inactive account on step 1 (email+password) before verification
+// Spec: user adds email/password → account already created (inactive) → mandatory verify
+// ──────────────────────────────────────────────────────────
+
+export const registerPending = action({
+  args: { email: v.string(), password: v.string() },
+  handler: async (ctx, args) => {
+    const cleanEmail = validateEmail(args.email);
+    validatePassword(args.password, cleanEmail);
+
+    const salt = await bcrypt.genSalt(BCRYPT_COST);
+    const hash = await bcrypt.hash(args.password, salt);
+
+    const { userId } = (await ctx.runMutation(internal.auth.mutations.createPendingUser, {
+      email: cleanEmail,
+      password_hash: hash,
+    })) as { userId: string };
+
+    // Generate and send verification code (same as verification:requestEmailCode)
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+    await ctx.runMutation(internal.auth.verificationInternal.upsertCode, {
+      email: cleanEmail,
+      code,
+      expires_at: expiresAt,
+    });
+    const resendKey = process.env.RESEND_API_KEY;
+    if (resendKey) {
+      try {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM ?? "Joti <onboarding@resend.dev>",
+            reply_to: "jhosepjamil@gmail.com",
+            to: [cleanEmail],
+            subject: "Your Joti verification code",
+            html: `<p>Your verification code is <strong>${code}</strong>. It expires in 10 minutes.</p>`,
+            text: `Your Joti verification code is ${code}. It expires in 10 minutes.`,
+          }),
+        });
+      } catch (e) {
+        console.warn("[Email] failed", e);
+      }
+    } else {
+      console.log(`[Email] From: jhosepjamil@gmail.com -> To: ${cleanEmail} | Code: ${code} | Expires: ${new Date(expiresAt).toISOString()}`);
+    }
+
+    return { userId, expiresAt };
+  },
+});
+
+export const completeProfile: ReturnType<typeof action> = action({
+  args: {
+    email: v.string(),
+    username: v.string(),
+    display_name: v.string(),
+    bio: v.optional(v.string()),
+    avatar: v.optional(v.string()),
+    locale: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<unknown> => {
+    const cleanEmail = validateEmail(args.email);
+    const user = (await ctx.runQuery(api.auth.queries.getUserByEmail, {
+      email: cleanEmail,
+    })) as { _id: string; email_verified_at?: number } | null;
+    if (!user) throw new ConvexError("Account not found. Please register again.");
+    if (!user.email_verified_at) throw new ConvexError({ code: "EMAIL_NOT_VERIFIED", message: "Email not verified. Please verify first." });
+
+    const cleanUsername = validateUsername(args.username);
+    const cleanDisplayName = validateDisplayName(args.display_name);
+    const cleanBio = validateBio(args.bio);
+    const cleanAvatar = validateAvatar(args.avatar);
+
+    const usernameAvailable: boolean = await ctx.runQuery(api.auth.queries.isUsernameAvailable, { username: cleanUsername });
+    if (!usernameAvailable) throw new ConvexError("Username is already taken.");
+
+    return await ctx.runMutation(internal.auth.mutations.completeProfile, {
+      userId: user._id as never,
+      username: cleanUsername,
+      display_name: cleanDisplayName,
+      bio: cleanBio,
+      avatar: cleanAvatar,
+      locale: args.locale,
+      timezone: args.timezone,
+    });
+  },
+});
+
+// ──────────────────────────────────────────────────────────
 // Login — single action: validate → fetch → lockout check → verify → track
 // Returns sanitized user+profile on success; throws ConvexError on failure.
 // Never reveals whether email exists (generic message for not found).

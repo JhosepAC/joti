@@ -78,6 +78,105 @@ export const createUserInternal = internalMutation({
 });
 
 // ──────────────────────────────────────────────────────────
+// Pending registration — create inactive user (credentials step creates account)
+// ──────────────────────────────────────────────────────────
+
+export const createPendingUser = internalMutation({
+  args: { email: v.string(), password_hash: v.string() },
+  handler: async (ctx, args) => {
+    const cleanEmail = validateEmail(args.email);
+    const existing = await ctx.db
+      .query("auth_users")
+      .withIndex("by_email", (q) => q.eq("email", cleanEmail))
+      .first();
+
+    if (existing && !existing.deleted_at) {
+      if (existing.email_verified_at) {
+        throw new ConvexError("Email is already registered.");
+      }
+      // Pending account exists (not yet verified) — update password and reuse
+      await ctx.db.patch(existing._id, { password_hash: args.password_hash });
+      return { userId: existing._id, isNew: false };
+    }
+
+    const userId = await ctx.db.insert("auth_users", {
+      email: cleanEmail,
+      password_hash: args.password_hash,
+      failed_login_attempts: 0,
+    });
+    return { userId, isNew: true };
+  },
+});
+
+export const activateUser = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const cleanEmail = validateEmail(args.email);
+    const user = await ctx.db
+      .query("auth_users")
+      .withIndex("by_email", (q) => q.eq("email", cleanEmail))
+      .first();
+    if (!user || user.deleted_at) throw new ConvexError("Account not found.");
+    if (user.email_verified_at) return { userId: user._id, already: true };
+    await ctx.db.patch(user._id, { email_verified_at: Date.now() });
+    return { userId: user._id, already: false };
+  },
+});
+
+export const completeProfile = internalMutation({
+  args: {
+    userId: v.id("auth_users"),
+    username: v.string(),
+    display_name: v.string(),
+    bio: v.optional(v.string()),
+    avatar: v.optional(v.string()),
+    locale: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const cleanUsername = validateUsername(args.username);
+    const cleanDisplayName = validateDisplayName(args.display_name);
+    const cleanBio = validateBio(args.bio);
+    const cleanAvatar = validateAvatar(args.avatar);
+
+    const user = await ctx.db.get(args.userId);
+    if (!user || user.deleted_at) throw new ConvexError("Account not found.");
+    if (!user.email_verified_at) throw new ConvexError("Email not verified. Please verify first.");
+
+    const existingProfile = await ctx.db
+      .query("auth_user_profiles")
+      .withIndex("by_user_id", (q) => q.eq("user_id", args.userId))
+      .first();
+    if (existingProfile) throw new ConvexError("Profile already completed.");
+
+    const existingUsername = await ctx.db
+      .query("auth_user_profiles")
+      .withIndex("by_username", (q) => q.eq("username", cleanUsername))
+      .first();
+    if (existingUsername) throw new ConvexError("Username is already taken.");
+
+    const profileId = await ctx.db.insert("auth_user_profiles", {
+      user_id: args.userId,
+      username: cleanUsername,
+      display_name: cleanDisplayName,
+      bio: cleanBio,
+      avatar: cleanAvatar,
+      locale: args.locale ?? "system",
+      timezone: args.timezone ?? "system",
+    });
+
+    // Clean verification record after profile completion
+    const verification = await ctx.db
+      .query("auth_email_verifications")
+      .withIndex("by_email", (q) => q.eq("email", user.email))
+      .first();
+    if (verification) await ctx.db.delete(verification._id);
+
+    return { profileId };
+  },
+});
+
+// ──────────────────────────────────────────────────────────
 // Legacy public register — expects pre-hashed password (hashPassword action)
 // Kept for compatibility with the initial proposal; prefer `api.auth.actions.register`
 // ──────────────────────────────────────────────────────────
