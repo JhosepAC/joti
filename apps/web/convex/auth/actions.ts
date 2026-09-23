@@ -4,6 +4,7 @@ import { action } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { internal } from "../_generated/api";
 import { api } from "../_generated/api";
 import { BCRYPT_COST } from "./constants";
@@ -103,8 +104,18 @@ export const registerPending = action({
       password_hash: hash,
     })) as { userId: string };
 
-    // Generate and send verification code (same as verification:requestEmailCode)
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate and send verification code (same as verification:requestEmailCode) — crypto-secure + 60s cooldown
+    const existingVerification = (await ctx.runQuery(internal.auth.verificationInternal.getByEmail, {
+      email: cleanEmail,
+    })) as { expires_at: number } | null;
+    if (existingVerification) {
+      const elapsed = Date.now() - (existingVerification.expires_at - 10 * 60 * 1000);
+      if (elapsed < 60 * 1000 && elapsed >= 0) {
+        const waitSec = Math.ceil((60 * 1000 - elapsed) / 1000);
+        throw new ConvexError({ code: "RATE_LIMITED", message: `Please wait ${waitSec}s before requesting another code.` });
+      }
+    }
+    const code = crypto.randomInt(100000, 1000000).toString();
     const expiresAt = Date.now() + 10 * 60 * 1000;
     await ctx.runMutation(internal.auth.verificationInternal.upsertCode, {
       email: cleanEmail,

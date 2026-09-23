@@ -22,7 +22,7 @@ export const CompleteProfileFlow: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const completeProfile = useAction(api.auth.actions.completeProfile);
@@ -31,17 +31,29 @@ export const CompleteProfileFlow: React.FC = () => {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) return;
+    if (!file.type.startsWith("image/")) {
+      setErrors({ general: "Please upload an image file", avatar: "Please upload an image file" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors({ general: "Avatar must be less than 5MB", avatar: "Avatar must be less than 5MB" });
+      return;
+    }
+    // Revoke previous preview URL to avoid leaks
+    if (avatarPreview?.startsWith("blob:")) URL.revokeObjectURL(avatarPreview);
     const preview = URL.createObjectURL(file);
     setAvatarFile(file);
     setAvatarPreview(preview);
     setAvatarUrl(null);
+    if (errors.avatar) setErrors((p) => ({ ...p, avatar: undefined, general: undefined }));
   };
 
   const selectRecommended = (url: string) => {
+    if (avatarPreview?.startsWith("blob:")) URL.revokeObjectURL(avatarPreview);
     setAvatarUrl(url);
     setAvatarPreview(url);
     setAvatarFile(null);
+    if (errors.avatar) setErrors((p) => ({ ...p, avatar: undefined, general: undefined }));
   };
 
   const handleSubmit = async () => {
@@ -49,11 +61,21 @@ export const CompleteProfileFlow: React.FC = () => {
       setErrors({ general: "Username and display name are required" });
       return;
     }
+    // Validate username/displayName format early for better UX
+    if (username.trim().length < 3 || username.trim().length > 20) {
+      setErrors({ general: "Username must be 3-20 characters" });
+      return;
+    }
+    if (!/^[a-z0-9_]+$/.test(username.trim().toLowerCase())) {
+      setErrors({ general: "Username may only contain a-z, 0-9 and _" });
+      return;
+    }
     setIsLoading(true);
     try {
       let avatar: string | undefined = avatarUrl ?? undefined;
       if (avatarFile) {
         if (avatarFile.size > 5 * 1024 * 1024) throw new Error("Avatar must be less than 5MB");
+        if (!avatarFile.type.startsWith("image/")) throw new Error("Please upload an image file");
         const uploadUrl = await generateUploadUrl({});
         const res = await fetch(uploadUrl as string, { method: "POST", headers: { "Content-Type": avatarFile.type }, body: avatarFile });
         if (!res.ok) throw new Error("Failed to upload avatar");
@@ -71,7 +93,14 @@ export const CompleteProfileFlow: React.FC = () => {
       });
       router.push("/auth/login?completed=1");
     } catch (err: unknown) {
-      setErrors({ general: getAuthErrorMessage(err, "Failed to complete profile") });
+      const msg = getAuthErrorMessage(err, "Failed to complete profile");
+      if (msg.toLowerCase().includes("avatar")) {
+        setErrors({ general: msg, avatar: msg });
+      } else if (msg.toLowerCase().includes("username")) {
+        setErrors({ general: msg, username: msg });
+      } else {
+        setErrors({ general: msg });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -94,12 +123,35 @@ export const CompleteProfileFlow: React.FC = () => {
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="username">Username</Label>
-          <Input id="username" placeholder="joti_user" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} />
-          <p className="text-[11px] text-text-muted">3-20 chars, a-z 0-9 _ only</p>
+          <Input
+            id="username"
+            placeholder="joti_user"
+            value={username}
+            hasError={Boolean(errors.username)}
+            onChange={(e) => {
+              setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""));
+              if (errors.username) setErrors((p) => ({ ...p, username: undefined, general: undefined }));
+            }}
+          />
+          {errors.username ? (
+            <p className="text-xs text-error pl-1">{errors.username}</p>
+          ) : (
+            <p className="text-[11px] text-text-muted">3-20 chars, a-z 0-9 _ only</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="displayName">Display Name</Label>
-          <Input id="displayName" placeholder="Joti User" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+          <Input
+            id="displayName"
+            placeholder="Joti User"
+            value={displayName}
+            hasError={Boolean(errors.displayName)}
+            onChange={(e) => {
+              setDisplayName(e.target.value);
+              if (errors.displayName) setErrors((p) => ({ ...p, displayName: undefined, general: undefined }));
+            }}
+          />
+          {errors.displayName && <p className="text-xs text-error pl-1">{errors.displayName}</p>}
         </div>
         <div className="space-y-4">
           <Label>Avatar</Label>
@@ -109,6 +161,7 @@ export const CompleteProfileFlow: React.FC = () => {
             </div>
             <input type="file" accept="image/*" onChange={handleFile} className="text-xs file:mr-2 file:rounded-full file:border-0 file:bg-primary file:text-white file:px-3 file:py-1.5" />
           </div>
+          {errors.avatar && <p className="text-xs text-error text-center">{errors.avatar}</p>}
           <div className="grid grid-cols-6 gap-2">
             {RECOMMENDED_AVATARS.map((url) => (
               <button key={url} type="button" onClick={() => selectRecommended(url)} className={`w-10 h-10 rounded-full overflow-hidden border-2 ${avatarUrl === url ? "border-primary" : "border-border"}`}>

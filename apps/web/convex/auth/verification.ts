@@ -3,16 +3,32 @@
 import { action } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
+import crypto from "crypto";
 import { internal } from "../_generated/api";
 import { api } from "../_generated/api";
 import { validateEmail } from "./validators";
 
-// 10 min expiry, 5 max attempts
+// 10 min expiry, 5 max attempts, 60s cooldown between sends
 const CODE_EXPIRY_MS = 10 * 60 * 1000;
+const CODE_COOLDOWN_MS = 60 * 1000;
 const MAX_VERIFY_ATTEMPTS = 5;
 
 function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  // Crypto-secure 6-digit code
+  return crypto.randomInt(100000, 1000000).toString();
+}
+
+async function assertNotRateLimited(ctx: any, email: string) {
+  const existing = (await ctx.runQuery(internal.auth.verificationInternal.getByEmail, {
+    email,
+  })) as { expires_at: number } | null;
+  if (existing) {
+    const elapsed = Date.now() - (existing.expires_at - CODE_EXPIRY_MS);
+    if (elapsed < CODE_COOLDOWN_MS && elapsed >= 0) {
+      const waitSec = Math.ceil((CODE_COOLDOWN_MS - elapsed) / 1000);
+      throw new ConvexError({ code: "RATE_LIMITED", message: `Please wait ${waitSec}s before requesting another code.` });
+    }
+  }
 }
 
 /**
@@ -29,6 +45,8 @@ export const requestEmailCode: ReturnType<typeof action> = action({
       email: cleanEmail,
     })) as { email_verified_at?: number } | null;
     if (existing?.email_verified_at) throw new ConvexError("Email is already registered.");
+
+    await assertNotRateLimited(ctx, cleanEmail);
 
     const code = generateCode();
     const expiresAt = Date.now() + CODE_EXPIRY_MS;
@@ -106,6 +124,14 @@ export const resendEmailCode: ReturnType<typeof action> = action({
   args: { email: v.string() },
   handler: async (ctx, args): Promise<{ sent: boolean; expiresAt: number }> => {
     const cleanEmail = validateEmail(args.email);
+
+    const verified = (await ctx.runQuery(api.auth.queries.getUserByEmail, {
+      email: cleanEmail,
+    })) as { email_verified_at?: number } | null;
+    if (verified?.email_verified_at) throw new ConvexError("Email is already registered.");
+
+    await assertNotRateLimited(ctx, cleanEmail);
+
     const code = generateCode();
     const expiresAt = Date.now() + CODE_EXPIRY_MS;
 

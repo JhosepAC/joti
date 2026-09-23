@@ -14,10 +14,21 @@ interface Props {
 }
 
 export const Step3Avatar: React.FC<Props> = ({ data, onChange, onNext, onSkip, error }) => {
+  const [fileError, setFileError] = React.useState<string | null>(null);
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) return;
+    if (!file.type.startsWith("image/")) {
+      setFileError("Please upload an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFileError("Avatar must be less than 5MB");
+      return;
+    }
+    setFileError(null);
+    // Revoke previous blob URL
+    if (data.avatarPreview?.startsWith("blob:")) URL.revokeObjectURL(data.avatarPreview);
     const preview = URL.createObjectURL(file);
     onChange("avatarFile", file);
     onChange("avatarPreview", preview);
@@ -25,6 +36,8 @@ export const Step3Avatar: React.FC<Props> = ({ data, onChange, onNext, onSkip, e
   };
 
   const selectRecommended = (url: string) => {
+    setFileError(null);
+    if (data.avatarPreview?.startsWith("blob:")) URL.revokeObjectURL(data.avatarPreview);
     onChange("avatarUrl", url);
     onChange("avatarPreview", url);
     onChange("avatarFile", null);
@@ -40,7 +53,9 @@ export const Step3Avatar: React.FC<Props> = ({ data, onChange, onNext, onSkip, e
         <p className="text-sm font-light text-text-secondary mt-1.5">Upload an image or choose a recommended one</p>
       </header>
 
-      {error && <div className="p-3 bg-red-50 border border-error/20 rounded-2xl text-xs text-error">{error}</div>}
+      {(error || fileError) && (
+        <div className="p-3 bg-red-50 border border-error/20 rounded-2xl text-xs text-error">{fileError ?? error}</div>
+      )}
 
       <div className="flex flex-col items-center gap-4">
         <div className="w-28 h-28 rounded-full bg-surface border-2 border-border flex items-center justify-center overflow-hidden text-3xl font-semibold text-text-secondary">

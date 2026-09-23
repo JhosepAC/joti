@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useAction, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { getAuthErrorMessage } from "../utils/get-auth-error-message";
+import { getAuthErrorCode, getAuthErrorMessage } from "../utils/get-auth-error-message";
 import {
   RegisterFlowData,
   RegisterFlowErrors,
@@ -137,7 +137,23 @@ export function useRegisterFlow() {
       setStep(1.1);
       setErrors({});
     } catch (err: unknown) {
-      setErrors({ general: getAuthErrorMessage(err, "Failed to create account") });
+      const msg = getAuthErrorMessage(err, "Failed to create account");
+      const code = getAuthErrorCode(err);
+      if (code === "RATE_LIMITED") {
+        const m = msg.match(/(\d+)s/);
+        const wait = m?.[1] ? parseInt(m[1], 10) : 60;
+        setResendCooldown(wait);
+        const interval = setInterval(() => {
+          setResendCooldown((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
+      setErrors({ general: msg });
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +195,23 @@ export function useRegisterFlow() {
       }, 1000);
       setErrors({});
     } catch (err: unknown) {
-      setErrors({ general: getAuthErrorMessage(err, "Failed to resend code") });
+      const msg = getAuthErrorMessage(err, "Failed to resend code");
+      const code = getAuthErrorCode(err);
+      if (code === "RATE_LIMITED") {
+        const m = msg.match(/(\d+)s/);
+        const wait = m?.[1] ? parseInt(m[1], 10) : 60;
+        setResendCooldown(wait);
+        const interval = setInterval(() => {
+          setResendCooldown((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
+      setErrors({ general: msg });
     } finally {
       setIsLoading(false);
     }
@@ -212,7 +244,12 @@ export function useRegisterFlow() {
 
       if (data.avatarFile) {
         if (data.avatarFile.size > 5 * 1024 * 1024) {
+          setErrors({ avatar: "Avatar must be less than 5MB", general: "Avatar must be less than 5MB" });
           throw new Error("Avatar must be less than 5MB");
+        }
+        if (!data.avatarFile.type.startsWith("image/")) {
+          setErrors({ avatar: "Please upload an image file", general: "Please upload an image file" });
+          throw new Error("Please upload an image file");
         }
         const uploadUrl = await generateUploadUrl({});
         const res = await fetch(uploadUrl as string, {
@@ -237,7 +274,15 @@ export function useRegisterFlow() {
       setErrors({});
       return result;
     } catch (err: unknown) {
-      setErrors({ general: getAuthErrorMessage(err, "Failed to complete profile") });
+      const msg = getAuthErrorMessage(err, "Failed to complete profile");
+      // Route avatar-specific errors to the avatar field so Step3 can display inline
+      if (msg.toLowerCase().includes("avatar")) {
+        setErrors({ avatar: msg, general: msg });
+        // Optionally guide user back to avatar step if they used an invalid preset
+        // but keep them on bio step to show context; user can navigate back
+      } else {
+        setErrors({ general: msg });
+      }
       throw err;
     } finally {
       setIsLoading(false);

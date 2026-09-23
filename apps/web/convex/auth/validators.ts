@@ -116,26 +116,42 @@ export function validateBio(bio?: string): string | undefined {
 }
 
 // ──────────────────────────────────────────────────────────
-// Avatar — optional https URL or Convex storageId, max length
+// Avatar — optional https URL, local /avatars path, or Convex storageId
 // ──────────────────────────────────────────────────────────
 export function validateAvatar(avatar?: string): string | undefined {
   if (!avatar) return undefined;
   const trimmed = avatar.trim();
   if (trimmed.length === 0) return undefined;
   if (trimmed.length > AVATAR_MAX_LENGTH) fail("Avatar URL is too long.");
-  // Allow Convex storageId (opaque string) as-is — they are not valid URLs
-  // Heuristic: storageIds are short IDs without :// and not URL-like
-  if (!trimmed.includes("://")) {
-    // Accept as storageId if it looks like Convex Id (alphanumeric)
-    if (/^[a-z0-9]+$/i.test(trimmed) && trimmed.length >= 8) return trimmed;
-    fail("Invalid avatar URL.");
+
+  // Local static assets: /avatars/profile_1.jpg etc. (served from public/)
+  if (trimmed.startsWith("/")) {
+    // Allow only safe local avatar paths: /avatars/* with image extension
+    if (/^\/avatars\/[a-zA-Z0-9_\-]+\.(jpg|jpeg|png|webp|svg)$/.test(trimmed)) {
+      return trimmed;
+    }
+    // Generic local path fallback (prevent javascript: etc.)
+    if (/^\/[a-zA-Z0-9/_\-.]+$/.test(trimmed) && !trimmed.includes("..") && !trimmed.includes("//")) {
+      return trimmed;
+    }
+    fail("Invalid avatar path.");
   }
-  try {
-    const url = new URL(trimmed);
-    if (url.protocol !== "https:") fail("Avatar URL must use https.");
-  } catch {
-    fail("Invalid avatar URL.");
+
+  // Remote URL — must be https
+  if (trimmed.includes("://")) {
+    try {
+      const url = new URL(trimmed);
+      if (url.protocol !== "https:") fail("Avatar URL must use https.");
+      return trimmed;
+    } catch {
+      fail("Invalid avatar URL.");
+    }
   }
+
+  // Convex storageId — opaque alphanumeric (may contain _ -)
+  if (/^[a-z0-9_\-]+$/i.test(trimmed) && trimmed.length >= 8) return trimmed;
+
+  fail("Invalid avatar URL.");
   return trimmed;
 }
 
