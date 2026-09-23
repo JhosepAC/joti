@@ -58,6 +58,11 @@ export const AVATAR_MAX_LENGTH = 2048;
 export const MAX_FAILED_ATTEMPTS = 5;
 export const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
+// --- Password reset ---
+export const PASSWORD_RESET_COOLDOWN_MS = 60 * 1000; // 1 minute between requests (per email)
+export const PASSWORD_RESET_EXPIRY_MS = 60 * 60 * 1000; // 1 hour link expiry
+export const PASSWORD_RESET_MAX_PER_HOUR = 5; // max 5 links per hour per email
+
 // Password hashing — bcrypt cost factor (OWASP recommends >=10, 12 is balanced)
 export const BCRYPT_COST = 12;
 

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useForgotPassword } from "../hooks/use-forgot-password";
 
 export const ForgotPasswordFlow: React.FC = () => {
-  const { email, setEmail, errors, isLoading, isSuccess, handleSubmit } = useForgotPassword();
+  const { email, setEmail, errors, isLoading, isSuccess, cooldown, handleResend, handleSubmit } = useForgotPassword();
 
   if (isSuccess) {
     return (
@@ -21,8 +21,16 @@ export const ForgotPasswordFlow: React.FC = () => {
             If an account exists for <span className="font-medium text-text-primary">{email}</span>, we&apos;ve sent a password reset link from jhosepjamil@gmail.com. It expires in 60 minutes.
           </p>
         </header>
-        <div className="p-4 bg-surface border border-border rounded-2xl text-xs text-text-secondary">
-          Didn&apos;t receive it? Check spam or try again in a few minutes. The link is single-use.
+        <div className="p-4 bg-surface border border-border rounded-2xl text-xs text-text-secondary space-y-2">
+          <p>Didn&apos;t receive it? Check spam. The link is single-use. You can request a new one after 60 seconds.</p>
+          {cooldown > 0 ? (
+            <p className="text-text-muted">Resend available in {cooldown}s</p>
+          ) : (
+            <Button variant="outline" className="w-full h-9 rounded-full text-xs mt-2" onClick={handleResend} disabled={isLoading}>
+              Resend link
+            </Button>
+          )}
+          {errors.general && <p className="text-error text-xs mt-2">{errors.general}</p>}
         </div>
         <Link href="/auth/login" className="block">
           <Button variant="outline" className="w-full h-11 rounded-full">Back to Sign In</Button>
@@ -65,9 +73,16 @@ export const ForgotPasswordFlow: React.FC = () => {
         </div>
 
         <div className="pt-2">
-          <Button type="submit" variant="primary" isLoading={isLoading} className="w-full h-12 text-sm font-medium rounded-full">
-            Send reset link
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={isLoading}
+            disabled={cooldown > 0}
+            className="w-full h-12 text-sm font-medium rounded-full"
+          >
+            {cooldown > 0 ? `Wait ${cooldown}s` : "Send reset link"}
           </Button>
+          {cooldown > 0 && <p className="text-xs text-text-muted text-center mt-2">Please wait before requesting another link.</p>}
         </div>
       </form>
 

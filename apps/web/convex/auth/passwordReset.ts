@@ -7,10 +7,9 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { internal } from "../_generated/api";
 import { api } from "../_generated/api";
-import { BCRYPT_COST } from "./constants";
+import { BCRYPT_COST, PASSWORD_RESET_COOLDOWN_MS, PASSWORD_RESET_EXPIRY_MS, PASSWORD_RESET_MAX_PER_HOUR } from "./constants";
 import { validateEmail, validatePassword } from "./validators";
 
-const RESET_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 const RESEND_FROM = process.env.RESEND_FROM ?? "Joti <onboarding@resend.dev>";
 
 function sha256Hex(raw: string): string {
@@ -82,6 +81,20 @@ export const requestPasswordReset: ReturnType<typeof action> = action({
     // OAuth-only accounts without password: still send generic email directing to Google sign-in?
     // We send but reset will fail gracefully; better to send informational email.
     if (!user.password_hash) {
+      // Apply same cooldown for OAuth accounts to avoid enumeration via timing
+      const throttle = (await ctx.runQuery(internal.auth.passwordResetInternal.getRecentByEmail, {
+        email: cleanEmail,
+      })) as { latest: { created_at: number }; countLastHour: number } | null;
+      if (throttle?.latest) {
+        const elapsed = Date.now() - throttle.latest.created_at;
+        if (elapsed < PASSWORD_RESET_COOLDOWN_MS) {
+          const waitSec = Math.ceil((PASSWORD_RESET_COOLDOWN_MS - elapsed) / 1000);
+          throw new ConvexError({ code: "RATE_LIMITED", message: `Please wait ${waitSec}s before requesting another reset link.` });
+        }
+        if (throttle.countLastHour >= PASSWORD_RESET_MAX_PER_HOUR) {
+          throw new ConvexError({ code: "RATE_LIMITED", message: "Too many reset requests. Please try again later." });
+        }
+      }
       await sendEmail(
         cleanEmail,
         "Password reset request",
@@ -91,9 +104,24 @@ export const requestPasswordReset: ReturnType<typeof action> = action({
       return { sent: true };
     }
 
+    // ── Rate limiting (best practice): 60s cooldown + 5/hour per email ──
+    const recent = (await ctx.runQuery(internal.auth.passwordResetInternal.getRecentByEmail, {
+      email: cleanEmail,
+    })) as { latest: { created_at: number }; countLastHour: number } | null;
+    if (recent?.latest) {
+      const elapsed = Date.now() - recent.latest.created_at;
+      if (elapsed < PASSWORD_RESET_COOLDOWN_MS) {
+        const waitSec = Math.ceil((PASSWORD_RESET_COOLDOWN_MS - elapsed) / 1000);
+        throw new ConvexError({ code: "RATE_LIMITED", message: `Please wait ${waitSec}s before requesting another reset link.` });
+      }
+      if (recent.countLastHour >= PASSWORD_RESET_MAX_PER_HOUR) {
+        throw new ConvexError({ code: "RATE_LIMITED", message: "Too many reset requests. Please try again later." });
+      }
+    }
+
     const rawToken = generateSecureToken();
     const tokenHash = sha256Hex(rawToken);
-    const expiresAt = Date.now() + RESET_EXPIRY_MS;
+    const expiresAt = Date.now() + PASSWORD_RESET_EXPIRY_MS;
 
     await ctx.runMutation(internal.auth.passwordResetInternal.createResetToken, {
       user_id: user._id as never,
