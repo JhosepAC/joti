@@ -70,12 +70,14 @@ export const RegisterFlow: React.FC = () => {
         <Step4Bio data={flow.data} errors={flow.errors} isLoading={flow.isLoading} onChange={flow.updateField} onSubmit={handleFinal} />
       )}
 
-      <footer className="text-center mt-10 text-[0.825rem] font-light text-text-secondary">
-        ¿Ya tienes una cuenta?{" "}
-        <Link href="/auth/login" className="text-text-primary font-medium hover:underline transition-all">
-          Iniciar sesión
-        </Link>
-      </footer>
+      {flow.step === 1 && (
+        <footer className="text-center mt-10 text-[0.825rem] font-light text-text-secondary">
+          ¿Ya tienes una cuenta?{" "}
+          <Link href="/auth/login" className="text-text-primary font-medium hover:underline transition-all">
+            Iniciar sesión
+          </Link>
+        </footer>
+      )}
     </div>
   );
 };

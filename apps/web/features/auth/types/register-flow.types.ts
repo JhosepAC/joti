@@ -27,10 +27,10 @@ export interface RegisterFlowErrors {
 export const TOTAL_STEPS = 4;
 
 export const RECOMMENDED_AVATARS = [
-  "https://api.dicebear.com/9.x/initials/svg?seed=JD",
-  "https://api.dicebear.com/9.x/initials/svg?seed=AB",
-  "https://api.dicebear.com/9.x/bottts/svg?seed=alpha",
-  "https://api.dicebear.com/9.x/bottts/svg?seed=beta",
-  "https://api.dicebear.com/9.x/lorelei/svg?seed=gamma",
-  "https://api.dicebear.com/9.x/avataaars/svg?seed=delta",
+  "/avatars/profile_1.jpg",
+  "/avatars/profile_2.jpg",
+  "/avatars/profile_3.jpg",
+  "/avatars/profile_4.jpg",
+  "/avatars/profile_5.jpg",
+  "/avatars/profile_6.jpg",
 ] as const;

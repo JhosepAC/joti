@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useAction, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { getAuthErrorMessage } from "../utils/get-auth-error-message";
 import {
   RegisterFlowData,
   RegisterFlowErrors,
@@ -57,9 +58,10 @@ export function useRegisterFlow() {
   const [codeExpiresAt, setCodeExpiresAt] = useState<number | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
 
+  const registerPendingAction = useAction(api.auth.actions.registerPending);
   const requestCodeAction = useAction(api.auth.verification.requestEmailCode);
   const confirmCodeAction = useAction(api.auth.verification.confirmEmailCode);
-  const registerAction = useAction(api.auth.actions.register);
+  const completeProfileAction = useAction(api.auth.actions.completeProfile);
   const generateUploadUrl = useMutation(api.auth.storage.generateAvatarUploadUrl);
 
   const updateField = useCallback(
@@ -126,13 +128,16 @@ export function useRegisterFlow() {
     if (!validateStep1()) return;
     setIsLoading(true);
     try {
-      const res = await requestCodeAction({ email: data.email.trim().toLowerCase() });
-      setCodeExpiresAt((res as { expiresAt: number }).expiresAt);
+      // Spec: email+password already creates inactive account
+      const res = (await registerPendingAction({
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+      })) as { expiresAt: number };
+      setCodeExpiresAt(res.expiresAt);
       setStep(1.1);
       setErrors({});
     } catch (err: unknown) {
-      const msg = err instanceof Error ? (err as Error & { data?: { message?: string } }).data?.message ?? err.message : "Failed to send code";
-      setErrors({ general: msg });
+      setErrors({ general: getAuthErrorMessage(err, "Failed to create account") });
     } finally {
       setIsLoading(false);
     }
@@ -150,8 +155,7 @@ export function useRegisterFlow() {
       setStep(2);
       setErrors({});
     } catch (err: unknown) {
-      const msg = err instanceof Error ? (err as Error & { data?: { message?: string } }).data?.message ?? err.message : "Invalid code";
-      setErrors({ code: msg });
+      setErrors({ code: getAuthErrorMessage(err, "Invalid or expired code") });
     } finally {
       setIsLoading(false);
     }
@@ -175,8 +179,7 @@ export function useRegisterFlow() {
       }, 1000);
       setErrors({});
     } catch (err: unknown) {
-      const msg = err instanceof Error ? (err as Error & { data?: { message?: string } }).data?.message ?? err.message : "Failed to resend";
-      setErrors({ general: msg });
+      setErrors({ general: getAuthErrorMessage(err, "Failed to resend code") });
     } finally {
       setIsLoading(false);
     }
@@ -207,7 +210,6 @@ export function useRegisterFlow() {
     try {
       let avatar: string | undefined = data.avatarUrl ?? undefined;
 
-      // Upload file if present — Convex storage
       if (data.avatarFile) {
         if (data.avatarFile.size > 5 * 1024 * 1024) {
           throw new Error("Avatar must be less than 5MB");
@@ -223,9 +225,8 @@ export function useRegisterFlow() {
         avatar = json.storageId;
       }
 
-      const result = await registerAction({
+      const result = await completeProfileAction({
         email: data.email.trim().toLowerCase(),
-        password: data.password,
         username: data.username.trim().toLowerCase(),
         display_name: data.displayName.trim(),
         bio: data.bio.trim() || undefined,
@@ -236,8 +237,7 @@ export function useRegisterFlow() {
       setErrors({});
       return result;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? (err as Error & { data?: { message?: string } }).data?.message ?? err.message : "Registration failed";
-      setErrors({ general: msg });
+      setErrors({ general: getAuthErrorMessage(err, "Failed to complete profile") });
       throw err;
     } finally {
       setIsLoading(false);

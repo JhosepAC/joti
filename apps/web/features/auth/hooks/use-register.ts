@@ -5,6 +5,7 @@ import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { AuthStatus, RegisterPayload, ValidationErrors } from "../types/auth.types";
 import { validateRegisterPayload } from "../validations/register.schema";
+import { getAuthErrorMessage } from "../utils/get-auth-error-message";
 
 export function useRegister() {
   const [payload, setPayload] = useState<RegisterPayload>({
@@ -51,11 +52,7 @@ export function useRegister() {
       return result;
     } catch (err: unknown) {
       setStatus("error");
-      const message =
-        err instanceof Error
-          ? (err as Error & { data?: { message?: string } }).data?.message ?? err.message
-          : "Failed to create account";
-      setErrors({ general: message });
+      setErrors({ general: getAuthErrorMessage(err, "Failed to create account") });
       throw err;
     } finally {
       setStatus("idle");
