@@ -15,6 +15,13 @@ export const LoginForm: React.FC = () => {
     errors,
     isLoading,
     isOAuthLoading,
+    requiresActivation,
+    requiresProfile,
+    activationCode,
+    setActivationCode,
+    pendingEmail,
+    handleActivationVerify,
+    handleResendActivation,
     handleFieldChange,
     handleCredentialsSubmit,
     handleGoogleLogin,
@@ -36,6 +43,38 @@ export const LoginForm: React.FC = () => {
       {errors.general && (
         <div className="mb-6 p-3.5 bg-red-50 border border-error/20 rounded-2xl text-xs text-error">
           {errors.general}
+        </div>
+      )}
+
+      {/* Activation Required (inactive account) */}
+      {requiresActivation && pendingEmail && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
+          <p className="text-xs font-medium text-amber-900">Your account is not activated. Enter the code sent to {pendingEmail} from jhosepjamil@gmail.com.</p>
+          <Input
+            placeholder="123456"
+            value={activationCode}
+            onChange={(e) => setActivationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            inputMode="numeric"
+            className="tracking-[0.3em] text-center"
+          />
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1 h-9 rounded-full text-xs" onClick={handleResendActivation} disabled={isLoading}>
+              Resend code
+            </Button>
+            <Button variant="primary" className="flex-1 h-9 rounded-full text-xs" onClick={handleActivationVerify} isLoading={isLoading}>
+              Verify & Activate
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Incomplete */}
+      {requiresProfile && pendingEmail && (
+        <div className="mb-6 p-4 bg-surface border border-border rounded-2xl space-y-3">
+          <p className="text-xs text-text-secondary">Account verified but profile incomplete. You must complete your profile to continue.</p>
+          <Link href={`/auth/complete-profile?email=${encodeURIComponent(pendingEmail)}`} className="block">
+            <Button variant="primary" className="w-full h-9 rounded-full text-xs">Complete Profile</Button>
+          </Link>
         </div>
       )}
 

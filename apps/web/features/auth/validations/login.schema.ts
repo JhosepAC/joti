@@ -21,13 +21,10 @@ export function validateLoginCredentials(credentials: LoginCredentials): {
     errors.email = "Please enter a valid email address";
   }
 
-  // Password Validation according to project specifications (database/auth.md)
+  // Password — do NOT reveal policy on login (avoids user enumeration / length oracle)
+  // Only check presence; actual verification is server-side with generic error
   if (!password) {
     errors.password = "Password is required";
-  } else if (password.length < 12) {
-    errors.password = "Password must be at least 12 characters";
-  } else if (password.length > 128) {
-    errors.password = "Password must not exceed 128 characters";
   }
 
   return {
