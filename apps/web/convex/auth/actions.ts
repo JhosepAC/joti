@@ -368,7 +368,7 @@ export const login: ReturnType<typeof action> = action({
     // The password check is proof of ownership, so mint the claim grant the
     // post-login gate needs. This is NOT a session -- it is short-lived,
     // single-use and scoped to finishing onboarding.
-    const claim = issueAccountGrant(ctx, user.email, user._id);
+    const claim = await issueAccountGrant(ctx, user.email, user._id);
 
     const profile = await ctx.runQuery(internal.auth.queries.getProfileByUserId, {
       userId: user._id,
