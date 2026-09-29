@@ -108,6 +108,34 @@ export const PencilIcon = (props: IconProps) => (
   </Svg>
 );
 
+export const MoreHorizontalIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <circle cx="12" cy="12" r="1" />
+    <circle cx="19" cy="12" r="1" />
+    <circle cx="5" cy="12" r="1" />
+  </Svg>
+);
+
+export const FilterIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </Svg>
+);
+
+export const SearchIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </Svg>
+);
+
+export const PlusIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </Svg>
+);
+
 export const LayersIcon = (props: IconProps) => (
   <Svg {...props}>
     <path d="m12 3 9 5-9 5-9-5 9-5Z" />

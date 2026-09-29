@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { clearGrants, readSpaceGrant, storeSpaceGrant } from "@/features/auth/utils/claim-store";
 import { getAuthErrorMessage } from "@/features/auth/utils/get-auth-error-message";
 import { purposeTitle } from "../catalog";
-import { LayersIcon, LockIcon, SpinnerIcon } from "./icons";
+import { SpinnerIcon } from "./icons";
 import type { SpaceTool, WorkspaceSpace } from "../types/space.types";
+import { SpaceSidebar } from "./space-sidebar";
+import { SpaceContent } from "./space-content";
 
 interface Props {
   slug: string;
@@ -28,10 +30,16 @@ type State =
  * only rendered for a caller holding a grant bound to that exact space, which
  * `spaces.actions.getWorkspace` verifies server-side; a guessed slug renders the
  * "not available" state instead of somebody's space.
+ *
+ * Layout: Fixed left sidebar (collapsible) + main content area.
+ * Sidebar shows the space's tools (derived from its purpose).
+ * Content area shows the selected tool's view.
  */
 export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: "loading" });
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const getWorkspace = useAction(api.spaces.actions.getWorkspace);
 
   useEffect(() => {
@@ -58,6 +66,10 @@ export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
         // does not have to sign in again.
         storeSpaceGrant(result.space.slug, result.grant);
         setState({ kind: "ready", space: result.space, tools: result.template.tools });
+        // Auto-select first tool
+        if (result.template.tools.length > 0 && !activeTool) {
+          setActiveTool(result.template.tools[0].key);
+        }
       } catch (err: unknown) {
         if (cancelled) return;
         setState({
@@ -100,82 +112,49 @@ export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
   }
 
   const { space, tools } = state;
+  const activeToolData = tools.find((t) => t.key === activeTool) || null;
+
+  const handleToolClick = (toolKey: string) => {
+    setActiveTool(toolKey);
+  };
+
+  const handleCreateNew = (toolKey: string) => {
+    // TODO: Open create modal for the specific tool
+    console.log(`Create new ${toolKey}`);
+    // For now, just select the tool
+    setActiveTool(toolKey);
+  };
+
+  const handleSidebarToggle = () => {
+    setSidebarCollapsed((prev) => !prev);
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-4 px-6 py-5">
-          <span
-            aria-hidden="true"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-2xl ring-1 ring-border"
-          >
-            {space.icon}
-          </span>
-          <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-text-primary font-heading">
-              {space.name}
-            </h1>
-            <p className="text-xs font-light text-text-secondary">
-              {purposeTitle(space.purpose)}
-              {space.is_private && (
-                <span className="ml-2 inline-flex items-center gap-1 align-middle">
-                  <LockIcon className="text-[11px]" />
-                  Privado
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
+      <SpaceSidebar
+        tools={tools}
+        activeTool={activeTool}
+        onToolClick={handleToolClick}
+        onCreateNew={handleCreateNew}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={handleSidebarToggle}
+        spaceName={space.name}
+        spaceIcon={space.icon}
+      />
 
-      <main className="mx-auto w-full max-w-5xl px-6 py-8">
-        <section aria-labelledby="toolsHeading" className="mb-8">
-          <h2 id="toolsHeading" className="mb-3 flex items-center gap-1.5 text-sm font-medium text-text-primary">
-            <LayersIcon className="text-icon" />
-            Herramientas de este espacio
-          </h2>
-          <ul className="flex flex-wrap gap-2">
-            {tools.map((tool) => (
-              <li
-                key={tool.key}
-                className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-text-secondary"
-              >
-                {tool.label}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/*
-          Placeholder on purpose. The onboarding creates the space and records
-          its setup; the items inside a space are a separate scope, so this
-          states the empty state instead of faking content.
-        */}
-        <div className="rounded-3xl border border-dashed border-border-strong px-6 py-16 text-center">
-          <h2 className="text-lg font-semibold text-text-primary font-heading">
-            Tu espacio está listo
-          </h2>
-          <p className="mx-auto mt-2 max-w-sm text-sm font-light text-text-secondary">
-            Aquí aparecerán tus notas, tareas y proyectos. Este espacio se creó
-            vacío a propósito: aún no hay nada dentro.
-          </p>
-        </div>
-
-        <p className="mt-8 text-center text-xs text-text-muted">
-          ¿Necesitas otra cosa?{" "}
-          <button
-            type="button"
-            // Drops the space grant so "cambiar de cuenta" cannot leave a live
-            // token behind for whoever signs in on this tab next.
-            onClick={() => {
-              clearGrants();
-              router.replace("/auth/login");
-            }}
-            className="text-text-secondary hover:underline"
-          >
-            Cambiar de cuenta
-          </button>
-        </p>
+      {/* Main Content */}
+      <main
+        className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ${
+          sidebarCollapsed ? "ml-16" : "ml-64"
+        }`}
+        style={{ minHeight: "100vh" }}
+      >
+        <SpaceContent
+          activeTool={activeToolData}
+          tools={tools}
+          onCreateNew={handleCreateNew}
+        />
       </main>
     </div>
   );
