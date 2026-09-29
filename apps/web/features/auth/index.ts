@@ -6,6 +6,8 @@ export * from "./components/halftone-art";
 export * from "./hooks/use-login";
 export * from "./hooks/use-register";
 export * from "./hooks/use-register-flow";
+export * from "./hooks/use-entry-gate";
+export * from "./utils/claim-store";
 export * from "./services/auth.service";
 export * from "./types/auth.types";
 export * from "./types/register-flow.types";

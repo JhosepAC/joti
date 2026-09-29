@@ -3,13 +3,16 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { useAction, useMutation } from "convex/react";
+import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RECOMMENDED_AVATARS } from "../types/register-flow.types";
 import { getAuthErrorMessage } from "../utils/get-auth-error-message";
+import { takeAccountGrant, storeAccountGrant } from "../utils/claim-store";
+
+const EXPIRED_SESSION_MESSAGE = "Your session expired. Please sign in again.";
 
 export const CompleteProfileFlow: React.FC = () => {
   const router = useRouter();
@@ -24,9 +27,15 @@ export const CompleteProfileFlow: React.FC = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [isLoading, setIsLoading] = useState(false);
+  // Proof of ownership stashed by the entry gate. Read once on mount, then
+  // cleared, so a reload cannot replay it.
+  const [claim] = useState<string | null>(() => {
+    const stored = takeAccountGrant();
+    return stored && stored.email === emailParam.trim().toLowerCase() ? stored.token : null;
+  });
 
   const completeProfile = useAction(api.auth.actions.completeProfile);
-  const generateUploadUrl = useMutation(api.auth.storage.generateAvatarUploadUrl);
+  const generateUploadUrl = useAction(api.auth.storage.generateAvatarUploadUrl);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,22 +85,31 @@ export const CompleteProfileFlow: React.FC = () => {
       if (avatarFile) {
         if (avatarFile.size > 5 * 1024 * 1024) throw new Error("Avatar must be less than 5MB");
         if (!avatarFile.type.startsWith("image/")) throw new Error("Please upload an image file");
-        const uploadUrl = await generateUploadUrl({});
+        if (!claim) throw new Error(EXPIRED_SESSION_MESSAGE);
+        const uploadUrl = await generateUploadUrl({ email: email.trim().toLowerCase(), claim });
         const res = await fetch(uploadUrl as string, { method: "POST", headers: { "Content-Type": avatarFile.type }, body: avatarFile });
         if (!res.ok) throw new Error("Failed to upload avatar");
         const json = (await res.json()) as { storageId: string };
         avatar = json.storageId;
       }
-      await completeProfile({
+      if (!claim) throw new Error(EXPIRED_SESSION_MESSAGE);
+      const result = (await completeProfile({
         email: email.trim().toLowerCase(),
+        claim,
         username: username.trim().toLowerCase(),
         display_name: displayName.trim(),
         bio: bio.trim() || undefined,
         avatar,
         locale: "system",
         timezone: "system",
-      });
-      router.push("/auth/login?completed=1");
+      })) as { claim?: string } | null;
+      // The profile gate returns a fresh grant for the next onboarding step.
+      if (result?.claim) {
+        storeAccountGrant(email.trim().toLowerCase(), result.claim);
+        router.push("/spaces/new");
+      } else {
+        router.push("/auth/login");
+      }
     } catch (err: unknown) {
       const msg = getAuthErrorMessage(err, "Failed to complete profile");
       if (msg.toLowerCase().includes("avatar")) {

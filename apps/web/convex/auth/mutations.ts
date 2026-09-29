@@ -1,4 +1,4 @@
-import { mutation, internalMutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import {
@@ -81,32 +81,16 @@ export const createUserInternal = internalMutation({
 // Pending registration — create inactive user (credentials step creates account)
 // ──────────────────────────────────────────────────────────
 
-export const createPendingUser = internalMutation({
-  args: { email: v.string(), password_hash: v.string() },
-  handler: async (ctx, args) => {
-    const cleanEmail = validateEmail(args.email);
-    const existing = await ctx.db
-      .query("auth_users")
-      .withIndex("by_email", (q) => q.eq("email", cleanEmail))
-      .first();
-
-    if (existing && !existing.deleted_at) {
-      if (existing.email_verified_at) {
-        throw new ConvexError("Email is already registered.");
-      }
-      // Pending account exists (not yet verified) — update password and reuse
-      await ctx.db.patch(existing._id, { password_hash: args.password_hash });
-      return { userId: existing._id, isNew: false };
-    }
-
-    const userId = await ctx.db.insert("auth_users", {
-      email: cleanEmail,
-      password_hash: args.password_hash,
-      failed_login_attempts: 0,
-    });
-    return { userId, isNew: true };
-  },
-});
+// createPendingUser was REMOVED.
+//
+// It inserted an `auth_users` row (with the password) at wizard step 1, before
+// the address was proven. That let an unauthenticated attacker pre-register
+// somebody else's address and win the race: the victim would receive and enter
+// the verification code, which "verified" whichever password happened to be
+// stored last -- the attacker's.
+//
+// Accounts are now only ever created after the address is verified, via
+// `createUserInternal` (called by actions.register / actions.completeProfile).
 
 export const activateUser = internalMutation({
   args: { email: v.string() },
@@ -176,72 +160,22 @@ export const completeProfile = internalMutation({
   },
 });
 
-// ──────────────────────────────────────────────────────────
-// Legacy public register — expects pre-hashed password (hashPassword action)
-// Kept for compatibility with the initial proposal; prefer `api.auth.actions.register`
-// ──────────────────────────────────────────────────────────
-
-export const registerUser = mutation({
-  args: {
-    email: v.string(),
-    password_hash: v.string(),
-    username: v.string(),
-    display_name: v.string(),
-    bio: v.optional(v.string()),
-    avatar: v.optional(v.string()),
-    locale: v.optional(v.string()),
-    timezone: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const cleanEmail = validateEmail(args.email);
-    const cleanUsername = validateUsername(args.username);
-    const cleanDisplayName = validateDisplayName(args.display_name);
-    const cleanBio = validateBio(args.bio);
-    const cleanAvatar = validateAvatar(args.avatar);
-
-    const existingEmail = await ctx.db
-      .query("auth_users")
-      .withIndex("by_email", (q) => q.eq("email", cleanEmail))
-      .first();
-    if (existingEmail && !existingEmail.deleted_at) {
-      throw new ConvexError("Email is already registered.");
-    }
-
-    const existingUsername = await ctx.db
-      .query("auth_user_profiles")
-      .withIndex("by_username", (q) => q.eq("username", cleanUsername))
-      .first();
-    if (existingUsername) {
-      throw new ConvexError("Username is already taken.");
-    }
-
-    if (!args.password_hash || args.password_hash.length < 20) {
-      throw new ConvexError("Invalid password hash.");
-    }
-
-    const userId = await ctx.db.insert("auth_users", {
-      email: cleanEmail,
-      password_hash: args.password_hash,
-      failed_login_attempts: 0,
-    });
-
-    await ctx.db.insert("auth_user_profiles", {
-      user_id: userId,
-      username: cleanUsername,
-      display_name: cleanDisplayName,
-      bio: cleanBio,
-      avatar: cleanAvatar,
-      locale: args.locale ?? "system",
-      timezone: args.timezone ?? "system",
-    });
-
-    return { userId };
-  },
-});
-
-// ──────────────────────────────────────────────────────────
-// Login attempt tracking — lockout after MAX_FAILED_ATTEMPTS
-// ──────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// REMOVED (security):
+//   registerUser            -- accepted a caller-supplied password hash, skipped
+//                              validatePassword() and the email-verification gate.
+//                              `actions.register` is the supported entry point.
+//   createPendingUser       -- created the account at wizard step 1, before the
+//                              address was proven, which let an attacker
+//                              pre-register someone else's address and have the
+//                              victim's code confirm the attacker's password.
+//   handleFailedLoginPublic -- public mutation, no auth check. Allowed locking
+//                              any account out permanently (targeted DoS).
+//   handleSuccessfulLoginPublic -- public mutation, no auth check. Allowed
+//                              resetting any account's failed-attempt counter,
+//                              which completely disabled brute-force lockout.
+// The `internalMutation` versions are the only supported path.
+// ---------------------------------------------------------------------------
 
 export const handleFailedLogin = internalMutation({
   args: { userId: v.id("auth_users") },
@@ -260,35 +194,7 @@ export const handleFailedLogin = internalMutation({
   },
 });
 
-export const handleFailedLoginPublic = mutation({
-  args: { userId: v.id("auth_users") },
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
-    if (!user) return;
-    const newAttempts = user.failed_login_attempts + 1;
-    let lockedUntil = user.locked_until;
-    if (newAttempts >= MAX_FAILED_ATTEMPTS) {
-      lockedUntil = Date.now() + LOCKOUT_DURATION_MS;
-    }
-    await ctx.db.patch(args.userId, {
-      failed_login_attempts: newAttempts,
-      locked_until: lockedUntil,
-    });
-  },
-});
-
 export const handleSuccessfulLogin = internalMutation({
-  args: { userId: v.id("auth_users") },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.userId, {
-      failed_login_attempts: 0,
-      locked_until: undefined,
-      last_login_at: Date.now(),
-    });
-  },
-});
-
-export const handleSuccessfulLoginPublic = mutation({
   args: { userId: v.id("auth_users") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.userId, {

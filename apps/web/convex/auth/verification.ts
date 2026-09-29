@@ -3,187 +3,83 @@
 import { action } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
-import crypto from "crypto";
 import { internal } from "../_generated/api";
-import { api } from "../_generated/api";
-import { validateEmail } from "./validators";
+import { issueClaimGrant, sha256Hex } from "./crypto";
+import { CLAIM_SCOPE_ACCOUNT } from "./constants";
+import { issueVerificationCode } from "./_codeService";
 
-// 10 min expiry, 5 max attempts, 60s cooldown between sends
-const CODE_EXPIRY_MS = 10 * 60 * 1000;
-const CODE_COOLDOWN_MS = 60 * 1000;
-const MAX_VERIFY_ATTEMPTS = 5;
+// `requestEmailCode` and `resendEmailCode` both delegate to
+// `_codeService.issueVerificationCode`, which owns generation, throttling,
+// hashing and delivery.
 
-function generateCode(): string {
-  // Crypto-secure 6-digit code
-  return crypto.randomInt(100000, 1000000).toString();
-}
-
-async function assertNotRateLimited(ctx: any, email: string) {
-  const existing = (await ctx.runQuery(internal.auth.verificationInternal.getByEmail, {
-    email,
-  })) as { expires_at: number } | null;
-  if (existing) {
-    const elapsed = Date.now() - (existing.expires_at - CODE_EXPIRY_MS);
-    if (elapsed < CODE_COOLDOWN_MS && elapsed >= 0) {
-      const waitSec = Math.ceil((CODE_COOLDOWN_MS - elapsed) / 1000);
-      throw new ConvexError({ code: "RATE_LIMITED", message: `Please wait ${waitSec}s before requesting another code.` });
-    }
-  }
-}
-
-/**
- * Request verification code — stores code and mocks email send via jhosepjamil@gmail.com
- * In production, replace console.log with Resend/Nodemailer using SMTP.
- */
 export const requestEmailCode: ReturnType<typeof action> = action({
   args: { email: v.string() },
-  handler: async (ctx, args): Promise<{ sent: boolean; expiresAt: number }> => {
-    const cleanEmail = validateEmail(args.email);
-
-    // Block only if already fully verified (active account)
-    const existing = (await ctx.runQuery(api.auth.queries.getUserByEmail, {
-      email: cleanEmail,
-    })) as { email_verified_at?: number } | null;
-    if (existing?.email_verified_at) throw new ConvexError("Email is already registered.");
-
-    await assertNotRateLimited(ctx, cleanEmail);
-
-    const code = generateCode();
-    const expiresAt = Date.now() + CODE_EXPIRY_MS;
-
-    await ctx.runMutation(internal.auth.verificationInternal.upsertCode, {
-      email: cleanEmail,
-      code,
-      expires_at: expiresAt,
-    });
-
-    // Dispatch email via Resend if configured, otherwise mock log
-    const resendKey = process.env.RESEND_API_KEY;
-    if (resendKey) {
-      try {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: process.env.RESEND_FROM ?? "Joti <onboarding@resend.dev>",
-            reply_to: "jhosepjamil@gmail.com",
-            to: [cleanEmail],
-            subject: "Your Joti verification code",
-            html: `<p>Your verification code is <strong>${code}</strong>. It expires in 10 minutes.</p><p>If you did not request this, ignore this email.</p>`,
-            text: `Your Joti verification code is ${code}. It expires in 10 minutes.`,
-          }),
-        });
-        if (!res.ok) {
-          const body = await res.text();
-          console.warn(`[Email][Resend] failed ${res.status}: ${body} — falling back to log`);
-          console.log(`[Email] From: jhosepjamil@gmail.com -> To: ${cleanEmail} | Code: ${code}`);
-        }
-      } catch (e) {
-        console.warn("[Email][Resend] exception", e);
-        console.log(`[Email] From: jhosepjamil@gmail.com -> To: ${cleanEmail} | Code: ${code}`);
-      }
-    } else {
-      console.log(
-        `[Email] From: jhosepjamil@gmail.com -> To: ${cleanEmail} | Code: ${code} | Expires: ${new Date(expiresAt).toISOString()}`,
-      );
-    }
-
+  handler: async (ctx, args) => {
+    const { expiresAt } = await issueVerificationCode(ctx, args.email);
     return { sent: true, expiresAt };
-  },
-});
-
-export const confirmEmailCode: ReturnType<typeof action> = action({
-  args: { email: v.string(), code: v.string() },
-  handler: async (ctx, args): Promise<{ verified: boolean }> => {
-    const cleanEmail = validateEmail(args.email);
-    const cleanCode = args.code.trim();
-
-    if (!/^\d{6}$/.test(cleanCode)) throw new ConvexError("Code must be 6 digits.");
-
-    const result: { verified: boolean } = await ctx.runMutation(
-      internal.auth.verificationInternal.verifyCode,
-      {
-        email: cleanEmail,
-        code: cleanCode,
-      },
-    );
-
-    if (!result.verified) throw new ConvexError("Invalid or expired code.");
-
-    // Activate pending account (set email_verified_at)
-    await ctx.runMutation(internal.auth.mutations.activateUser, { email: cleanEmail });
-
-    return { verified: true };
   },
 });
 
 export const resendEmailCode: ReturnType<typeof action> = action({
   args: { email: v.string() },
-  handler: async (ctx, args): Promise<{ sent: boolean; expiresAt: number }> => {
-    const cleanEmail = validateEmail(args.email);
-
-    const verified = (await ctx.runQuery(api.auth.queries.getUserByEmail, {
-      email: cleanEmail,
-    })) as { email_verified_at?: number } | null;
-    if (verified?.email_verified_at) throw new ConvexError("Email is already registered.");
-
-    await assertNotRateLimited(ctx, cleanEmail);
-
-    const code = generateCode();
-    const expiresAt = Date.now() + CODE_EXPIRY_MS;
-
-    await ctx.runMutation(internal.auth.verificationInternal.upsertCode, {
-      email: cleanEmail,
-      code,
-      expires_at: expiresAt,
-    });
-
-    const resendKey2 = process.env.RESEND_API_KEY;
-    if (resendKey2) {
-      try {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey2}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: process.env.RESEND_FROM ?? "Joti <onboarding@resend.dev>",
-            reply_to: "jhosepjamil@gmail.com",
-            to: [cleanEmail],
-            subject: "Your Joti verification code (resend)",
-            html: `<p>Your verification code is <strong>${code}</strong>. It expires in 10 minutes.</p>`,
-            text: `Your Joti verification code is ${code}. It expires in 10 minutes.`,
-          }),
-        });
-        if (!res.ok) {
-          const body = await res.text();
-          console.warn(`[Email][Resend] failed ${res.status}: ${body}`);
-          console.log(`[Email][Resend] From: jhosepjamil@gmail.com -> To: ${cleanEmail} | Code: ${code}`);
-        }
-      } catch (e) {
-        console.warn("[Email][Resend] exception", e);
-        console.log(`[Email][Resend] From: jhosepjamil@gmail.com -> To: ${cleanEmail} | Code: ${code}`);
-      }
-    } else {
-      console.log(`[Email][Resend] From: jhosepjamil@gmail.com -> To: ${cleanEmail} | Code: ${code}`);
-    }
-
+  handler: async (ctx, args) => {
+    const { expiresAt } = await issueVerificationCode(ctx, args.email);
     return { sent: true, expiresAt };
   },
 });
 
-// Helper query to check if email is already verified (for login gate)
-export const isEmailVerified: ReturnType<typeof action> = action({
-  args: { email: v.string() },
-  handler: async (ctx, args): Promise<boolean> => {
-    const cleanEmail = validateEmail(args.email);
-    const record = (await ctx.runQuery(internal.auth.verificationInternal.getByEmail, {
+/**
+ * Confirms possession of the emailed code.
+ *
+ * SECURITY: the comparison is a constant-time digest check inside
+ * `verificationInternal.verifyCode`, and wrong guesses decrement a per-record
+ * attempt counter (5 max) that is only reset when a fresh code is issued. A
+ * successful check burns the code, so a captured request cannot be replayed.
+ */
+export const confirmEmailCode: ReturnType<typeof action> = action({
+  args: { email: v.string(), code: v.string() },
+  handler: async (ctx, args) => {
+    const cleanEmail = args.email.trim().toLowerCase();
+    const cleanCode = args.code.trim();
+
+    if (!/^\d{6}$/.test(cleanCode)) {
+      throw new ConvexError({ code: "VALIDATION_ERROR", message: "Code must be 6 digits." });
+    }
+
+    const result = (await ctx.runMutation(
+      internal.auth.verificationInternal.verifyCode,
+      { email: cleanEmail, code: cleanCode, code_hash: sha256Hex(cleanCode) },
+    )) as { verified: boolean };
+
+    if (!result.verified) {
+      throw new ConvexError("Invalid or expired code.");
+    }
+
+    // Redeeming the code is proof of address ownership, so mint the claim grant
+    // that the remaining wizard steps (avatar upload, profile submit) require.
+    // This replaces what used to be implicit trust in "the caller knows a
+    // verified email".
+    const claim = issueClaimGrant();
+
+    await ctx.runMutation(internal.auth.claimGrants.issue, {
       email: cleanEmail,
-    })) as { verified_at?: number } | null;
-    return Boolean(record?.verified_at);
+      scope: CLAIM_SCOPE_ACCOUNT,
+      token_hash: sha256Hex(claim),
+    });
+
+    // Safety net for pre-existing rows that were created without being marked
+    // verified. Accounts are now only created after this point, so the lookup
+    // usually finds nothing and `activateUser` throws "Account not found." --
+    // that is the expected case, not a failure.
+    await ctx
+      .runMutation(internal.auth.mutations.activateUser, { email: cleanEmail })
+      .catch(() => undefined);
+
+    return { verified: true, claim };
   },
 });
+
+// isEmailVerified was REMOVED.
+//
+// It was a public action whose only job was to report whether an address had a
+// verification record -- a direct account-existence oracle. Nothing called it.

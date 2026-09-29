@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { storeAccountGrant } from "../../utils/claim-store";
 import { StepIndicator } from "./step-indicator";
 import { Step1Credentials } from "./step-1-credentials";
 import { VerifyCode } from "./verify-code";
@@ -15,10 +16,22 @@ export const RegisterFlow: React.FC = () => {
   const flow = useRegisterFlow();
   const router = useRouter();
 
+  /**
+   * The account now exists and the profile is complete, which is the precondition
+   * for the first space, so onboarding continues there instead of bouncing back
+   * to the login page. `completeProfile` burns the claim it was given and
+   * returns the one that step needs.
+   */
   const handleFinal = async () => {
     try {
-      await flow.handleFinalSubmit();
-      router.push("/auth/login?registered=1");
+      const result = (await flow.handleFinalSubmit()) as { claim?: string } | null;
+      const email = flow.data.email.trim().toLowerCase();
+      if (result?.claim) {
+        storeAccountGrant(email, result.claim);
+        router.push("/spaces/new");
+      } else {
+        router.push("/auth/login?registered=1");
+      }
     } catch {
       // error already in flow.errors
     }

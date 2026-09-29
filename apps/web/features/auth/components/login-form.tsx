@@ -15,8 +15,8 @@ export const LoginForm: React.FC = () => {
     errors,
     isLoading,
     isOAuthLoading,
+    isEntering,
     requiresActivation,
-    requiresProfile,
     activationCode,
     setActivationCode,
     pendingEmail,
@@ -68,18 +68,8 @@ export const LoginForm: React.FC = () => {
         </div>
       )}
 
-      {/* Profile Incomplete */}
-      {requiresProfile && pendingEmail && (
-        <div className="mb-6 p-4 bg-surface border border-border rounded-2xl space-y-3">
-          <p className="text-xs text-text-secondary">Account verified but profile incomplete. You must complete your profile to continue.</p>
-          <Link href={`/auth/complete-profile?email=${encodeURIComponent(pendingEmail)}`} className="block">
-            <Button variant="primary" className="w-full h-9 rounded-full text-xs">Complete Profile</Button>
-          </Link>
-        </div>
-      )}
-
       {/* Traditional Form */}
-      <form onSubmit={handleCredentialsSubmit} className="space-y-5" noValidate>
+      <form onSubmit={handleCredentialsSubmit} className="space-y-5" noValidate aria-busy={isEntering}>
         {/* Email Field */}
         <div className="space-y-2.5">
           <Label htmlFor="email" className="inline-block mb-1">
@@ -133,7 +123,7 @@ export const LoginForm: React.FC = () => {
           <Button
             type="submit"
             variant="primary"
-            isLoading={isLoading}
+            isLoading={isLoading || isEntering}
             disabled={isOAuthLoading}
             className="w-full h-12 text-sm font-medium rounded-full"
           >

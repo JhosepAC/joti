@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useAction, useMutation } from "convex/react";
+import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { getAuthErrorCode, getAuthErrorMessage } from "../utils/get-auth-error-message";
 import {
@@ -57,12 +57,16 @@ export function useRegisterFlow() {
   const [isVerified, setIsVerified] = useState(false);
   const [codeExpiresAt, setCodeExpiresAt] = useState<number | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
+  // Short-lived proof of address ownership, returned by confirmEmailCode and
+  // required by both the avatar upload and the final profile submit. Held in
+  // memory only -- never persisted or put in a URL.
+  const [claim, setClaim] = useState<string | null>(null);
 
   const registerPendingAction = useAction(api.auth.actions.registerPending);
   const requestCodeAction = useAction(api.auth.verification.requestEmailCode);
   const confirmCodeAction = useAction(api.auth.verification.confirmEmailCode);
   const completeProfileAction = useAction(api.auth.actions.completeProfile);
-  const generateUploadUrl = useMutation(api.auth.storage.generateAvatarUploadUrl);
+  const generateUploadUrl = useAction(api.auth.storage.generateAvatarUploadUrl);
 
   const updateField = useCallback(
     <K extends keyof RegisterFlowData>(field: K, value: RegisterFlowData[K]) => {
@@ -166,7 +170,11 @@ export function useRegisterFlow() {
     }
     setIsLoading(true);
     try {
-      await confirmCodeAction({ email: data.email.trim().toLowerCase(), code: code.trim() });
+      const res = (await confirmCodeAction({
+        email: data.email.trim().toLowerCase(),
+        code: code.trim(),
+      })) as { claim?: string };
+      if (res?.claim) setClaim(res.claim);
       setIsVerified(true);
       setStep(2);
       setErrors({});
@@ -251,7 +259,15 @@ export function useRegisterFlow() {
           setErrors({ avatar: "Please upload an image file", general: "Please upload an image file" });
           throw new Error("Please upload an image file");
         }
-        const uploadUrl = await generateUploadUrl({});
+        if (!claim) {
+          const msg = "Your verification session expired. Please request a new code.";
+          setErrors({ general: msg, avatar: msg });
+          throw new Error(msg);
+        }
+        const uploadUrl = await generateUploadUrl({
+          email: data.email.trim().toLowerCase(),
+          claim,
+        });
         const res = await fetch(uploadUrl as string, {
           method: "POST",
           headers: { "Content-Type": data.avatarFile.type || "image/png" },
@@ -262,10 +278,20 @@ export function useRegisterFlow() {
         avatar = json.storageId;
       }
 
+      if (!claim) {
+        const msg = "Your verification session expired. Please request a new code.";
+        setErrors({ general: msg });
+        throw new Error(msg);
+      }
+
       const result = await completeProfileAction({
         email: data.email.trim().toLowerCase(),
+        claim,
         username: data.username.trim().toLowerCase(),
         display_name: data.displayName.trim(),
+        // The account row is only created here, once the address has been
+        // proven, so the password collected back in step 1 is committed now.
+        password: data.password,
         bio: data.bio.trim() || undefined,
         avatar,
         locale: "system",

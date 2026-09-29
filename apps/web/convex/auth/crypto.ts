@@ -1,82 +1,136 @@
 "use node";
 
-import { action } from "../_generated/server";
-import { v } from "convex/values";
 import bcrypt from "bcryptjs";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+  timingSafeEqual,
+} from "node:crypto";
 import { BCRYPT_COST } from "./constants";
 
-// ──────────────────────────────────────────────────────────
-// Password hashing — bcryptjs (pure JS, compatible with Convex Node runtime)
-// Previously Argon2id via @node-rs/argon2 required native .node bindings
-// which Convex bundler (esbuild) cannot load. bcrypt with cost 12 is OWASP-approved
-// alternative; swap to Argon2id via @noble/hashes/argon2 if needed later.
-// ──────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// SECURITY: everything in convex/ that is `export`ed becomes part of the PUBLIC
+// API and is callable by anyone on the internet. These helpers are therefore
+// plain module functions (NOT Convex `action`s) so they are never exposed.
+// ---------------------------------------------------------------------------
 
-export const hashPassword = action({
-  args: { password: v.string() },
-  handler: async (_, args) => {
-    const salt = await bcrypt.genSalt(BCRYPT_COST);
-    return await bcrypt.hash(args.password, salt);
-  },
-});
+// --- Password hashing ---
+// bcryptjs (pure JS) because Convex' esbuild bundler cannot load the native
+// .node bindings required by @node-rs/argon2. Cost 12 is OWASP-approved.
 
-export const verifyPassword = action({
-  args: { password: v.string(), hash: v.string() },
-  handler: async (_, args) => {
-    return await bcrypt.compare(args.password, args.hash);
-  },
-});
-
-// ──────────────────────────────────────────────────────────
-// Token encryption — AES-256-GCM for OAuth tokens at rest
-// Uses Node `crypto`; key must be set as CONVEX env TOKEN_ENCRYPTION_KEY (32 bytes hex/base64)
-// Falls back to no-op in dev if key is missing.
-// ──────────────────────────────────────────────────────────
-
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
-
-function getEncryptionKey(): Buffer | null {
-  const raw = process.env.TOKEN_ENCRYPTION_KEY;
-  if (!raw) return null;
-  if (/^[0-9a-fA-F]{64}$/.test(raw)) return Buffer.from(raw, "hex");
-  try {
-    const buf = Buffer.from(raw, "base64");
-    if (buf.length === 32) return buf;
-  } catch {
-    // ignore
-  }
-  const buf = Buffer.alloc(32);
-  Buffer.from(raw, "utf8").copy(buf);
-  return buf;
+export async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(BCRYPT_COST);
+  return await bcrypt.hash(password, salt);
 }
 
-export const encryptToken = action({
-  args: { token: v.string() },
-  handler: async (_, args) => {
-    const key = getEncryptionKey();
-    if (!key) return args.token;
-    const iv = randomBytes(12);
-    const cipher = createCipheriv("aes-256-gcm", key, iv);
-    const encrypted = Buffer.concat([cipher.update(args.token, "utf8"), cipher.final()]);
-    const tag = cipher.getAuthTag();
-    return `${iv.toString("base64")}:${tag.toString("base64")}:${encrypted.toString("base64")}`;
-  },
-});
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return await bcrypt.compare(password, hash);
+}
 
-export const decryptToken = action({
-  args: { encrypted: v.string() },
-  handler: async (_, args) => {
-    const key = getEncryptionKey();
-    if (!key) return args.encrypted;
-    const parts = args.encrypted.split(":");
-    if (parts.length !== 3) return args.encrypted;
-    const [ivB64, tagB64, dataB64] = parts as [string, string, string];
-    const iv = Buffer.from(ivB64!, "base64");
-    const tag = Buffer.from(tagB64!, "base64");
-    const data = Buffer.from(dataB64!, "base64");
-    const decipher = createDecipheriv("aes-256-gcm", key, iv);
-    decipher.setAuthTag(tag);
-    const decrypted = Buffer.concat([decipher.update(data), decipher.final()]);
-    return decrypted.toString("utf8");
-  },
-});
+/**
+ * A real bcrypt hash of a value nobody knows, used to equalize response time on
+ * the "account does not exist" path so login duration does not leak whether an
+ * address is registered. It is a valid hash, so `bcrypt.compare` performs the
+ * same work it would for a genuine account.
+ */
+export const DUMMY_PASSWORD_HASH =
+  "$2b$12$1pawnVJPZnMxGGHyfijNnO0bFw.kpZ3ooYP7985g2EtehWyOzKE42";
+
+/**
+ * Burns the same CPU as a real password check without ever affecting the result.
+ * Failures are swallowed on purpose: this is a side-effect-only defence against
+ * timing oracles and must not change the caller's control flow.
+ */
+export async function equalizePasswordTiming(password: string): Promise<void> {
+  try {
+    await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
+  } catch {
+    // Intentionally ignored.
+  }
+}
+
+// --- Token encryption at rest (AES-256-GCM) ---
+
+const KEY_BYTES = 32;
+const TOKEN_VERSION = "v1";
+
+/**
+ * Resolves TOKEN_ENCRYPTION_KEY. Throws instead of degrading to a weak or
+ * absent key: a silent no-op here would store OAuth tokens in plaintext.
+ */
+function getEncryptionKey(): Buffer {
+  const raw = process.env.TOKEN_ENCRYPTION_KEY;
+  if (!raw || raw.trim().length === 0) {
+    throw new Error(
+      "TOKEN_ENCRYPTION_KEY is not set. Refusing to store OAuth tokens unencrypted.",
+    );
+  }
+  const trimmed = raw.trim();
+  if (/^[0-9a-fA-F]{64}$/.test(trimmed)) {
+    return Buffer.from(trimmed, "hex");
+  }
+  const fromBase64 = Buffer.from(trimmed, "base64");
+  if (fromBase64.length === KEY_BYTES) {
+    return fromBase64;
+  }
+  throw new Error(
+    "TOKEN_ENCRYPTION_KEY must be exactly 32 bytes, encoded as 64 hex characters or base64.",
+  );
+}
+
+export function encryptToken(plaintext: string): string {
+  const key = getEncryptionKey();
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  return [
+    TOKEN_VERSION,
+    iv.toString("base64"),
+    cipher.getAuthTag().toString("base64"),
+    ciphertext.toString("base64"),
+  ].join(":");
+}
+
+export function decryptToken(payload: string): string {
+  const parts = payload.split(":");
+  if (parts.length !== 4 || parts[0] !== TOKEN_VERSION) {
+    throw new Error("Malformed encrypted token payload.");
+  }
+  const key = getEncryptionKey();
+  const decipher = createDecipheriv(
+    "aes-256-gcm",
+    key,
+    Buffer.from(parts[1] as string, "base64"),
+  );
+  decipher.setAuthTag(Buffer.from(parts[2] as string, "base64"));
+  const plaintext = Buffer.concat([
+    decipher.update(Buffer.from(parts[3] as string, "base64")),
+    decipher.final(),
+  ]);
+  return plaintext.toString("utf8");
+}
+
+// --- Digests ---
+
+export function sha256Hex(raw: string): string {
+  return createHash("sha256").update(raw, "utf8").digest("hex");
+}
+
+/** Raw claim-grant token: 32 bytes of CSPRNG entropy, base64url encoded. */
+export function issueClaimGrant(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+/** Constant-time string comparison for secrets of equal expected length. */
+export function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, "utf8");
+  const bufB = Buffer.from(b, "utf8");
+  if (bufA.length !== bufB.length) {
+    // Still burn a comparison so length mismatches are not measurably faster.
+    timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
+}
