@@ -56,7 +56,7 @@ export default defineSchema({
   auth_email_verifications: defineTable({
     email: v.string(), // normalized lowercase
     code: v.optional(v.string()), // legacy plaintext, always undefined on new rows
-    code_hash: v.optional(v.string()), // SHA-256 hex of the 6-digit code
+    code_hash: v.optional(v.string()), // peppered SHA-256 hex of the 6-digit code (see auth/crypto hashEmailCode)
     expires_at: v.number(), // ms timestamp
     attempts: v.number(), // default 0
     verified_at: v.optional(v.number()),

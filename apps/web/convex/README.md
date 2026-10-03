@@ -38,6 +38,7 @@ Deliberately small, and none of it returns credential material:
 | `actions.register` | Verify address → hash → create user + profile atomically. |
 | `actions.completeProfile` | Wizard step 4 / post-login gate. Requires a claim grant. Returns the next grant. |
 | `actions.login` | Password check + lockout accounting. Returns a claim grant. |
+| `actions.logout` | Best-effort burn of presented grants. Always answers identically. |
 | `verification.requestEmailCode` / `resendEmailCode` | Issue and email a code. |
 | `verification.confirmEmailCode` | Redeem a code. Returns a claim grant. |
 | `passwordReset.requestPasswordReset` | Email a one-time reset link. |
@@ -222,10 +223,13 @@ Account-level brute force is handled separately by the lockout in
 ## Verification codes
 
 - Generated with `crypto.randomInt` (CSPRNG), 6 digits, 10-minute expiry.
-- Stored **only as a SHA-256 digest** (`code_hash`). A database dump or a log
-  entry therefore does not hand out live codes. The legacy plaintext `code`
+- Stored **only as a peppered SHA-256 digest** (`code_hash`, see
+  `auth/crypto.hashEmailCode`). A database dump or a log entry therefore does
+  not hand out live codes, and the digest cannot be brute-forced offline
+  without the server-side `EMAIL_CODE_PEPPER`. The legacy plaintext `code`
   column is still readable so existing rows keep working, and the next issuance
-  migrates them.
+  migrates them. Rows issued just before the pepper was introduced verify
+  through a short grace-period digest and are migrated on re-issue.
 - Compared in constant time (`constantTimeEqual` in `verificationInternal.ts`).
 - 5 wrong guesses per issued code; the counter resets only when a new code is
   issued.
@@ -337,6 +341,7 @@ fail at runtime, not at push time:
 
 ```bash
 npx convex env set TOKEN_ENCRYPTION_KEY <64 hex chars>   # 32 bytes, or encryptToken throws
+npx convex env set EMAIL_CODE_PEPPER    <32+ char secret> # pepper for verification-code digests
 npx convex env set GOOGLE_CLIENT_ID     <client id>
 npx convex env set GOOGLE_CLIENT_SECRET <client secret>
 npx convex env set RESEND_API_KEY       <api key>

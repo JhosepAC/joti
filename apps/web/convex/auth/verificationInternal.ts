@@ -6,8 +6,8 @@ import { VERIFICATION_MAX_ATTEMPTS } from "./constants";
 // ---------------------------------------------------------------------------
 // This module runs in the V8 isolate, so it must not import anything that
 // touches `node:*` (bcryptjs, node:crypto). The caller -- the Node action in
-// verification.ts -- hashes the code and passes the digest in, and the
-// comparison below is pure JS.
+// verification.ts -- hashes the code (peppered) and passes the digests in,
+// and the comparisons below are pure JS.
 // ---------------------------------------------------------------------------
 
 /** Length-independent, data-independent string comparison. */
@@ -23,8 +23,9 @@ function constantTimeEqual(a: string, b: string): boolean {
 export const upsertCode = internalMutation({
   args: { email: v.string(), code_hash: v.string(), expires_at: v.number() },
   handler: async (ctx, args) => {
-    // Only the SHA-256 digest is persisted, so a leaked database dump or log
-    // entry does not hand out live verification codes.
+    // Only the peppered SHA-256 digest is persisted, so a leaked database dump
+    // or log entry does not hand out live verification codes (and cannot be
+    // brute-forced offline without the server-side pepper).
     const existing = await ctx.db
       .query("auth_email_verifications")
       .withIndex("by_email", (q) => q.eq("email", args.email))
@@ -52,7 +53,12 @@ export const upsertCode = internalMutation({
 });
 
 export const verifyCode = internalMutation({
-  args: { email: v.string(), code: v.string(), code_hash: v.string() },
+  args: {
+    email: v.string(),
+    code: v.string(),
+    code_hash: v.string(),
+    code_hash_legacy: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const record = await ctx.db
       .query("auth_email_verifications")
@@ -65,13 +71,22 @@ export const verifyCode = internalMutation({
       throw new ConvexError("Too many attempts. Request a new code.");
     }
 
+    const matchesPeppered =
+      record.code_hash !== undefined && constantTimeEqual(record.code_hash, args.code_hash);
+    const matchesLegacy =
+      !matchesPeppered &&
+      args.code_hash_legacy !== undefined &&
+      record.code_hash !== undefined &&
+      constantTimeEqual(record.code_hash, args.code_hash_legacy);
     const matches =
-      record.code_hash !== undefined
-        ? constantTimeEqual(record.code_hash, args.code_hash)
-        : // Legacy row written before codes were hashed: compare the raw code
-          // in constant time so the path stays timing-safe, then let the next
-          // upsert migrate the row to a digest.
-          record.code !== undefined && constantTimeEqual(record.code, args.code);
+      matchesPeppered ||
+      matchesLegacy ||
+      (record.code_hash === undefined &&
+        // Legacy row written before codes were hashed: compare the raw code
+        // in constant time so the path stays timing-safe, then let the next
+        // upsert migrate the row to a digest.
+        record.code !== undefined &&
+        constantTimeEqual(record.code, args.code));
 
     if (!matches) {
       await ctx.db.patch(record._id, { attempts: record.attempts + 1 });
