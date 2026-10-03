@@ -7,6 +7,7 @@ import { internal } from "../_generated/api";
 import { hashEmailCode, hashEmailCodeLegacy, issueClaimGrant, sha256Hex } from "./crypto";
 import { CLAIM_SCOPE_ACCOUNT } from "./constants";
 import { issueVerificationCode } from "./_codeService";
+import { validateEmail } from "./validators";
 
 // `requestEmailCode` and `resendEmailCode` both delegate to
 // `_codeService.issueVerificationCode`, which owns generation, throttling,
@@ -39,7 +40,9 @@ export const resendEmailCode: ReturnType<typeof action> = action({
 export const confirmEmailCode: ReturnType<typeof action> = action({
   args: { email: v.string(), code: v.string() },
   handler: async (ctx, args) => {
-    const cleanEmail = args.email.trim().toLowerCase();
+    // Canonical validation, not trim-only: overlong or malformed addresses
+    // must not reach the DB lookup or mint grants for junk rows.
+    const cleanEmail = validateEmail(args.email);
     const cleanCode = args.code.trim();
 
     if (!/^\d{6}$/.test(cleanCode)) {

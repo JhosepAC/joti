@@ -3,6 +3,7 @@ import { ConvexError } from "convex/values";
 import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
 import { completeGoogleLogin, verifySignedState } from "../../auth/_oauthShared";
+import { getAppUrl } from "../../auth/appUrl";
 import { validateEmail } from "../../auth/validators";
 
 /**
@@ -26,10 +27,7 @@ import { validateEmail } from "../../auth/validators";
  */
 export const googleCallback = httpAction(async (ctx, request) => {
   const url = new URL(request.url);
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
-    /\/+$/,
-    "",
-  );
+  const appUrl = getAppUrl();
 
   const fail = (reason: string) =>
     Response.redirect(`${appUrl}/auth/login?error=${encodeURIComponent(reason)}`, 302);

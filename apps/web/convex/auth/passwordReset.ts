@@ -14,8 +14,8 @@ import {
 } from "./constants";
 import { validateEmail, validatePassword } from "./validators";
 import { hashPassword, sha256Hex, verifyPassword } from "./crypto";
+import { getAppUrl } from "./appUrl";
 import {
-  getAppUrl,
   sendOAuthOnlyAccountNotice,
   sendPasswordChangedEmail,
   sendPasswordResetEmail,
@@ -239,18 +239,21 @@ export const resetPassword: ReturnType<typeof action> = action({
 /** Lets the UI show an expired/invalid state before rendering the form. */
 export const verifyResetToken: ReturnType<typeof action> = action({
   args: { token: v.string() },
-  handler: async (ctx, args): Promise<{ valid: boolean; email?: string; expiresAt?: number }> => {
+  handler: async (ctx, args): Promise<{ valid: boolean; expiresAt?: number }> => {
     const raw = args.token.trim();
     if (!raw) return { valid: false };
 
     const record = (await ctx.runQuery(
       internal.auth.passwordResetInternal.getByTokenHash,
       { token_hash: sha256Hex(raw) },
-    )) as { email: string; expires_at: number; used_at?: number } | null;
+    )) as { expires_at: number; used_at?: number } | null;
 
     if (!record) return { valid: false };
     if (record.used_at) return { valid: false };
     if (record.expires_at < Date.now()) return { valid: false };
-    return { valid: true, email: record.email, expiresAt: record.expires_at };
+    // Deliberately no email: the token is already sufficient for takeover,
+    // so echoing the address would only widen history/log exposure. The
+    // consuming `resetPassword` resolves the address server-side.
+    return { valid: true, expiresAt: record.expires_at };
   },
 });

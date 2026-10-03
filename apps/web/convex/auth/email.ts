@@ -65,14 +65,6 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-export function getAppUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000"
-  ).replace(/\/+$/, "");
-}
-
 export async function sendVerificationCodeEmail(
   to: string,
   code: string,

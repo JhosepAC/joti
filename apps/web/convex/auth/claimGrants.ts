@@ -151,3 +151,25 @@ export const clearByEmail = internalMutation({
     return { removed: rows.length };
   },
 });
+
+/**
+ * Deletes dead grants: expired ones, which can never validate again. Runs on
+ * a schedule (see convex/crons.ts) so the table stays bounded -- every `issue`
+ * already supersedes live siblings, so only leftovers of abandoned flows
+ * accumulate here.
+ */
+export const deleteExpired = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const rows = await ctx.db.query("auth_claim_grants").collect();
+    let deleted = 0;
+    for (const row of rows) {
+      if (row.expires_at < now) {
+        await ctx.db.delete(row._id);
+        deleted += 1;
+      }
+    }
+    return { deleted };
+  },
+});
