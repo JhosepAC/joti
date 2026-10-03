@@ -342,6 +342,8 @@ fail at runtime, not at push time:
 ```bash
 npx convex env set TOKEN_ENCRYPTION_KEY <64 hex chars>   # 32 bytes, or encryptToken throws
 npx convex env set EMAIL_CODE_PEPPER    <32+ char secret> # pepper for verification-code digests
+npx convex env set OAUTH_STATE_SECRET   <32+ char secret> # HMAC key for OAuth state (independent)
+npx convex env set NEXT_PUBLIC_APP_URL  <app origin>      # e.g. http://localhost:3002 in dev
 npx convex env set GOOGLE_CLIENT_ID     <client id>
 npx convex env set GOOGLE_CLIENT_SECRET <client secret>
 npx convex env set RESEND_API_KEY       <api key>
