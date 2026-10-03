@@ -161,7 +161,7 @@ export const register: ReturnType<typeof action> = action({
 // ---------------------------------------------------------------------------
 
 export const registerPending = action({
-  args: { email: v.string(), password: v.optional(v.string()) },
+  args: { email: v.string(), password: v.optional(v.string()), locale: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const cleanEmail = validateEmail(args.email);
     if (args.password !== undefined) {
@@ -173,7 +173,7 @@ export const registerPending = action({
     // and delivery, so there is exactly one send path (and one place where
     // secrets stay out of the logs). It enforces the per-address cooldown and
     // hourly cap before doing any work, and no password is ever persisted here.
-    const { expiresAt } = await issueVerificationCode(ctx, cleanEmail);
+    const { expiresAt } = await issueVerificationCode(ctx, cleanEmail, args.locale);
 
     // Uniform response shape. Deliberately no `alreadyRegistered` flag: that
     // would be a free account-existence oracle for unauthenticated callers.

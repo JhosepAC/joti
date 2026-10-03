@@ -21,6 +21,7 @@ import type { DataModel } from "../_generated/dataModel";
 import { validateEmail } from "./validators";
 import { hashEmailCode } from "./crypto";
 import { sendVerificationCodeEmail } from "./email";
+import { resolveEmailLocale } from "./emailCopy";
 import {
   VERIFICATION_CODE_COOLDOWN_MS,
   VERIFICATION_CODE_EXPIRY_MS,
@@ -46,8 +47,10 @@ type Ctx = GenericActionCtx<DataModel>;
 export async function issueVerificationCode(
   ctx: Ctx,
   rawEmail: string,
+  rawLocale?: string,
 ): Promise<{ expiresAt: number }> {
   const email = validateEmail(rawEmail);
+  const locale = resolveEmailLocale(rawLocale);
 
   // Cooldown first, then the hourly cap, so a burst cannot fan out into
   // hundreds of provider calls.
@@ -82,7 +85,7 @@ export async function issueVerificationCode(
     expires_at: expiresAt,
   });
 
-  const delivery = await sendVerificationCodeEmail(email, code);
+  const delivery = await sendVerificationCodeEmail(email, code, locale);
   if (!delivery.delivered) {
     // Roll back the row so a later retry (once the provider is fixed) starts
     // clean instead of tripping over this attempt's cooldown. The hourly send

@@ -16,6 +16,7 @@ import { validateEmail, validatePassword } from "./validators";
 import { hashPassword, sha256Hex, verifyPassword } from "./crypto";
 import { getAppUrl } from "./appUrl";
 import {
+  resolveEmailLocale,
   sendOAuthOnlyAccountNotice,
   sendPasswordChangedEmail,
   sendPasswordResetEmail,
@@ -83,9 +84,12 @@ async function consumeResetQuota(
  * EMAIL_DELIVERY_FAILED instead of reporting a success that never happened.
  */
 export const requestPasswordReset: ReturnType<typeof action> = action({
-  args: { email: v.string() },
+  args: { email: v.string(), locale: v.optional(v.string()) },
   handler: async (ctx, args): Promise<{ sent: boolean }> => {
     const cleanEmail = validateEmail(args.email);
+    // Presentation locale for the email body; unknown values fall back to
+    // Spanish, matching the app fallback.
+    const locale = resolveEmailLocale(args.locale);
 
     // Throttle BEFORE the account lookup, identically for both branches (see
     // consumeResetQuota): the check costs the same indexed reads either way,
@@ -101,7 +105,7 @@ export const requestPasswordReset: ReturnType<typeof action> = action({
     }
 
     if (!user.password_hash) {
-      const delivery = await sendOAuthOnlyAccountNotice(cleanEmail);
+      const delivery = await sendOAuthOnlyAccountNotice(cleanEmail, locale);
       if (!delivery.delivered) {
         // No row was created on this path, so there is nothing to roll back;
         // surface the failure instead of a fake success (see below).
@@ -125,7 +129,7 @@ export const requestPasswordReset: ReturnType<typeof action> = action({
     });
 
     const resetLink = `${getAppUrl()}/auth/reset-password?token=${encodeURIComponent(rawToken)}`;
-    const delivery = await sendPasswordResetEmail(cleanEmail, resetLink);
+    const delivery = await sendPasswordResetEmail(cleanEmail, resetLink, locale);
     if (!delivery.delivered) {
       // Roll back the token row so a retry (once the provider is fixed) mints
       // a fresh link instead of tripping over this attempt. The hourly quota
@@ -152,9 +156,11 @@ export const resetPassword: ReturnType<typeof action> = action({
     token: v.string(),
     password: v.string(),
     confirmPassword: v.optional(v.string()),
+    locale: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{ success: boolean }> => {
     const rawToken = args.token.trim();
+    const locale = resolveEmailLocale(args.locale);
     if (!rawToken) {
       throw new ConvexError({ code: "VALIDATION_ERROR", message: "Reset token is required." });
     }
@@ -230,7 +236,7 @@ export const resetPassword: ReturnType<typeof action> = action({
       token_hash: tokenHash,
     });
 
-    await sendPasswordChangedEmail(record.email);
+    await sendPasswordChangedEmail(record.email, locale);
 
     return { success: true };
   },

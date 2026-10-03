@@ -14,17 +14,17 @@ import { validateEmail } from "./validators";
 // hashing and delivery.
 
 export const requestEmailCode: ReturnType<typeof action> = action({
-  args: { email: v.string() },
+  args: { email: v.string(), locale: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const { expiresAt } = await issueVerificationCode(ctx, args.email);
+    const { expiresAt } = await issueVerificationCode(ctx, args.email, args.locale);
     return { sent: true, expiresAt };
   },
 });
 
 export const resendEmailCode: ReturnType<typeof action> = action({
-  args: { email: v.string() },
+  args: { email: v.string(), locale: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const { expiresAt } = await issueVerificationCode(ctx, args.email);
+    const { expiresAt } = await issueVerificationCode(ctx, args.email, args.locale);
     return { sent: true, expiresAt };
   },
 });
