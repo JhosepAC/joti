@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { AuthSplitLayout } from "@/features/auth/components/auth-split-layout";
 import { NewSpaceOnboarding } from "@/features/spaces/components/new-space-onboarding";
 
-export const metadata: Metadata = {
-  title: "Tu primer espacio - Joti",
-  description: "Crea el primer espacio de tu cuenta en Joti",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata.spacesNew");
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 export default function NewSpacePage() {
   return (

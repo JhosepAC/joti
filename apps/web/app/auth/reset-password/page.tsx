@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 import { AuthSplitLayout } from "@/features/auth/components/auth-split-layout";
 import { ResetPasswordFlow } from "@/features/auth/components/reset-password-flow";
+import { SuspenseFallback } from "@/components/ui/suspense-fallback";
 
-export const metadata: Metadata = {
-  title: "Reset Password - Joti",
-  description: "Choose a new password for your Joti account",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata.resetPassword");
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 export default function ResetPasswordPage() {
   return (
     <AuthSplitLayout>
-      <Suspense fallback={<div className="w-full max-w-[460px] mx-auto py-8 text-sm text-text-secondary">Loading...</div>}>
+      <Suspense fallback={<SuspenseFallback />}>
         <ResetPasswordFlow />
       </Suspense>
     </AuthSplitLayout>

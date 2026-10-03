@@ -2,7 +2,10 @@
 
 import * as React from "react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ArrowLeftIcon, ArrowRightIcon, LogoutIcon, PlusIcon } from "./icons";
+import { LanguageSwitcher } from "@/i18n/LanguageSwitcher";
+import { useToolLabel } from "../utils/tool-labels";
 import type { SpaceTool } from "../types/space.types";
 
 interface Props {
@@ -95,6 +98,9 @@ export const SpaceSidebar: React.FC<Props> = ({
   onSignOut,
   signingOut,
 }) => {
+  const t = useTranslations("spaces.workspace");
+  const tSidebar = useTranslations("spaces.workspace.sidebar");
+  const toolLabel = useToolLabel();
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
 
   const getToolIcon = (key: string) => {
@@ -107,7 +113,7 @@ export const SpaceSidebar: React.FC<Props> = ({
       className={`fixed left-0 top-0 z-40 h-screen bg-surface border-r border-border transition-all duration-200 ${
         collapsed ? "w-16" : "w-64"
       }`}
-      aria-label="Herramientas del espacio"
+      aria-label={t("sidebar.tools")}
     >
       {/* Space Header */}
       <div
@@ -126,10 +132,11 @@ export const SpaceSidebar: React.FC<Props> = ({
       </div>
 
       {/* Tools List */}
-      <nav className="flex-1 overflow-y-auto p-3" aria-label="Herramientas">
+      <nav className="flex-1 overflow-y-auto p-3" aria-label={t("sidebar.toolsNav")}>
         <ul className="space-y-1" role="list">
           {tools.map((tool) => {
             const isActive = activeTool === tool.key;
+            const label = toolLabel(tool.key, tool.label);
             return (
               <li key={tool.key}>
                 <button
@@ -149,10 +156,10 @@ export const SpaceSidebar: React.FC<Props> = ({
                     }
                     ${collapsed ? "justify-center px-0" : ""}
                   `}
-                  title={collapsed ? tool.label : undefined}
+                  title={collapsed ? label : undefined}
                 >
                   {getToolIcon(tool.key)}
-                  {!collapsed && <span className="truncate">{tool.label}</span>}
+                  {!collapsed && <span className="truncate">{label}</span>}
                   {!collapsed && hoveredTool === tool.key && !isActive && (
                     <button
                       type="button"
@@ -161,7 +168,7 @@ export const SpaceSidebar: React.FC<Props> = ({
                         onCreateNew(tool.key);
                       }}
                       className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-background hover:text-text-primary transition-colors"
-                      aria-label={`Crear nuevo ${tool.label}`}
+                      aria-label={t("content.createNew", { label })}
                     >
                       <PlusIcon className="w-4 h-4" />
                     </button>
@@ -180,17 +187,17 @@ export const SpaceSidebar: React.FC<Props> = ({
           onClick={onSignOut}
           disabled={signingOut}
           className="w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-background hover:text-text-primary transition-colors disabled:opacity-50"
-          aria-label="Cerrar sesión"
-          title={collapsed ? "Cerrar sesión" : undefined}
+          aria-label={t("signOut")}
+          title={collapsed ? t("signOut") : undefined}
         >
           <LogoutIcon className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span>{signingOut ? "Saliendo…" : "Cerrar sesión"}</span>}
+          {!collapsed && <span>{signingOut ? t("signingOut") : t("signOut")}</span>}
         </button>
         <button
           type="button"
           onClick={onToggleCollapse}
           className="w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-background hover:text-text-primary transition-colors"
-          aria-label={collapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
+          aria-label={collapsed ? tSidebar("expandBar") : tSidebar("collapseBar")}
           aria-expanded={!collapsed}
         >
           {collapsed ? (
@@ -198,10 +205,15 @@ export const SpaceSidebar: React.FC<Props> = ({
           ) : (
             <>
               <ArrowLeftIcon className="w-5 h-5 flex-shrink-0" />
-              <span>Colapsar</span>
+              <span>{tSidebar("collapse")}</span>
             </>
           )}
         </button>
+        {!collapsed && (
+          <div className="flex justify-center px-3 py-1">
+            <LanguageSwitcher compact />
+          </div>
+        )}
       </div>
     </aside>
   );

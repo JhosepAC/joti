@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { CheckIcon } from "./icons";
 
 interface StepIndicatorProps {
@@ -8,23 +9,31 @@ interface StepIndicatorProps {
   total: number;
 }
 
-const STEP_LABELS = ["Identidad", "Propósito", "Resumen"] as const;
+const STEP_KEYS = ["identity", "purpose", "review"] as const;
 
 /** Numbered steps with labels and connecting segments. */
 export const SpaceStepIndicator: React.FC<StepIndicatorProps> = ({ current, total }) => {
-  const steps = STEP_LABELS.slice(0, total);
+  const t = useTranslations("spaces.steps");
+  // Static record (not a dynamic key lookup) so every label stays type-checked.
+  const labels: Record<(typeof STEP_KEYS)[number], string> = {
+    identity: t("identity"),
+    purpose: t("purpose"),
+    review: t("review"),
+  };
+  const steps = STEP_KEYS.slice(0, total);
 
   return (
-    <nav aria-label="Progreso de la creación del espacio" className="mb-8">
+    <nav aria-label={t("navLabel")} className="mb-8">
+      <p className="sr-only">{t("progress", { current, total })}</p>
       <ol className="flex items-start">
-        {steps.map((label, index) => {
+        {steps.map((key, index) => {
           const stepNumber = index + 1;
           const completed = stepNumber < current;
           const active = stepNumber === current;
           const isLast = stepNumber === total;
           return (
             <li
-              key={label}
+              key={key}
               aria-current={active ? "step" : undefined}
               className={`flex items-start ${isLast ? "" : "flex-1"}`}
             >
@@ -52,7 +61,7 @@ export const SpaceStepIndicator: React.FC<StepIndicatorProps> = ({ current, tota
                       : "font-light text-text-muted"
                   }`}
                 >
-                  {label}
+                  {labels[key]}
                 </span>
               </div>
               {!isLast && (

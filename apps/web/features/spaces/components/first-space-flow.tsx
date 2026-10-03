@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { SpaceStepIndicator } from "./space-step-indicator";
 import { SpaceIdentityStep } from "./space-identity-step";
@@ -26,6 +27,8 @@ interface Props {
  */
 export const FirstSpaceFlow: React.FC<Props> = ({ email, claim, displayName }) => {
   const router = useRouter();
+  const t = useTranslations("spaces.new");
+  const tCommon = useTranslations("common.actions");
   const flow = useFirstSpaceFlow({
     email,
     claim,
@@ -39,17 +42,17 @@ export const FirstSpaceFlow: React.FC<Props> = ({ email, claim, displayName }) =
     <div className="mx-auto w-full max-w-[600px] py-8">
       <header className="mb-8 text-center">
         <h1 className="text-3xl font-semibold tracking-[-0.03em] text-text-primary font-heading leading-tight md:text-[2.25rem]">
-          Crea tu primer espacio
+          {t("title")}
         </h1>
         <p className="mx-auto mt-2 max-w-[420px] text-[0.95rem] font-light text-text-secondary">
-          Todo en Joti vive dentro de un espacio. Empecemos por el primero.
+          {t("subtitle")}
         </p>
       </header>
 
       <SpaceStepIndicator current={flow.step} total={flow.totalSteps} />
 
       <section
-        aria-label={`Paso ${flow.step} de ${flow.totalSteps}`}
+        aria-label={t("sectionLabel", { step: flow.step, total: flow.totalSteps })}
         className="rounded-3xl border border-border bg-background p-6 shadow-sm md:p-8"
       >
         {flow.generalError && (
@@ -94,7 +97,7 @@ export const FirstSpaceFlow: React.FC<Props> = ({ email, claim, displayName }) =
               disabled={!flow.canGoBack || flow.isCreating}
             >
               <ArrowLeftIcon className="text-base" />
-              Atrás
+              {tCommon("back")}
             </Button>
             <Button
               type="button"
@@ -103,7 +106,7 @@ export const FirstSpaceFlow: React.FC<Props> = ({ email, claim, displayName }) =
               onClick={flow.goNext}
               disabled={!flow.canGoNext || flow.isCreating}
             >
-              Siguiente
+              {tCommon("next")}
               <ArrowRightIcon className="text-base" />
             </Button>
           </div>

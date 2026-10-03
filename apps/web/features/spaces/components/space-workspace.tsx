@@ -4,12 +4,12 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
+import { useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { readSpaceGrant, storeSpaceGrant } from "@/features/auth/utils/claim-store";
 import { useLogout } from "@/features/auth/hooks/use-logout";
-import { getAuthErrorMessage } from "@/features/auth/utils/get-auth-error-message";
-import { purposeTitle } from "../catalog";
+import { useAuthErrorMessage } from "@/features/auth/utils/get-auth-error-message";
 import { SpinnerIcon } from "./icons";
 import type { SpaceTool, WorkspaceSpace } from "../types/space.types";
 import { SpaceSidebar } from "./space-sidebar";
@@ -38,6 +38,9 @@ type State =
  */
 export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
   const router = useRouter();
+  const t = useTranslations("spaces.workspace");
+  const tErrors = useTranslations("errors");
+  const tErr = useAuthErrorMessage();
   const [state, setState] = useState<State>({ kind: "loading" });
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -55,7 +58,7 @@ export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
     if (!grant) {
       setState({
         kind: "denied",
-        message: "Tu sesión no está activa. Inicia sesión para entrar a este espacio.",
+        message: tErrors("spaceSignIn"),
       });
       return;
     }
@@ -76,7 +79,7 @@ export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
         if (cancelled) return;
         setState({
           kind: "denied",
-          message: getAuthErrorMessage(err, "No pudimos abrir este espacio."),
+          message: tErr(err, tErrors("spaceUnavailable")),
         });
       }
     })();
@@ -84,13 +87,13 @@ export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
     return () => {
       cancelled = true;
     };
-  }, [getWorkspace, slug]);
+  }, [getWorkspace, slug, tErrors, tErr]);
 
   if (state.kind === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center" aria-busy="true">
         <SpinnerIcon className="text-2xl text-icon" strokeWidth={2} />
-        <span className="sr-only">Cargando espacio</span>
+        <span className="sr-only">{t("loading")}</span>
       </div>
     );
   }
@@ -99,7 +102,7 @@ export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-[460px] flex-col items-center justify-center px-6 text-center">
         <h1 className="text-2xl font-semibold text-text-primary font-heading">
-          Espacio no disponible
+          {t("unavailableTitle")}
         </h1>
         <p className="mt-2 text-sm font-light text-text-secondary">{state.message}</p>
         <Button
@@ -107,7 +110,7 @@ export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
           className="mt-6 h-11 rounded-full"
           onClick={() => router.replace("/auth/login")}
         >
-          Iniciar sesión
+          {t("signIn")}
         </Button>
       </div>
     );

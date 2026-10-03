@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { PURPOSE_OPTIONS } from "../catalog";
+import { useTranslations } from "next-intl";
+import { PURPOSE_KEYS } from "../catalog";
 import { CheckIcon, iconForPurpose } from "./icons";
 import type { SpacePurposeKey } from "../types/space.types";
 
@@ -20,28 +21,50 @@ interface Props {
  * the label carries the presentation.
  */
 export const SpacePurposeStep: React.FC<Props> = ({ value, onChange }) => {
+  const t = useTranslations("spaces.purpose");
+  // Static record (not a dynamic key lookup) so every title/description stays
+  // type-checked against the dictionary.
+  const copy: Record<SpacePurposeKey, { title: string; description: string }> = {
+    personal: {
+      title: t("options.personal.title"),
+      description: t("options.personal.description"),
+    },
+    work: {
+      title: t("options.work.title"),
+      description: t("options.work.description"),
+    },
+    study: {
+      title: t("options.study.title"),
+      description: t("options.study.description"),
+    },
+    blank: {
+      title: t("options.blank.title"),
+      description: t("options.blank.description"),
+    },
+  };
+
   return (
     <div>
       <header className="mb-6">
         <h2 className="text-xl font-semibold text-text-primary font-heading">
-          Propósito del espacio
+          {t("title")}
         </h2>
         <p className="mt-1 text-sm font-light text-text-secondary">
-          Elige para qué lo vas a usar. Esto define la plantilla inicial y las
-          herramientas habilitadas.
+          {t("subtitle")}
         </p>
       </header>
 
       <fieldset>
-        <legend className="sr-only">Propósito del espacio</legend>
+        <legend className="sr-only">{t("title")}</legend>
         <div className="grid gap-3 sm:grid-cols-2">
-          {PURPOSE_OPTIONS.map((option) => {
-            const selected = option.key === value;
-            const Icon = iconForPurpose(option.key);
-            const id = `space-purpose-${option.key}`;
+          {PURPOSE_KEYS.map((key) => {
+            const selected = key === value;
+            const Icon = iconForPurpose(key);
+            const id = `space-purpose-${key}`;
+            const option = copy[key];
             return (
               <label
-                key={option.key}
+                key={key}
                 htmlFor={id}
                 className={`relative flex cursor-pointer flex-col gap-3 rounded-2xl border bg-surface p-5 transition-all focus-within:ring-2 focus-within:ring-focus-ring ${
                   selected
@@ -53,9 +76,9 @@ export const SpacePurposeStep: React.FC<Props> = ({ value, onChange }) => {
                   id={id}
                   type="radio"
                   name="spacePurpose"
-                  value={option.key}
+                  value={key}
                   checked={selected}
-                  onChange={() => onChange(option.key)}
+                  onChange={() => onChange(key)}
                   className="sr-only"
                 />
                 <span

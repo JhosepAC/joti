@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { LayersIcon, RocketIcon } from "./icons";
-import { purposeTitle } from "../catalog";
-import type { SpaceDraft, SpaceTool } from "../types/space.types";
+import type { SpaceDraft, SpacePurposeKey, SpaceTool } from "../types/space.types";
+import { useToolLabel } from "../utils/tool-labels";
 
 interface Props {
   draft: SpaceDraft;
@@ -22,14 +23,25 @@ export const SpaceSummaryStep: React.FC<Props> = ({
   isCreating,
   onSubmit,
 }) => {
+  const t = useTranslations("spaces.summary");
+  const tPurpose = useTranslations("spaces.purpose.options");
+  const toolLabel = useToolLabel();
+  // Static record (not a dynamic key lookup) so the title stays type-checked.
+  const purposeTitles: Record<SpacePurposeKey, string> = {
+    personal: tPurpose("personal.title"),
+    work: tPurpose("work.title"),
+    study: tPurpose("study.title"),
+    blank: tPurpose("blank.title"),
+  };
+  // Server labels stay as fallback for tool keys this client does not know.
   return (
     <div>
       <header className="mb-6">
         <h2 className="text-xl font-semibold text-text-primary font-heading">
-          Resumen del espacio
+          {t("title")}
         </h2>
         <p className="mt-1 text-sm font-light text-text-secondary">
-          Revisa antes de crear. Podrás cambiarlo todo más adelante.
+          {t("subtitle")}
         </p>
       </header>
 
@@ -47,7 +59,7 @@ export const SpaceSummaryStep: React.FC<Props> = ({
               {draft.name.trim()}
             </p>
             <p className="mt-1 inline-flex items-center rounded-full bg-background px-2.5 py-1 text-[0.7rem] font-medium text-text-secondary ring-1 ring-border">
-              {purposeTitle(draft.purpose)}
+              {purposeTitles[draft.purpose]}
             </p>
           </div>
         </div>
@@ -61,7 +73,7 @@ export const SpaceSummaryStep: React.FC<Props> = ({
           <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-xl bg-background text-icon ring-1 ring-border">
             <LayersIcon className="text-base" />
           </span>
-          Herramientas habilitadas
+          {t("tools")}
           {!isLoadingTools && (
             <span className="ml-auto rounded-full bg-background px-2.5 py-0.5 text-[0.7rem] font-medium text-text-secondary tabular-nums ring-1 ring-border">
               {tools.length}
@@ -81,7 +93,7 @@ export const SpaceSummaryStep: React.FC<Props> = ({
                 key={tool.key}
                 className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-light text-text-secondary"
               >
-                {tool.label}
+                {toolLabel(tool.key, tool.label)}
               </li>
             ))}
           </ul>
@@ -103,7 +115,7 @@ export const SpaceSummaryStep: React.FC<Props> = ({
               <RocketIcon className="text-xl" strokeWidth={2} />
             </span>
           </span>
-          Crear mi espacio
+          {t("submit")}
         </Button>
       </div>
     </div>

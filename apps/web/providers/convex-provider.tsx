@@ -2,9 +2,11 @@
 
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { ReactNode, useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+  const t = useTranslations("providers.convex");
 
   const client = useMemo(() => {
     if (!convexUrl) return null;
@@ -23,15 +25,16 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
           className="w-full max-w-[420px] rounded-3xl border border-error/20 bg-red-50 p-6 text-center"
         >
           <h1 className="text-lg font-semibold text-text-primary font-heading">
-            Configuration error
+            {t("title")}
           </h1>
           <p className="mt-2 text-sm font-light text-text-secondary">
-            The app backend is not configured (missing{" "}
-            <code className="rounded bg-background px-1.5 py-0.5 text-xs">
-              NEXT_PUBLIC_CONVEX_URL
-            </code>
-            ). Set it in <code className="rounded bg-background px-1.5 py-0.5 text-xs">.env.local</code> and
-            restart the dev server.
+            {t.rich("description", {
+              code: (chunks) => (
+                <code className="rounded bg-background px-1.5 py-0.5 text-xs">{chunks}</code>
+              ),
+              variable: "NEXT_PUBLIC_CONVEX_URL",
+              file: ".env.local",
+            })}
           </p>
         </div>
       </div>

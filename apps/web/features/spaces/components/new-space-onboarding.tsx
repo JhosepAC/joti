@@ -4,6 +4,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import { readAccountGrant, type AccountGrant } from "@/features/auth/utils/claim-store";
 import { useEntryGate } from "@/features/auth/hooks/use-entry-gate";
 import { FirstSpaceFlow } from "./first-space-flow";
@@ -24,6 +25,8 @@ import { SpinnerIcon } from "./icons";
  */
 export const NewSpaceOnboarding: React.FC = () => {
   const router = useRouter();
+  const t = useTranslations("spaces.onboarding");
+  const tErrors = useTranslations("errors");
   const [grant, setGrant] = useState<AccountGrant | null | undefined>(undefined);
   const gate = useEntryGate(grant);
 
@@ -35,7 +38,7 @@ export const NewSpaceOnboarding: React.FC = () => {
     return (
       <div className="flex min-h-screen items-center justify-center" aria-busy="true">
         <SpinnerIcon className="text-2xl text-icon" strokeWidth={2} />
-        <span className="sr-only">Comprobando tu cuenta</span>
+        <span className="sr-only">{t("checking")}</span>
       </div>
     );
   }
@@ -44,17 +47,17 @@ export const NewSpaceOnboarding: React.FC = () => {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-[460px] flex-col items-center justify-center px-6 text-center">
         <h1 className="text-2xl font-semibold text-text-primary font-heading">
-          No pudimos abrir esta sección
+          {t("unavailableTitle")}
         </h1>
         <p className="mt-2 text-sm font-light text-text-secondary">
-          {gate.error ?? "Tu sesión no es válida. Inicia sesión de nuevo."}
+          {gate.error ?? tErrors("sessionInvalid")}
         </p>
         <Button
           variant="primary"
           className="mt-6 h-11 rounded-full"
           onClick={() => router.replace("/auth/login")}
         >
-          Ir a iniciar sesión
+          {t("signIn")}
         </Button>
       </div>
     );
