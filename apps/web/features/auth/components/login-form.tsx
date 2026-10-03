@@ -20,6 +20,7 @@ export const LoginForm: React.FC = () => {
     activationCode,
     setActivationCode,
     pendingEmail,
+    resendCooldown,
     handleActivationVerify,
     handleResendActivation,
     handleFieldChange,
@@ -58,8 +59,13 @@ export const LoginForm: React.FC = () => {
             className="tracking-[0.3em] text-center"
           />
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1 h-9 rounded-full text-xs" onClick={handleResendActivation} disabled={isLoading}>
-              Resend code
+            <Button
+              variant="outline"
+              className="flex-1 h-9 rounded-full text-xs"
+              onClick={handleResendActivation}
+              disabled={isLoading || resendCooldown > 0}
+            >
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
             </Button>
             <Button variant="primary" className="flex-1 h-9 rounded-full text-xs" onClick={handleActivationVerify} isLoading={isLoading}>
               Verify & Activate

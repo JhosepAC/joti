@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { getAuthErrorCode, getAuthErrorMessage } from "../utils/get-auth-error-message";
@@ -72,6 +72,30 @@ export function useRegisterFlow() {
   // after a render, so rapid double submits could otherwise fire twice --
   // burning a single-use claim on the second call.
   const inFlight = useRef(false);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cooldown ticker owned in one place: every resend path funnels through
+  // here, previous tickers are replaced (never stacked), and unmount clears
+  // the timer so no setState fires on an unmounted hook.
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  const startResendCooldown = (seconds: number) => {
+    setResendCooldown(seconds);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const updateField = useCallback(
     <K extends keyof RegisterFlowData>(field: K, value: RegisterFlowData[K]) => {
@@ -154,16 +178,7 @@ export function useRegisterFlow() {
       if (code === "RATE_LIMITED") {
         const m = msg.match(/(\d+)s/);
         const wait = m?.[1] ? parseInt(m[1], 10) : 60;
-        setResendCooldown(wait);
-        const interval = setInterval(() => {
-          setResendCooldown((prev) => {
-            if (prev <= 1) {
-              clearInterval(interval);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+        startResendCooldown(wait);
       }
       setErrors({ general: msg });
     } finally {
@@ -205,16 +220,7 @@ export function useRegisterFlow() {
     try {
       const res = await requestCodeAction({ email: data.email.trim().toLowerCase() });
       setCodeExpiresAt((res as { expiresAt: number }).expiresAt);
-      setResendCooldown(30);
-      const interval = setInterval(() => {
-        setResendCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      startResendCooldown(30);
       setErrors({});
     } catch (err: unknown) {
       const msg = getAuthErrorMessage(err, "Failed to resend code");
@@ -222,16 +228,7 @@ export function useRegisterFlow() {
       if (code === "RATE_LIMITED") {
         const m = msg.match(/(\d+)s/);
         const wait = m?.[1] ? parseInt(m[1], 10) : 60;
-        setResendCooldown(wait);
-        const interval = setInterval(() => {
-          setResendCooldown((prev) => {
-            if (prev <= 1) {
-              clearInterval(interval);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+        startResendCooldown(wait);
       }
       setErrors({ general: msg });
     } finally {

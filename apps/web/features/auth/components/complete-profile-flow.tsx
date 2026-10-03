@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -16,9 +16,12 @@ const EXPIRED_SESSION_MESSAGE = "Your session expired. Please sign in again.";
 
 export const CompleteProfileFlow: React.FC = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const emailParam = searchParams.get("email") ?? "";
-  const [email] = useState(emailParam);
+  // Address and proof of ownership come from the stored grant, never from the
+  // URL: query parameters persist in history, Referer headers and server
+  // logs. Read once on mount, then cleared, so a reload cannot replay it.
+  const [grant] = useState(() => takeAccountGrant());
+  const email = grant?.email ?? "";
+  const claim = grant?.token ?? null;
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -27,13 +30,6 @@ export const CompleteProfileFlow: React.FC = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [isLoading, setIsLoading] = useState(false);
-  // Proof of ownership stashed by the entry gate. Read once on mount, then
-  // cleared, so a reload cannot replay it.
-  const [claim] = useState<string | null>(() => {
-    const stored = takeAccountGrant();
-    return stored && stored.email === emailParam.trim().toLowerCase() ? stored.token : null;
-  });
-
   const completeProfile = useAction(api.auth.actions.completeProfile);
   const generateUploadUrl = useAction(api.auth.storage.generateAvatarUploadUrl);
 

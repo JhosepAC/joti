@@ -4,7 +4,6 @@ export * from "./components/social-login-button";
 export * from "./components/dither-visual";
 export * from "./components/halftone-art";
 export * from "./hooks/use-login";
-export * from "./hooks/use-register";
 export * from "./hooks/use-register-flow";
 export * from "./hooks/use-entry-gate";
 export * from "./utils/claim-store";

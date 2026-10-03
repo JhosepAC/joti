@@ -68,7 +68,9 @@ export function useEntryGate(grant: AccountGrant | null | undefined): EntryResul
         if (context.stage === "profile" && context.claim) {
           storeAccountGrant(grant.email, context.claim);
           setResult({ stage: "redirecting", error: null, displayName: null, claim: null });
-          router.replace(`/auth/complete-profile?email=${encodeURIComponent(grant.email)}`);
+          // No address in the URL: the next screen reads it from the stored
+          // grant, so it never lands in history, Referer headers or logs.
+          router.replace("/auth/complete-profile");
           return;
         }
 

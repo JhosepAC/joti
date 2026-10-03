@@ -13,7 +13,6 @@ export function useResetPassword(token: string | null) {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
-  const [tokenEmail, setTokenEmail] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const verifyAction = useAction(api.auth.passwordReset.verifyResetToken);
@@ -31,9 +30,12 @@ export function useResetPassword(token: string | null) {
     verifyAction({ token })
       .then((res) => {
         if (cancelled) return;
-        const r = res as { valid: boolean; email?: string };
+        // The backend answers validity only (no email: the token is already
+        // takeover-capable, so echoing the address would widen exposure).
+        // The email-containment password rule is still enforced server-side
+        // by `resetPassword`, which resolves the address itself.
+        const r = res as { valid: boolean };
         setTokenValid(r.valid);
-        if (r.email) setTokenEmail(r.email);
         if (!r.valid) setErrors({ general: "This reset link is invalid or has expired." });
       })
       .catch(() => {
@@ -53,7 +55,6 @@ export function useResetPassword(token: string | null) {
     const { isValid, errors: vErrors } = validateResetPasswordInput({
       password,
       confirmPassword,
-      email: tokenEmail ?? undefined,
     });
     if (!isValid) {
       setErrors(vErrors);
@@ -91,7 +92,6 @@ export function useResetPassword(token: string | null) {
     isLoading: status === "loading",
     isSuccess,
     tokenValid,
-    tokenEmail,
     handleSubmit,
   };
 }

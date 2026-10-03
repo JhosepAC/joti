@@ -24,6 +24,19 @@ export const ResetPasswordFlow: React.FC = () => {
     handleSubmit,
   } = useResetPassword(token);
 
+  // The token arrives by email link, which puts it in history as a side
+  // effect. Once it is consumed (success) or known-dead (invalid/expired),
+  // strip it from the URL so it does not linger in history, Referer headers
+  // or logs. State already holds what the UI needs, so no reload occurs.
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !token) return;
+    if (tokenValid === false || isSuccess) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("token");
+      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    }
+  }, [token, tokenValid, isSuccess]);
+
   if (!token) {
     return (
       <div className="w-full max-w-[460px] mx-auto py-8 space-y-6">
