@@ -3,7 +3,6 @@ export * from "./components/creating-space-modal";
 export * from "./components/first-space-flow";
 export * from "./components/icons";
 export * from "./components/new-space-onboarding";
-export * from "./components/space-icon-picker";
 export * from "./components/space-identity-step";
 export * from "./components/space-purpose-step";
 export * from "./components/space-step-indicator";
