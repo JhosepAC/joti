@@ -26,6 +26,7 @@ import type * as auth_tokenVault from "../auth/tokenVault.js";
 import type * as auth_validators from "../auth/validators.js";
 import type * as auth_verification from "../auth/verification.js";
 import type * as auth_verificationInternal from "../auth/verificationInternal.js";
+import type * as http from "../http.js";
 import type * as oauth_google_authorize from "../oauth/google/authorize.js";
 import type * as oauth_google_callback from "../oauth/google/callback.js";
 import type * as spaces_actions from "../spaces/actions.js";
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   "auth/validators": typeof auth_validators;
   "auth/verification": typeof auth_verification;
   "auth/verificationInternal": typeof auth_verificationInternal;
+  http: typeof http;
   "oauth/google/authorize": typeof oauth_google_authorize;
   "oauth/google/callback": typeof oauth_google_callback;
   "spaces/actions": typeof spaces_actions;
