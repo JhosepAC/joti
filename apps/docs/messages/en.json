@@ -5,6 +5,13 @@
       "description": "Joti documentation"
     }
   },
+  "common": {
+    "settings": {
+      "button": "Settings",
+      "menu": "Settings menu",
+      "language": "Language"
+    }
+  },
   "home": {
     "logoAlt": "Turborepo logo",
     "getStarted": "Get started by editing <code>{path}</code>",

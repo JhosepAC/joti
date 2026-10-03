@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
 import { ConvexClientProvider } from "@/providers/convex-provider";
+import { SettingsMenu } from "@/components/ui/settings-menu";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,6 +40,7 @@ export default async function RootLayout({
       <body className="font-sans bg-background text-text-primary antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ConvexClientProvider>{children}</ConvexClientProvider>
+          <SettingsMenu />
         </NextIntlClientProvider>
       </body>
     </html>

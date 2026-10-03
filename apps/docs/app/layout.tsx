@@ -3,8 +3,7 @@ import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
-import { LanguageSwitcher } from "../i18n/LanguageSwitcher";
-
+import { SettingsMenu } from "../i18n/SettingsMenu";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -33,10 +32,8 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <div style={{ position: "fixed", top: 12, right: 12, zIndex: 50 }}>
-            <LanguageSwitcher />
-          </div>
           {children}
+          <SettingsMenu />
         </NextIntlClientProvider>
       </body>
     </html>

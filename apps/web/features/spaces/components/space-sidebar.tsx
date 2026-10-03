@@ -4,7 +4,6 @@ import * as React from "react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowLeftIcon, ArrowRightIcon, LogoutIcon, PlusIcon } from "./icons";
-import { LanguageSwitcher } from "@/i18n/LanguageSwitcher";
 import { useToolLabel } from "../utils/tool-labels";
 import type { SpaceTool } from "../types/space.types";
 
@@ -209,11 +208,6 @@ export const SpaceSidebar: React.FC<Props> = ({
             </>
           )}
         </button>
-        {!collapsed && (
-          <div className="flex justify-center px-3 py-1">
-            <LanguageSwitcher compact />
-          </div>
-        )}
       </div>
     </aside>
   );

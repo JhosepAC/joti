@@ -1,6 +1,11 @@
 {
   "common": {
     "appName": "Joti",
+    "settings": {
+      "button": "Settings",
+      "menu": "Settings menu",
+      "language": "Language"
+    },
     "actions": {
       "save": "Save",
       "cancel": "Cancel",

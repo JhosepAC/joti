@@ -5,6 +5,13 @@
       "description": "Documentación de Joti"
     }
   },
+  "common": {
+    "settings": {
+      "button": "Ajustes",
+      "menu": "Menú de ajustes",
+      "language": "Idioma"
+    }
+  },
   "home": {
     "logoAlt": "Logo de Turborepo",
     "getStarted": "Empieza editando <code>{path}</code>",
