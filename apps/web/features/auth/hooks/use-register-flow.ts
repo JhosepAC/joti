@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { getAuthErrorCode, getAuthErrorMessage } from "../utils/get-auth-error-message";
@@ -68,6 +68,11 @@ export function useRegisterFlow() {
   const completeProfileAction = useAction(api.auth.actions.completeProfile);
   const generateUploadUrl = useAction(api.auth.storage.generateAvatarUploadUrl);
 
+  // Synchronous in-flight guard (see use-login): button state flips only
+  // after a render, so rapid double submits could otherwise fire twice --
+  // burning a single-use claim on the second call.
+  const inFlight = useRef(false);
+
   const updateField = useCallback(
     <K extends keyof RegisterFlowData>(field: K, value: RegisterFlowData[K]) => {
       setData((prev) => ({ ...prev, [field]: value }));
@@ -131,6 +136,8 @@ export function useRegisterFlow() {
 
   const handleStep1Next = async () => {
     if (!validateStep1()) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsLoading(true);
     try {
       // Spec: email+password already creates inactive account
@@ -160,6 +167,7 @@ export function useRegisterFlow() {
       }
       setErrors({ general: msg });
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   };
@@ -169,6 +177,8 @@ export function useRegisterFlow() {
       setErrors({ code: "Code must be 6 digits" });
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsLoading(true);
     try {
       const res = (await confirmCodeAction({
@@ -182,12 +192,15 @@ export function useRegisterFlow() {
     } catch (err: unknown) {
       setErrors({ code: getAuthErrorMessage(err, "Invalid or expired code") });
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   };
 
   const handleResendCode = async () => {
     if (resendCooldown > 0) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsLoading(true);
     try {
       const res = await requestCodeAction({ email: data.email.trim().toLowerCase() });
@@ -222,6 +235,7 @@ export function useRegisterFlow() {
       }
       setErrors({ general: msg });
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   };
@@ -247,6 +261,8 @@ export function useRegisterFlow() {
       setStep(1.1);
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsLoading(true);
     try {
       let avatar: string | undefined = data.avatarUrl ?? undefined;
@@ -312,6 +328,7 @@ export function useRegisterFlow() {
       }
       throw err;
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   };

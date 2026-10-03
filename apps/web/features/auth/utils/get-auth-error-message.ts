@@ -52,10 +52,7 @@ export function getAuthErrorMessage(err: unknown, fallback = "Something went wro
 export function getAuthErrorCode(err: unknown): string | undefined {
   if (err instanceof Error) {
     const data = (err as Error & { data?: { code?: string } }).data;
-    if (data?.code) return data.code;
-    // Fallback parse from sanitized message for lockout
-    const msg = sanitizeRawMessage(err.message);
-    if (msg.includes("Account is locked")) return "ACCOUNT_LOCKED";
+    return data?.code;
   }
   return undefined;
 }

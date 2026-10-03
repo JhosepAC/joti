@@ -16,6 +16,13 @@ export const RegisterFlow: React.FC = () => {
   const flow = useRegisterFlow();
   const router = useRouter();
 
+  const handleGoogle = () => {
+    const siteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
+    if (siteUrl && typeof window !== "undefined") {
+      window.location.href = `${siteUrl}/oauth/google/authorize`;
+    }
+  };
+
   /**
    * The account now exists and the profile is complete, which is the precondition
    * for the first space, so onboarding continues there instead of bouncing back
@@ -48,6 +55,7 @@ export const RegisterFlow: React.FC = () => {
           isLoading={flow.isLoading}
           onChange={flow.updateField}
           onNext={flow.handleStep1Next}
+          onGoogle={handleGoogle}
         />
       )}
 

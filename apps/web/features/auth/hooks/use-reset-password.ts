@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ValidationErrors } from "../types/auth.types";
@@ -18,6 +18,9 @@ export function useResetPassword(token: string | null) {
 
   const verifyAction = useAction(api.auth.passwordReset.verifyResetToken);
   const resetAction = useAction(api.auth.passwordReset.resetPassword);
+
+  // Synchronous in-flight guard against double submits.
+  const inFlight = useRef(false);
 
   useEffect(() => {
     if (!token) {
@@ -56,6 +59,8 @@ export function useResetPassword(token: string | null) {
       setErrors(vErrors);
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setStatus("loading");
     setErrors({});
     try {
@@ -66,6 +71,7 @@ export function useResetPassword(token: string | null) {
       setStatus("error");
       setErrors({ general: getAuthErrorMessage(err, "Failed to reset password") });
     } finally {
+      inFlight.current = false;
       setStatus("idle");
     }
   };

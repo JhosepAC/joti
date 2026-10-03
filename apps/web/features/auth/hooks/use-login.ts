@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -32,6 +32,11 @@ export function useLogin() {
   // It stays `undefined` until then, which tells the gate there is nothing to
   // resolve yet -- as opposed to `null`, which means "no grant, sign in".
   const [entry, setEntry] = useState<AccountGrant | null | undefined>(undefined);
+
+  // Synchronous in-flight guard. `status === "loading"` flips only after a
+  // render, so two rapid submits (Enter + click, double click) could otherwise
+  // dispatch the action twice before the button disables.
+  const inFlight = useRef(false);
 
   // Real Convex action — Argon2 verification + lockout logic lives server-side
   const loginAction = useAction(api.auth.actions.login);
@@ -82,6 +87,8 @@ export function useLogin() {
       setErrors(validationErrors);
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
 
     try {
       setStatus("loading");
@@ -105,6 +112,7 @@ export function useLogin() {
         setErrors({ general: getAuthErrorMessage(err, "Invalid email or password.") });
       }
     } finally {
+      inFlight.current = false;
       setStatus("idle");
     }
   };
@@ -115,6 +123,8 @@ export function useLogin() {
       setErrors({ general: "Code must be 6 digits" });
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     try {
       setStatus("loading");
       await confirmCodeAction({ email: pendingEmail, code: activationCode.trim() });
@@ -131,12 +141,15 @@ export function useLogin() {
       setErrors({ general: getAuthErrorMessage(err, "Invalid or expired code") });
       setStatus("error");
     } finally {
+      inFlight.current = false;
       setStatus("idle");
     }
   };
 
   const handleResendActivation = async () => {
     if (!pendingEmail) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     try {
       setStatus("loading");
       await requestCodeAction({ email: pendingEmail });
@@ -144,6 +157,7 @@ export function useLogin() {
     } catch (err: unknown) {
       setErrors({ general: getAuthErrorMessage(err, "Failed to resend code") });
     } finally {
+      inFlight.current = false;
       setStatus("idle");
     }
   };

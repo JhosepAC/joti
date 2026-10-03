@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,11 @@ export const CompleteProfileFlow: React.FC = () => {
 
   const completeProfile = useAction(api.auth.actions.completeProfile);
   const generateUploadUrl = useAction(api.auth.storage.generateAvatarUploadUrl);
+
+  // Synchronous in-flight guard: the Complete button disables only after a
+  // render, and a second submit would burn the single-use claim with a
+  // confusing error.
+  const inFlight = useRef(false);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,6 +84,8 @@ export const CompleteProfileFlow: React.FC = () => {
       setErrors({ general: "Username may only contain a-z, 0-9 and _" });
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsLoading(true);
     try {
       let avatar: string | undefined = avatarUrl ?? undefined;
@@ -120,6 +127,7 @@ export const CompleteProfileFlow: React.FC = () => {
         setErrors({ general: msg });
       }
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   };

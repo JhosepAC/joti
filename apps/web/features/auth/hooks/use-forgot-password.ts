@@ -17,6 +17,10 @@ export function useForgotPassword() {
 
   const requestAction = useAction(api.auth.passwordReset.requestPasswordReset);
 
+  // Synchronous in-flight guard: `cooldown`/`status` flip only after a
+  // render, so rapid double submits could otherwise fire twice.
+  const inFlight = useRef(false);
+
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -51,6 +55,8 @@ export function useForgotPassword() {
       setErrors(vErrors);
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setStatus("loading");
     setErrors({});
     try {
@@ -72,6 +78,7 @@ export function useForgotPassword() {
         setErrors({ general: getAuthErrorMessage(err, "Failed to send reset link") });
       }
     } finally {
+      inFlight.current = false;
       setStatus("idle");
     }
   };
