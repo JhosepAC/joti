@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
+import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { AuthStatus, LoginCredentials, ValidationErrors } from "../types/auth.types";
 import { validateLoginCredentials } from "../validations/login.schema";
-import { getAuthErrorMessage, getAuthErrorCode } from "../utils/get-auth-error-message";
+import { getAuthErrorCode, useAuthErrorMessage } from "../utils/get-auth-error-message";
+import { useValidationTranslator } from "@/i18n/translate";
 import { storeAccountGrant, type AccountGrant } from "../utils/claim-store";
 import { useEntryGate } from "./use-entry-gate";
 
@@ -17,6 +19,11 @@ type LoginResult = {
 };
 
 export function useLogin() {
+  const tValidation = useValidationTranslator();
+  const tErrors = useAuthErrorMessage();
+  const tActivation = useTranslations("auth.activation");
+  const tGeneral = useTranslations("validation.general");
+  const locale = useLocale();
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: "",
     password: "",
@@ -34,11 +41,6 @@ export function useLogin() {
   // It stays `undefined` until then, which tells the gate there is nothing to
   // resolve yet -- as opposed to `null`, which means "no grant, sign in".
   const [entry, setEntry] = useState<AccountGrant | null | undefined>(undefined);
-
-  // Synchronous in-flight guard. `status === "loading"` flips only after a
-  // render, so two rapid submits (Enter + click, double click) could otherwise
-  // dispatch the action twice before the button disables.
-  const inFlight = useRef(false);
 
   // Real Convex action — Argon2 verification + lockout logic lives server-side
   const loginAction = useAction(api.auth.actions.login);
@@ -58,6 +60,11 @@ export function useLogin() {
     }
   }, [gate.stage, router]);
 
+  // Synchronous in-flight guard. `status === "loading"` flips only after a
+  // render, so two rapid submits (Enter + click, double click) could otherwise
+  // dispatch the action twice before the button disables.
+  const inFlight = useRef(false);
+
   const handleFieldChange = (field: keyof LoginCredentials, value: string) => {
     setCredentials((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -72,7 +79,7 @@ export function useLogin() {
    */
   const enterFrom = (result: LoginResult) => {
     if (!result.claim) {
-      setErrors({ general: "No pudimos iniciar tu sesión. Inténtalo de nuevo." });
+      setErrors({ general: tGeneral("signInFailed") });
       setStatus("error");
       return;
     }
@@ -109,7 +116,7 @@ export function useLogin() {
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { isValid, errors: validationErrors } = validateLoginCredentials(credentials);
+    const { isValid, errors: validationErrors } = validateLoginCredentials(credentials, tValidation);
     if (!isValid) {
       setErrors(validationErrors);
       return;
@@ -134,9 +141,9 @@ export function useLogin() {
       if (code === "EMAIL_NOT_VERIFIED") {
         setRequiresActivation(true);
         setPendingEmail(credentials.email.trim().toLowerCase());
-        setErrors({ general: getAuthErrorMessage(err) });
+        setErrors({ general: tErrors(err) });
       } else {
-        setErrors({ general: getAuthErrorMessage(err, "Invalid email or password.") });
+        setErrors({ general: tErrors(err) });
       }
     } finally {
       inFlight.current = false;
@@ -147,7 +154,7 @@ export function useLogin() {
   const handleActivationVerify = async () => {
     if (!pendingEmail) return;
     if (!/^\d{6}$/.test(activationCode.trim())) {
-      setErrors({ general: "Code must be 6 digits" });
+      setErrors({ general: tActivation("codeMustBeDigits") });
       return;
     }
     if (inFlight.current) return;
@@ -165,7 +172,7 @@ export function useLogin() {
       setStatus("success");
       enterFrom(result);
     } catch (err: unknown) {
-      setErrors({ general: getAuthErrorMessage(err, "Invalid or expired code") });
+      setErrors({ general: tErrors(err) });
       setStatus("error");
     } finally {
       inFlight.current = false;
@@ -179,12 +186,12 @@ export function useLogin() {
     inFlight.current = true;
     try {
       setStatus("loading");
-      await requestCodeAction({ email: pendingEmail });
+      await requestCodeAction({ email: pendingEmail, locale });
       setErrors({});
       startResendCooldown(30);
     } catch (err: unknown) {
       const code = getAuthErrorCode(err);
-      const msg = getAuthErrorMessage(err, "Failed to resend code");
+      const msg = tErrors(err);
       setErrors({ general: msg });
       if (code === "RATE_LIMITED") {
         const match = msg.match(/(\d+)s/);

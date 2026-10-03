@@ -1,5 +1,6 @@
 import * as React from "react";
 import { DitherVisual } from "./dither-visual";
+import { LanguageSwitcher } from "@/i18n/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 
 export interface AuthSplitLayoutProps {
@@ -23,6 +24,9 @@ export const AuthSplitLayout: React.FC<AuthSplitLayoutProps> = ({
       {/* Panel Izquierdo: Formulario */}
       <section className="flex flex-col justify-center px-6 sm:px-12 md:px-16 lg:px-20 py-10 w-full min-h-screen">
         {children}
+        <div className="pt-8">
+          <LanguageSwitcher />
+        </div>
       </section>
 
       {/* Panel Derecho: Fondo Dither con Animación Shader Interactiva */}

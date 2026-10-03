@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { storeAccountGrant } from "../../utils/claim-store";
 import { StepIndicator } from "./step-indicator";
 import { Step1Credentials } from "./step-1-credentials";
@@ -13,6 +14,7 @@ import { Step4Bio } from "./step-4-bio";
 import { useRegisterFlow } from "../../hooks/use-register-flow";
 
 export const RegisterFlow: React.FC = () => {
+  const t = useTranslations("auth.register.step1");
   const flow = useRegisterFlow();
   const router = useRouter();
 
@@ -93,9 +95,9 @@ export const RegisterFlow: React.FC = () => {
 
       {flow.step === 1 && (
         <footer className="text-center mt-10 text-[0.825rem] font-light text-text-secondary">
-          ¿Ya tienes una cuenta?{" "}
+          {t("footer")}{" "}
           <Link href="/auth/login" className="text-text-primary font-medium hover:underline transition-all">
-            Iniciar sesión
+            {t("signIn")}
           </Link>
         </footer>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations, useFormatter } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,23 +20,29 @@ interface Props {
 }
 
 export const VerifyCode: React.FC<Props> = ({ email, code, setCode, errors, isLoading, onVerify, onResend, expiresAt, resendCooldown = 0 }) => {
+  const t = useTranslations("auth.register.verify");
+  const format = useFormatter();
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-2xl font-semibold text-text-primary font-heading">Confirm your email</h2>
+        <h2 className="text-2xl font-semibold text-text-primary font-heading">{t("title")}</h2>
         <p className="text-sm font-light text-text-secondary mt-2">
-          We sent a 6-digit code to <span className="font-medium text-text-primary">{email}</span> from{" "}
-          <span className="font-medium">jhosepjamil@gmail.com</span>. Enter it below.
+          {t.rich("description", {
+            b: (chunks) => <span className="font-medium text-text-primary">{chunks}</span>,
+            email,
+          })}
         </p>
         {expiresAt && (
-          <p className="text-xs text-text-muted mt-1">Expires at {new Date(expiresAt).toLocaleTimeString()}</p>
+          <p className="text-xs text-text-muted mt-1">
+            {t("expiresAt", { time: format.dateTime(new Date(expiresAt), { hour: "numeric", minute: "2-digit" }) })}
+          </p>
         )}
       </header>
 
       {errors.general && <div className="p-3 bg-red-50 border border-error/20 rounded-2xl text-xs text-error">{errors.general}</div>}
 
       <div className="space-y-2">
-        <Label htmlFor="code">Verification Code</Label>
+        <Label htmlFor="code">{t("code")}</Label>
         <Input
           id="code"
           placeholder="123456"
@@ -50,22 +57,22 @@ export const VerifyCode: React.FC<Props> = ({ email, code, setCode, errors, isLo
       </div>
 
       <Button type="button" variant="primary" className="w-full h-12 rounded-full" isLoading={isLoading} onClick={onVerify}>
-        Verify & Continue
+        {t("submit")}
       </Button>
 
       <div className="flex justify-between items-center text-xs">
-        <span className="text-text-muted">Didn&apos;t receive it?</span>
+        <span className="text-text-muted">{t("resendPrompt")}</span>
         <button
           type="button"
           onClick={onResend}
           disabled={resendCooldown > 0 || isLoading}
           className="font-medium text-text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+          {resendCooldown > 0 ? t("resendIn", { seconds: resendCooldown }) : t("resend")}
         </button>
       </div>
 
-      <p className="text-xs text-text-muted text-center">If you close this screen, you&apos;ll need to verify when you sign in.</p>
+      <p className="text-xs text-text-muted text-center">{t("note")}</p>
     </div>
   );
 };

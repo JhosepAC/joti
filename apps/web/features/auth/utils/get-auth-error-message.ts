@@ -2,16 +2,37 @@
  * Centralized mapper to prevent leaking raw Convex server logs to UI.
  * Convex client errors often arrive as:
  *   "[CONVEX A(auth/actions:login)] [Request ID: ...] Server Error Uncaught ConvexError: Invalid email or password. Called by client"
- * We extract the user-facing message and map known codes to friendly text.
+ *
+ * Strategy: backend contracts (codes) stay in English; presentation maps
+ * codes -- and a closed list of known server messages for throws that carry
+ * no code -- to i18n keys. Anything unrecognized falls back to the sanitized
+ * raw message (English) rather than breaking the UI.
  */
 
+import { useCallback } from "react";
+import { useTranslations } from "next-intl";
+
 const CODE_MESSAGE_MAP: Record<string, string> = {
-  VALIDATION_ERROR: "Please check your input and try again.",
-  EMAIL_NOT_VERIFIED: "Please verify your email before signing in. Check your inbox for the code.",
-  INVALID_CREDENTIALS: "Invalid email or password.",
-  RATE_LIMITED: "Please wait a moment before trying again.",
-  EMAIL_DELIVERY_FAILED: "We could not send the email. Please try again later.",
+  VALIDATION_ERROR: "validation",
+  EMAIL_NOT_VERIFIED: "emailNotVerified",
+  INVALID_CREDENTIALS: "invalidCredentials",
+  RATE_LIMITED: "rateLimited",
+  EMAIL_DELIVERY_FAILED: "deliveryFailed",
+  NOT_FOUND: "spaceUnavailable",
+  PROFILE_REQUIRED: "profileRequired",
+  SPACE_ALREADY_EXISTS: "spaceExists",
+  STORAGE_LIMIT: "storageLimit",
 };
+
+/** Known server messages from throws that carry no code. */
+const SERVER_MESSAGE_MAP: Array<{ match: RegExp; key: string }> = [
+  { match: /invalid email or password/i, key: "invalidCredentials" },
+  { match: /invalid or expired code/i, key: "codeInvalid" },
+  { match: /session expired/i, key: "sessionExpired" },
+  { match: /no longer valid/i, key: "sessionInvalid" },
+  { match: /not available/i, key: "spaceUnavailable" },
+  { match: /too many attempts/i, key: "tooManyAttempts" },
+];
 
 function sanitizeRawMessage(raw: string): string {
   if (!raw) return "Something went wrong. Please try again.";
@@ -36,17 +57,45 @@ export function getAuthErrorMessage(err: unknown, fallback = "Something went wro
   if (!err) return fallback;
   if (err instanceof Error) {
     const data = (err as Error & { data?: { code?: string; message?: string } }).data;
-    // Known code mapping first
-    if (data?.code && CODE_MESSAGE_MAP[data.code]) {
-      // Prefer explicit message if provided and not raw prefix
-      if (data.message && !data.message.includes("[CONVEX")) return data.message;
-      return CODE_MESSAGE_MAP[data.code] as string;
-    }
     if (data?.message) return sanitizeRawMessage(data.message);
     return sanitizeRawMessage(err.message);
   }
   if (typeof err === "string") return sanitizeRawMessage(err);
   return fallback;
+}
+
+/**
+ * Translated version for UI: maps codes and known server messages to the
+ * `errors` namespace, sanitized raw text only as a last resort.
+ */
+export function useAuthErrorMessage() {
+  const t = useTranslations("errors");
+
+  return useCallback(
+    (err: unknown, fallback?: string): string => {
+      const fallbackText = fallback ?? t("fallback");
+      if (!err) return fallbackText;
+      if (err instanceof Error) {
+        const data = (err as Error & { data?: { code?: string; message?: string } }).data;
+        if (data?.code && CODE_MESSAGE_MAP[data.code]) {
+          return t(CODE_MESSAGE_MAP[data.code] as Parameters<typeof t>[0]);
+        }
+        const raw = data?.message ?? err.message;
+        const clean = sanitizeRawMessage(raw);
+        const known = SERVER_MESSAGE_MAP.find((entry) => entry.match.test(clean));
+        if (known) return t(known.key as Parameters<typeof t>[0]);
+        return clean || fallbackText;
+      }
+      if (typeof err === "string") {
+        const clean = sanitizeRawMessage(err);
+        const known = SERVER_MESSAGE_MAP.find((entry) => entry.match.test(clean));
+        if (known) return t(known.key as Parameters<typeof t>[0]);
+        return clean || fallbackText;
+      }
+      return fallbackText;
+    },
+    [t],
+  );
 }
 
 export function getAuthErrorCode(err: unknown): string | undefined {

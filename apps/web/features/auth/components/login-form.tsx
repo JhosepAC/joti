@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,8 @@ import { SocialLoginButton } from "./social-login-button";
 import { useLogin } from "../hooks/use-login";
 
 export const LoginForm: React.FC = () => {
+  const t = useTranslations("auth.login");
+  const tCommon = useTranslations("common.actions");
   const {
     credentials,
     errors,
@@ -33,10 +36,10 @@ export const LoginForm: React.FC = () => {
       {/* Header */}
       <header className="mb-8">
         <h1 className="text-3xl md:text-[2.25rem] font-semibold tracking-[-0.03em] text-text-primary font-heading leading-tight">
-          Sign In
+          {t("title")}
         </h1>
         <p className="text-[0.95rem] font-light text-text-secondary mt-2">
-          Continue to access your dashboard
+          {t("subtitle")}
         </p>
       </header>
 
@@ -50,7 +53,7 @@ export const LoginForm: React.FC = () => {
       {/* Activation Required (inactive account) */}
       {requiresActivation && pendingEmail && (
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
-          <p className="text-xs font-medium text-amber-900">Your account is not activated. Enter the code sent to {pendingEmail} from jhosepjamil@gmail.com.</p>
+          <p className="text-xs font-medium text-amber-900">{t("activationTitle", { email: pendingEmail })}</p>
           <Input
             placeholder="123456"
             value={activationCode}
@@ -65,10 +68,10 @@ export const LoginForm: React.FC = () => {
               onClick={handleResendActivation}
               disabled={isLoading || resendCooldown > 0}
             >
-              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+              {resendCooldown > 0 ? t("activationResendIn", { seconds: resendCooldown }) : t("activationResend")}
             </Button>
             <Button variant="primary" className="flex-1 h-9 rounded-full text-xs" onClick={handleActivationVerify} isLoading={isLoading}>
-              Verify & Activate
+              {t("activationVerify")}
             </Button>
           </div>
         </div>
@@ -79,7 +82,7 @@ export const LoginForm: React.FC = () => {
         {/* Email Field */}
         <div className="space-y-2.5">
           <Label htmlFor="email" className="inline-block mb-1">
-            Email
+            {t("email")}
           </Label>
           <Input
             id="email"
@@ -100,12 +103,12 @@ export const LoginForm: React.FC = () => {
         {/* Password Field */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between mb-1">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("password")}</Label>
             <Link
               href="/auth/forgot-password"
               className="text-xs font-normal text-text-secondary hover:text-text-primary hover:underline transition-colors"
             >
-              Forgot Password?
+              {t("forgotPassword")}
             </Link>
           </div>
           <Input
@@ -133,13 +136,13 @@ export const LoginForm: React.FC = () => {
             disabled={isOAuthLoading}
             className="w-full h-12 text-sm font-medium rounded-full"
           >
-            Sign In
+            {t("submit")}
           </Button>
         </div>
       </form>
 
       {/* Divider */}
-      <Divider>or</Divider>
+      <Divider>{tCommon("or")}</Divider>
 
       {/* Google OAuth Login */}
       <SocialLoginButton
@@ -152,12 +155,12 @@ export const LoginForm: React.FC = () => {
 
       {/* Footer */}
       <footer className="text-center mt-10 text-[0.825rem] font-light text-text-secondary">
-        Don&apos;t have an account?{" "}
+        {t("noAccount")}{" "}
         <Link
           href="/auth/register"
           className="text-text-primary font-medium hover:underline transition-all"
         >
-          Create Account
+          {t("createAccount")}
         </Link>
       </footer>
     </div>
