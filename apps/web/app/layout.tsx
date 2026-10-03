@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Lato, Varela_Round } from "next/font/google";
+import { Inter, Varela_Round } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/providers/convex-provider";
 
-const lato = Lato({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["100", "300", "400", "700", "900"],
-  style: ["normal", "italic"],
-  variable: "--font-lato",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -29,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${lato.variable} ${varelaRound.variable}`}>
+    <html lang="en" className={`${inter.variable} ${varelaRound.variable}`}>
       <body className="font-sans bg-background text-text-primary antialiased">
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
