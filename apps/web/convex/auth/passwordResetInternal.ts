@@ -69,15 +69,17 @@ export const markUsed = internalMutation({
 export const deleteExpired = internalMutation({
   args: {},
   handler: async (ctx) => {
+    // Runs on a schedule (see convex/crons.ts). Used links are single-use and
+    // dead, and expired links can never validate again, so both go promptly:
+    // there is no audit consumer for these rows, and keeping them only feeds
+    // the per-email scans in `getByTokenHash` paths.
+    const now = Date.now();
     const all = await ctx.db.query("auth_password_resets").collect();
     let deleted = 0;
     for (const r of all) {
-      if (r.expires_at < Date.now() - 24 * 60 * 60 * 1000 || r.used_at) {
-        // keep used for audit 24h, then clean? For now delete expired+used after 24h
-        if (r.expires_at < Date.now() || r.used_at) {
-          await ctx.db.delete(r._id);
-          deleted++;
-        }
+      if (r.used_at !== undefined || r.expires_at < now) {
+        await ctx.db.delete(r._id);
+        deleted++;
       }
     }
     return { deleted };

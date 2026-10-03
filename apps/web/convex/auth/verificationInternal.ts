@@ -125,3 +125,26 @@ export const clearByEmail = internalMutation({
     if (record) await ctx.db.delete(record._id);
   },
 });
+
+/**
+ * Deletes long-dead verification rows. Runs on a schedule (see
+ * convex/crons.ts). The grace period matters: `verified_at` rows stay valid
+ * for registration for 30 minutes after redemption, so only rows dead for
+ * over a day are swept -- anything needed by the cooldown (60s) or the
+ * freshness gate (30min) is far younger.
+ */
+export const deleteExpired = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const rows = await ctx.db.query("auth_email_verifications").collect();
+    let deleted = 0;
+    for (const row of rows) {
+      if (row.expires_at < cutoff) {
+        await ctx.db.delete(row._id);
+        deleted += 1;
+      }
+    }
+    return { deleted };
+  },
+});

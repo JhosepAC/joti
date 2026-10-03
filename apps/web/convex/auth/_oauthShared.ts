@@ -43,7 +43,11 @@ export function getGoogleClientId(): string {
 }
 
 function getStateSecret(): string {
-  return process.env.OAUTH_STATE_SECRET ?? requireEnv("GOOGLE_CLIENT_SECRET");
+  // Independent secret on purpose: sharing GOOGLE_CLIENT_SECRET between
+  // Google confidential-client auth and login-CSRF HMAC would couple two
+  // purposes to one key (a Google-secret rotation would silently rekey CSRF
+  // protection, and vice versa). Fail closed like the other key material.
+  return requireEnv("OAUTH_STATE_SECRET");
 }
 
 // --- base64url, without Buffer ---------------------------------------------
