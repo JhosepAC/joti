@@ -56,7 +56,7 @@ export const Step1Credentials: React.FC<Props> = ({ data, errors, isLoading, onC
             autoComplete="new-password"
           />
           {errors.password && <p className="text-xs text-error pl-2">{errors.password}</p>}
-          <p className="text-[11px] text-text-muted pl-1">12-128 characters, not containing your email or username</p>
+          <p className="text-[11px] text-text-muted pl-1">12+ characters, max 72 bytes, not containing your email or username</p>
         </div>
 
         <div className="space-y-2">

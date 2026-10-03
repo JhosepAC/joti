@@ -88,7 +88,8 @@ export function useRegisterFlow() {
 
     if (!data.password) newErrors.password = "Password is required";
     else if (data.password.length < 12) newErrors.password = "Password must be at least 12 characters";
-    else if (data.password.length > 128) newErrors.password = "Password must not exceed 128 characters";
+    // Bytes, not chars: the server caps passwords at 72 UTF-8 bytes (bcrypt limit).
+    else if (new TextEncoder().encode(data.password).length > 72) newErrors.password = "Password must not exceed 72 bytes";
     else if (email && data.password.toLowerCase().includes(email.split("@")[0] ?? "") && (email.split("@")[0]?.length ?? 0) >= 3) {
       newErrors.password = "Password must not contain your email";
     }

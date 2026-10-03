@@ -46,7 +46,8 @@ export function validateRegisterPayload(payload: RegisterPayload): {
 
   if (!password) errors.password = "Password is required";
   else if (password.length < 12) errors.password = "Password must be at least 12 characters";
-  else if (password.length > 128) errors.password = "Password must not exceed 128 characters";
+  // Bytes, not chars: the server caps passwords at 72 UTF-8 bytes (bcrypt limit).
+  else if (new TextEncoder().encode(password).length > 72) errors.password = "Password must not exceed 72 bytes";
   else if (password.toLowerCase().includes(email.split("@")[0] ?? "" ) && (email.split("@")[0]?.length ?? 0) >= 3) {
     errors.password = "Password must not contain your email";
   } else if (username && password.toLowerCase().includes(username) && username.length >= 3) {

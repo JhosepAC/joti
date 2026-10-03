@@ -6,7 +6,7 @@ import {
   DISPLAY_NAME_MAX_LENGTH,
   EMAIL_MAX_LENGTH,
   EMAIL_REGEX,
-  PASSWORD_MAX_LENGTH,
+  PASSWORD_MAX_BYTES,
   PASSWORD_MIN_LENGTH,
   RESERVED_USERNAMES,
   USERNAME_MAX_LENGTH,
@@ -36,7 +36,13 @@ export function validateEmail(email: string): string {
 }
 
 // ──────────────────────────────────────────────────────────
-// Password — 12-128 chars, not derived from email/username, no trim lowercasing
+// Password — 12+ chars, max 72 UTF-8 bytes, not derived from email/username
+//
+// The byte cap (not a char cap) is load-bearing: bcrypt -- including bcryptjs
+// -- silently ignores everything past byte 72, so two long passwords sharing
+// a 72-byte prefix would verify identically. Capping bytes keeps every
+// accepted password fully effective. TextEncoder is available in both the
+// Node and V8-isolate runtimes, unlike Buffer.
 // ──────────────────────────────────────────────────────────
 export function validatePassword(
   password: string,
@@ -45,8 +51,8 @@ export function validatePassword(
 ): void {
   if (password.length < PASSWORD_MIN_LENGTH)
     fail(`Password must be at least ${PASSWORD_MIN_LENGTH} characters.`);
-  if (password.length > PASSWORD_MAX_LENGTH)
-    fail(`Password must not exceed ${PASSWORD_MAX_LENGTH} characters.`);
+  if (new TextEncoder().encode(password).length > PASSWORD_MAX_BYTES)
+    fail(`Password must not exceed ${PASSWORD_MAX_BYTES} bytes.`);
 
   const lowerPass = password.toLowerCase();
   const lowerEmail = email.toLowerCase();

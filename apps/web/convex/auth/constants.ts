@@ -44,7 +44,8 @@ export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // --- Password ---
 export const PASSWORD_MIN_LENGTH = 12;
-export const PASSWORD_MAX_LENGTH = 128;
+// Bytes, not chars: bcrypt ignores everything past byte 72 (see validatePassword).
+export const PASSWORD_MAX_BYTES = 72;
 
 // --- Display name / Bio ---
 export const DISPLAY_NAME_MAX_LENGTH = 100;

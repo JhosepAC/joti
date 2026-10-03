@@ -83,7 +83,7 @@ export const ResetPasswordFlow: React.FC = () => {
     <div className="w-full max-w-[460px] mx-auto py-8">
       <header className="mb-8">
         <h1 className="text-3xl font-semibold tracking-[-0.03em] text-text-primary font-heading leading-tight">Reset password</h1>
-        <p className="text-sm font-light text-text-secondary mt-2">Choose a new password. It must be 12–128 characters and not contain your email or username.</p>
+        <p className="text-sm font-light text-text-secondary mt-2">Choose a new password. At least 12 characters, max 72 bytes, and not containing your email or username.</p>
       </header>
 
       {errors.general && (
@@ -104,7 +104,7 @@ export const ResetPasswordFlow: React.FC = () => {
             required
           />
           {errors.password && <p className="text-xs text-error pl-3">{errors.password}</p>}
-          <p className="text-[11px] text-text-muted pl-1">12–128 characters. Spaces allowed. Must not contain your email or username.</p>
+          <p className="text-[11px] text-text-muted pl-1">12+ characters, max 72 bytes. Spaces allowed. Must not contain your email or username.</p>
         </div>
 
         <div className="space-y-2.5">

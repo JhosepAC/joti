@@ -11,7 +11,8 @@ export function validateResetPasswordInput(input: {
 
   if (!password) errors.password = "Password is required";
   else if (password.length < 12) errors.password = "Password must be at least 12 characters";
-  else if (password.length > 128) errors.password = "Password must not exceed 128 characters";
+  // Bytes, not chars: the server caps passwords at 72 UTF-8 bytes (bcrypt limit).
+  else if (new TextEncoder().encode(password).length > 72) errors.password = "Password must not exceed 72 bytes";
   else if (email) {
     const localPart = email.split("@")[0]?.toLowerCase() ?? "";
     if (localPart.length >= 3 && password.toLowerCase().includes(localPart)) {
