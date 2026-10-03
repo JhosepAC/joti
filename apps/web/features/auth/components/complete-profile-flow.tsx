@@ -191,7 +191,7 @@ export const CompleteProfileFlow: React.FC = () => {
         </div>
         <div className="space-y-2">
           <Label htmlFor="bio">Bio</Label>
-          <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} rows={3} placeholder="A little about you..." className="w-full rounded-2xl border border-border p-3 text-sm resize-none" />
+          <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} rows={3} placeholder="A little about you..." className="w-full rounded-2xl border border-border bg-background p-3 text-sm placeholder:text-text-muted focus:border-border-strong focus:outline-none resize-none" />
           <p className="text-xs text-text-muted text-right">{bio.length}/500</p>
         </div>
       </div>

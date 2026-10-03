@@ -32,7 +32,7 @@ export const Step4Bio: React.FC<Props> = ({ data, errors, isLoading, onChange, o
           onChange={(e) => onChange("bio", e.target.value)}
           maxLength={500}
           rows={4}
-          className="w-full min-h-[110px] rounded-2xl border border-border bg-background px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border-focus focus:ring-2 focus:ring-focus-ring resize-none"
+          className="w-full min-h-[110px] rounded-2xl border border-border bg-background px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border-strong focus:ring-2 focus:ring-focus-ring resize-none"
         />
         <div className="flex justify-between text-xs px-1">
           <span className={errors.bio ? "text-error" : "text-text-muted"}>{errors.bio ?? "Max 500 characters, no control chars"}</span>
