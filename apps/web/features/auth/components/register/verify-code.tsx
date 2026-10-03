@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useRef } from "react";
 import { useTranslations, useFormatter } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RegisterFlowErrors } from "../../types/register-flow.types";
 
@@ -85,7 +85,43 @@ function ShieldIcon({ className }: { className?: string }) {
 export const VerifyCode: React.FC<Props> = ({ email, code, setCode, errors, isLoading, onVerify, onResend, expiresAt, resendCooldown = 0 }) => {
   const t = useTranslations("auth.register.verify");
   const format = useFormatter();
+  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const digits = code.padEnd(6, " ").slice(0, 6).split("");
+
+  const focusBox = (index: number) => {
+    inputsRef.current[index]?.focus();
+    inputsRef.current[index]?.select();
+  };
+
+  const setDigit = (index: number, raw: string) => {
+    const digit = raw.replace(/\D/g, "").slice(-1);
+    if (!digit) return;
+    const next = code.padEnd(6, " ").slice(0, 6).split("");
+    next[index] = digit;
+    setCode(next.join("").trimEnd());
+    if (index < 5) focusBox(index + 1);
+  };
+
+  const handleKeyDown = (index: number) => (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Backspace") return;
+    const current = code.padEnd(6, " ").slice(0, 6)[index];
+    if (current?.trim()) {
+      // Delete the digit in place; a second Backspace moves back.
+      const next = code.padEnd(6, " ").slice(0, 6).split("");
+      next[index] = " ";
+      setCode(next.join("").trimEnd());
+    } else if (index > 0) {
+      focusBox(index - 1);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    setCode(pasted);
+    focusBox(Math.min(pasted.length, 5));
+  };
 
   return (
     <div className="space-y-6">
@@ -124,35 +160,37 @@ export const VerifyCode: React.FC<Props> = ({ email, code, setCode, errors, isLo
             )}
           </div>
 
-          {/* Segmented digit preview, driven by the single accessible input below */}
-          <div aria-hidden="true" className="grid grid-cols-6 gap-2">
+          {/* Six real inputs styled as boxes: auto-advance, Backspace goes
+              back, paste fills all. The parent still owns the plain code string. */}
+          <div role="group" aria-label={t("code")} className="grid grid-cols-6 gap-2">
             {digits.map((digit, index) => (
-              <span
+              <input
                 key={index}
-                className={`flex h-12 items-center justify-center rounded-xl border bg-background text-xl font-semibold tabular-nums transition-colors ${
-                  digit.trim()
-                    ? "border-border-strong text-text-primary"
-                    : errors.code
-                      ? "border-error/40 text-text-muted"
+                ref={(el) => {
+                  inputsRef.current[index] = el;
+                }}
+                id={index === 0 ? "code" : undefined}
+                type="text"
+                inputMode="numeric"
+                autoComplete={index === 0 ? "one-time-code" : "off"}
+                aria-label={t("digitLabel", { current: index + 1, total: 6 })}
+                value={digit.trim()}
+                maxLength={1}
+                onChange={(e) => setDigit(index, e.target.value)}
+                onKeyDown={handleKeyDown(index)}
+                onPaste={handlePaste}
+                onFocus={(e) => e.target.select()}
+                disabled={isLoading}
+                className={`h-12 w-full rounded-xl border bg-background text-center text-xl font-semibold tabular-nums outline-none transition-colors focus:border-border-strong disabled:cursor-not-allowed disabled:opacity-50 ${
+                  errors.code
+                    ? "border-error/40 text-text-primary"
+                    : digit.trim()
+                      ? "border-border-strong text-text-primary"
                       : "border-border text-text-muted"
                 }`}
-              >
-                {digit}
-              </span>
+              />
             ))}
           </div>
-
-          <Input
-            id="code"
-            placeholder="123456"
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            hasError={Boolean(errors.code)}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            aria-describedby={errors.code ? undefined : "codeHelp"}
-            className="tracking-[0.3em] text-center text-lg"
-          />
           {errors.code ? (
             <p className="text-xs text-error pl-2">{errors.code}</p>
           ) : (

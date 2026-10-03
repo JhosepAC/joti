@@ -97,6 +97,7 @@
         "expiresAt": "Expires at {time}",
         "code": "Verification Code",
         "codeHint": "Enter the 6 digits without spaces or dashes.",
+        "digitLabel": "Digit {current} of {total}",
         "submit": "Verify & Continue",
         "resendPrompt": "Didn't receive it?",
         "resend": "Resend code",

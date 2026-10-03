@@ -96,6 +96,7 @@
         "expiresAt": "Vence a las {time}",
         "code": "Código de verificación",
         "codeHint": "Ingresa los 6 dígitos sin espacios ni guiones.",
+        "digitLabel": "Dígito {current} de {total}",
         "submit": "Verificar y continuar",
         "resendPrompt": "¿No lo recibiste?",
         "resend": "Reenviar código",
