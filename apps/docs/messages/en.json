@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "app": {
+      "title": "Joti Docs",
+      "description": "Joti documentation"
+    }
+  },
+  "common": {
+    "settings": {
+      "button": "Settings",
+      "menu": "Settings menu",
+      "language": "Language"
+    }
+  },
+  "home": {
+    "logoAlt": "Turborepo logo",
+    "getStarted": "Get started by editing <code>{path}</code>",
+    "saveInstantly": "Save and see your changes instantly.",
+    "deployNow": "Deploy now",
+    "vercelAlt": "Vercel logomark",
+    "readDocs": "Read our docs",
+    "openAlert": "Open alert",
+    "alertMessage": "Hello from your docs app!",
+    "windowAlt": "Window icon",
+    "examples": "Examples",
+    "globeAlt": "Globe icon",
+    "goToDocs": "Go to turborepo.dev →"
+  }
+}

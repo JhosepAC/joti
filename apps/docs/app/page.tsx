@@ -1,4 +1,5 @@
 import Image, { type ImageProps } from "next/image";
+import { getTranslations } from "next-intl/server";
 import { Button } from "@repo/ui/button";
 import styles from "./page.module.css";
 
@@ -18,7 +19,8 @@ const ThemeImage = (props: Props) => {
   );
 };
 
-export default function Home() {
+export default async function Home() {
+  const t = await getTranslations("home");
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -26,16 +28,19 @@ export default function Home() {
           className={styles.logo}
           srcLight="turborepo-dark.svg"
           srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
+          alt={t("logoAlt")}
           width={180}
           height={38}
           priority
         />
         <ol>
           <li>
-            Get started by editing <code>apps/docs/app/page.tsx</code>
+            {t.rich("getStarted", {
+              code: (chunks) => <code>{chunks}</code>,
+              path: "apps/docs/app/page.tsx",
+            })}
           </li>
-          <li>Save and see your changes instantly.</li>
+          <li>{t("saveInstantly")}</li>
         </ol>
 
         <div className={styles.ctas}>
@@ -48,11 +53,11 @@ export default function Home() {
             <Image
               className={styles.logo}
               src="/vercel.svg"
-              alt="Vercel logomark"
+              alt={t("vercelAlt")}
               width={20}
               height={20}
             />
-            Deploy now
+            {t("deployNow")}
           </a>
           <a
             href="https://turborepo.dev/docs?utm_source"
@@ -60,27 +65,27 @@ export default function Home() {
             rel="noopener noreferrer"
             className={styles.secondary}
           >
-            Read our docs
+            {t("readDocs")}
           </a>
         </div>
-        <Button appName="docs" className={styles.secondary}>
-          Open alert
+        <Button appName="docs" className={styles.secondary} alertMessage={t("alertMessage")}>
+          {t("openAlert")}
         </Button>
       </main>
       <footer className={styles.footer}>
         <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
           target="_blank"
           rel="noopener noreferrer"
         >
           <Image
             aria-hidden
             src="/window.svg"
-            alt="Window icon"
+            alt={t("windowAlt")}
             width={16}
             height={16}
           />
-          Examples
+          {t("examples")}
         </a>
         <a
           href="https://turborepo.dev?utm_source=create-turbo"
@@ -90,11 +95,11 @@ export default function Home() {
           <Image
             aria-hidden
             src="/globe.svg"
-            alt="Globe icon"
+            alt={t("globeAlt")}
             width={16}
             height={16}
           />
-          Go to turborepo.dev →
+          {t("goToDocs")}
         </a>
       </footer>
     </div>

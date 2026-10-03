@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "app": {
+      "title": "Docs Joti",
+      "description": "Documentación de Joti"
+    }
+  },
+  "common": {
+    "settings": {
+      "button": "Ajustes",
+      "menu": "Menú de ajustes",
+      "language": "Idioma"
+    }
+  },
+  "home": {
+    "logoAlt": "Logo de Turborepo",
+    "getStarted": "Empieza editando <code>{path}</code>",
+    "saveInstantly": "Guarda y ve tus cambios al instante.",
+    "deployNow": "Desplegar ahora",
+    "vercelAlt": "Logotipo de Vercel",
+    "readDocs": "Lee nuestra documentación",
+    "openAlert": "Abrir alerta",
+    "alertMessage": "¡Hola desde tu app docs!",
+    "windowAlt": "Ícono de ventana",
+    "examples": "Ejemplos",
+    "globeAlt": "Ícono de globo",
+    "goToDocs": "Ir a turborepo.dev →"
+  }
+}
