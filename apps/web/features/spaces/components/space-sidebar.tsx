@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
-import { ArrowLeftIcon, ArrowRightIcon, PlusIcon } from "./icons";
+import { ArrowLeftIcon, ArrowRightIcon, LogoutIcon, PlusIcon } from "./icons";
 import type { SpaceTool } from "../types/space.types";
 
 interface Props {
@@ -14,6 +14,8 @@ interface Props {
   onToggleCollapse: () => void;
   spaceName: string;
   spaceIcon: string;
+  onSignOut: () => void;
+  signingOut: boolean;
 }
 
 const TOOL_ICONS: Record<string, React.FC<React.SVGProps<SVGSVGElement>> | undefined> = {
@@ -90,6 +92,8 @@ export const SpaceSidebar: React.FC<Props> = ({
   onToggleCollapse,
   spaceName,
   spaceIcon,
+  onSignOut,
+  signingOut,
 }) => {
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
 
@@ -169,8 +173,19 @@ export const SpaceSidebar: React.FC<Props> = ({
         </ul>
       </nav>
 
-      {/* Collapse Toggle */}
-      <div className="border-t border-border p-3">
+      {/* Sign out + Collapse Toggle */}
+      <div className="space-y-1 border-t border-border p-3">
+        <button
+          type="button"
+          onClick={onSignOut}
+          disabled={signingOut}
+          className="w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-background hover:text-text-primary transition-colors disabled:opacity-50"
+          aria-label="Cerrar sesión"
+          title={collapsed ? "Cerrar sesión" : undefined}
+        >
+          <LogoutIcon className="w-5 h-5 flex-shrink-0" />
+          {!collapsed && <span>{signingOut ? "Saliendo…" : "Cerrar sesión"}</span>}
+        </button>
         <button
           type="button"
           onClick={onToggleCollapse}

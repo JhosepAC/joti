@@ -18,6 +18,7 @@ import {
 } from "./validators";
 import {
   CLAIM_SCOPE_ACCOUNT,
+  CLAIM_SCOPE_SPACE,
   LOGIN_MAX_ATTEMPTS_PER_HOUR,
   VERIFICATION_RECENT_MS,
 } from "./constants";
@@ -409,6 +410,50 @@ export const login: ReturnType<typeof action> = action({
       profile,
       claim,
     };
+  },
+});
+
+// ---------------------------------------------------------------------------
+// logout -- best-effort burn of presented grants.
+//
+// The response is always `{ signedOut: true }`, whether or not any grant was
+// presented or valid, so it reveals nothing about grant state. The client
+// clears its local store first and redirects regardless; server-side grants
+// are short-lived (15 min) and single-use, so an unburned leftover expires on
+// its own. All pairs are optional so logout works from any screen with
+// whatever the client still holds.
+// ---------------------------------------------------------------------------
+
+export const logout: ReturnType<typeof action> = action({
+  args: {
+    email: v.optional(v.string()),
+    claim: v.optional(v.string()),
+    slug: v.optional(v.string()),
+    grant: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<{ signedOut: boolean }> => {
+    if (args.email && args.claim) {
+      await ctx
+        .runMutation(internal.auth.claimGrants.consume, {
+          email: args.email.trim().toLowerCase(),
+          scope: CLAIM_SCOPE_ACCOUNT,
+          token_hash: sha256Hex(args.claim),
+        })
+        .catch(() => undefined);
+    }
+    if (args.grant) {
+      await ctx
+        .runMutation(internal.auth.claimGrants.consume, {
+          // The space store carries no email; the account grant (if the
+          // client still holds one) supplies it. A mismatch simply fails
+          // closed here, which is fine for a best-effort burn.
+          email: (args.email ?? "").trim().toLowerCase(),
+          scope: CLAIM_SCOPE_SPACE,
+          token_hash: sha256Hex(args.grant),
+        })
+        .catch(() => undefined);
+    }
+    return { signedOut: true };
   },
 });
 

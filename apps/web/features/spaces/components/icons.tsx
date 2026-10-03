@@ -143,6 +143,14 @@ export const LayersIcon = (props: IconProps) => (
   </Svg>
 );
 
+export const LogoutIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="m16 17 5-5-5-5" />
+    <path d="M21 12H9" />
+  </Svg>
+);
+
 export const SpinnerIcon = (props: IconProps) => (
   <Svg {...props} className={`animate-spin ${props.className ?? ""}`}>
     <path d="M12 3a9 9 0 1 0 9 9" />

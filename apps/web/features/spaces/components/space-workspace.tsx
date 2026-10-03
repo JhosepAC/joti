@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { clearGrants, readSpaceGrant, storeSpaceGrant } from "@/features/auth/utils/claim-store";
+import { readSpaceGrant, storeSpaceGrant } from "@/features/auth/utils/claim-store";
+import { useLogout } from "@/features/auth/hooks/use-logout";
 import { getAuthErrorMessage } from "@/features/auth/utils/get-auth-error-message";
 import { purposeTitle } from "../catalog";
 import { SpinnerIcon } from "./icons";
@@ -41,6 +42,7 @@ export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const getWorkspace = useAction(api.spaces.actions.getWorkspace);
+  const { signOut, signingOut } = useLogout();
 
   useEffect(() => {
     let cancelled = false;
@@ -141,6 +143,8 @@ export const SpaceWorkspace: React.FC<Props> = ({ slug }) => {
         onToggleCollapse={handleSidebarToggle}
         spaceName={space.name}
         spaceIcon={space.icon}
+        onSignOut={() => void signOut(slug)}
+        signingOut={signingOut}
       />
 
       {/* Main Content */}
