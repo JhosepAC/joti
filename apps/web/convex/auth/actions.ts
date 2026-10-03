@@ -110,8 +110,10 @@ export const register: ReturnType<typeof action> = action({
       internal.auth.queries.isEmailAvailable,
       { email: cleanEmail },
     )) as boolean;
+    // One generic message for both uniqueness failures: distinct messages
+    // would let anyone probe which emails and usernames are taken.
     if (!emailAvailable) {
-      throw new ConvexError("That email address cannot be registered.");
+      throw new ConvexError("Could not create an account with the provided details.");
     }
 
     const usernameAvailable = (await ctx.runQuery(
@@ -119,7 +121,7 @@ export const register: ReturnType<typeof action> = action({
       { username: cleanUsername },
     )) as boolean;
     if (!usernameAvailable) {
-      throw new ConvexError("Username is already taken.");
+      throw new ConvexError("Could not create an account with the provided details.");
     }
 
     // Rate limit before the expensive bcrypt call.

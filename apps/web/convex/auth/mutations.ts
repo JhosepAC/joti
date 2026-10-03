@@ -38,7 +38,9 @@ export const createUserInternal = internalMutation({
       .withIndex("by_email", (q) => q.eq("email", cleanEmail))
       .first();
     if (existingEmail && !existingEmail.deleted_at) {
-      throw new ConvexError("Email is already registered.");
+      // Generic on purpose: this mutation is reachable from the public
+      // `register` action, so a distinct message would be an existence oracle.
+      throw new ConvexError("Could not create an account with the provided details.");
     }
 
     const existingUsername = await ctx.db
@@ -46,7 +48,8 @@ export const createUserInternal = internalMutation({
       .withIndex("by_username", (q) => q.eq("username", cleanUsername))
       .first();
     if (existingUsername) {
-      throw new ConvexError("Username is already taken.");
+      // Same generic message as above (see the email branch).
+      throw new ConvexError("Could not create an account with the provided details.");
     }
 
     const userId = await ctx.db.insert("auth_users", {
