@@ -41,19 +41,15 @@ export const getByTokenHash = internalQuery({
   },
 });
 
-export const getRecentByEmail = internalQuery({
-  args: { email: v.string() },
+export const deleteByTokenHash = internalMutation({
+  args: { token_hash: v.string() },
   handler: async (ctx, args) => {
-    const all = await ctx.db
+    const record = await ctx.db
       .query("auth_password_resets")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .collect();
-    if (all.length === 0) return null;
-    // most recent by created_at
-    all.sort((a, b) => b.created_at - a.created_at);
-    const latest = all[0];
-    const countLastHour = all.filter((r) => r.created_at > Date.now() - 60 * 60 * 1000).length;
-    return { latest, countLastHour };
+      .withIndex("by_token_hash", (q) => q.eq("token_hash", args.token_hash))
+      .first();
+    if (record) await ctx.db.delete(record._id);
+    return { deleted: record !== null };
   },
 });
 

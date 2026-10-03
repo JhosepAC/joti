@@ -10,6 +10,7 @@ const CODE_MESSAGE_MAP: Record<string, string> = {
   EMAIL_NOT_VERIFIED: "Please verify your email before signing in. Check your inbox for the code.",
   INVALID_CREDENTIALS: "Invalid email or password.",
   RATE_LIMITED: "Please wait a moment before trying again.",
+  EMAIL_DELIVERY_FAILED: "We could not send the email. Please try again later.",
 };
 
 function sanitizeRawMessage(raw: string): string {
