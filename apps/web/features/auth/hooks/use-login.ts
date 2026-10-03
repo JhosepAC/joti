@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { AuthStatus, LoginCredentials, ValidationErrors } from "../types/auth.types";
@@ -38,6 +39,17 @@ export function useLogin() {
   const confirmCodeAction = useAction(api.auth.verification.confirmEmailCode);
 
   const gate = useEntryGate(entry);
+
+  // The gate navigates "profile" and "workspace" itself, but the "space"
+  // stage (first-space onboarding) renders on /spaces/new, so the login page
+  // has to send the user there. The rotated grant is already in
+  // sessionStorage (see use-entry-gate), so /spaces/new can resume.
+  const router = useRouter();
+  useEffect(() => {
+    if (gate.stage === "ready") {
+      router.replace("/spaces/new");
+    }
+  }, [gate.stage, router]);
 
   const handleFieldChange = (field: keyof LoginCredentials, value: string) => {
     setCredentials((prev) => ({ ...prev, [field]: value }));
