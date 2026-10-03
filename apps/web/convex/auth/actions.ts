@@ -9,12 +9,14 @@ import type { DataModel, Id } from "../_generated/dataModel";
 import { equalizePasswordTiming, hashPassword, issueClaimGrant, sha256Hex, verifyPassword } from "./crypto";
 import { issueVerificationCode } from "./_codeService";
 import {
+  validateAvatar,
   validateBio,
   validateDisplayName,
   validateEmail,
+  validateLocale,
   validatePassword,
+  validateTimezone,
   validateUsername,
-  validateAvatar,
 } from "./validators";
 import {
   CLAIM_SCOPE_ACCOUNT,
@@ -102,6 +104,8 @@ export const register: ReturnType<typeof action> = action({
     const cleanDisplayName = validateDisplayName(args.display_name);
     const cleanBio = validateBio(args.bio);
     const cleanAvatar = validateAvatar(args.avatar);
+    const cleanLocale = validateLocale(args.locale);
+    const cleanTimezone = validateTimezone(args.timezone);
 
     validatePassword(args.password, cleanEmail, cleanUsername);
     await assertRecentlyVerified(ctx, cleanEmail);
@@ -140,8 +144,8 @@ export const register: ReturnType<typeof action> = action({
       display_name: cleanDisplayName,
       bio: cleanBio,
       avatar: cleanAvatar,
-      locale: args.locale,
-      timezone: args.timezone,
+      locale: cleanLocale,
+      timezone: cleanTimezone,
     });
   },
 });
@@ -203,6 +207,8 @@ export const completeProfile: ReturnType<typeof action> = action({
     const cleanDisplayName = validateDisplayName(args.display_name);
     const cleanBio = validateBio(args.bio);
     const cleanAvatar = validateAvatar(args.avatar);
+    const cleanLocale = validateLocale(args.locale);
+    const cleanTimezone = validateTimezone(args.timezone);
 
     const existing = (await ctx.runQuery(internal.auth.queries.getSafeUserByEmail, {
       email: cleanEmail,
@@ -262,8 +268,8 @@ export const completeProfile: ReturnType<typeof action> = action({
           display_name: cleanDisplayName,
           bio: cleanBio,
           avatar: cleanAvatar,
-          locale: args.locale,
-          timezone: args.timezone,
+          locale: cleanLocale,
+          timezone: cleanTimezone,
         },
       )) as { userId: Id<"auth_users"> };
 
@@ -298,8 +304,8 @@ export const completeProfile: ReturnType<typeof action> = action({
       display_name: cleanDisplayName,
       bio: cleanBio,
       avatar: cleanAvatar,
-      locale: args.locale,
-      timezone: args.timezone,
+      locale: cleanLocale,
+      timezone: cleanTimezone,
     })) as { profileId: Id<"auth_user_profiles"> };
 
     // Burn only after the write succeeded (see the peek-first note above).
