@@ -185,9 +185,15 @@ export const handleFailedLogin = internalMutation({
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) return;
-    const newAttempts = user.failed_login_attempts + 1;
+    // Capped: the counter is only a tripwire for arming the lockout, and an
+    // unbounded value would keep growing under a sustained attack.
+    const newAttempts = Math.min(user.failed_login_attempts + 1, MAX_FAILED_ATTEMPTS);
     let lockedUntil = user.locked_until;
-    if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+    const alreadyLocked = lockedUntil !== undefined && lockedUntil > Date.now();
+    // Arm the lockout only on the transition into it. Re-arming on every
+    // failure while locked would let anyone keep any account locked forever
+    // with a trickle of bad guesses; the lockout must expire on its own.
+    if (newAttempts >= MAX_FAILED_ATTEMPTS && !alreadyLocked) {
       lockedUntil = Date.now() + LOCKOUT_DURATION_MS;
     }
     await ctx.db.patch(args.userId, {

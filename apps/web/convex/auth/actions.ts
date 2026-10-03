@@ -373,6 +373,16 @@ export const login: ReturnType<typeof action> = action({
     // which made them an existence oracle for unauthenticated callers.
     const isValid = await verifyPassword(args.password, user.password_hash);
 
+    // While locked, every attempt -- right password or not -- gets the same
+    // generic message and changes no state: a distinct "locked" reply would
+    // reveal whether the presented password was correct, and touching the
+    // counters here would let an attacker extend the lockout (see
+    // handleFailedLogin). The lockout expires on its own; afterwards a
+    // correct password succeeds and a wrong one re-arms it.
+    if (user.locked_until && user.locked_until > Date.now()) {
+      throw invalidCredentials;
+    }
+
     if (!isValid) {
       await ctx.runMutation(internal.auth.mutations.handleFailedLogin, {
         userId: user._id,
@@ -387,11 +397,6 @@ export const login: ReturnType<typeof action> = action({
         code: "EMAIL_NOT_VERIFIED",
         message: "Please verify your email before signing in. Check your inbox for the code.",
       });
-    }
-
-    if (user.locked_until && user.locked_until > Date.now()) {
-      const secondsLeft = Math.ceil((user.locked_until - Date.now()) / 1000);
-      throw new ConvexError(`Account is locked. Try again in ${secondsLeft} seconds.`);
     }
 
     await ctx.runMutation(internal.auth.mutations.handleSuccessfulLogin, {
