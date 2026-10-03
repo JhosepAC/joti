@@ -205,15 +205,24 @@ export const completeProfile: ReturnType<typeof action> = action({
       email: cleanEmail,
     })) as UserRow;
 
-    // Proof of address control. The grant is only ever minted after a
-    // successful code redemption (wizard) or a successful password check
-    // (post-login), and it is burned here. Without it, knowing a verified
-    // address was enough to claim that account's profile.
-    await ctx.runMutation(internal.auth.claimGrants.consume, {
-      email: cleanEmail,
-      scope: CLAIM_SCOPE_ACCOUNT,
+    // Peek first, consume last. The grant is single-use, so burning it before
+    // the retryable checks (username taken, profile already completed) would
+    // strand the user on a fixable form error with a dead token. Every check
+    // below runs against the peeked grant; the burn happens only after the
+    // write succeeds. (Residual race: if the grant expires or is consumed
+    // concurrently between peek and burn, the final consume throws after the
+    // write -- the caller re-signs in and the entry gate routes them onward
+    // from the already-created profile, so nothing is lost.)
+    const grant = (await ctx.runQuery(internal.auth.claimGrants.peek, {
       token_hash: sha256Hex(args.claim),
-    });
+      scope: CLAIM_SCOPE_ACCOUNT,
+    })) as { email: string };
+    if (grant.email !== cleanEmail) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "This session is no longer valid. Please sign in again.",
+      });
+    }
 
     if (!existing) {
       // No account: this is the tail of registration, so the caller supplies the
@@ -255,6 +264,14 @@ export const completeProfile: ReturnType<typeof action> = action({
         },
       )) as { userId: Id<"auth_users"> };
 
+      // The account exists only now, so burn the presented grant only after
+      // the write succeeded (see the peek-first note above).
+      await ctx.runMutation(internal.auth.claimGrants.consume, {
+        email: cleanEmail,
+        scope: CLAIM_SCOPE_ACCOUNT,
+        token_hash: sha256Hex(args.claim),
+      });
+
       // The onboarding continues with the first space, so hand the caller a
       // grant for that step rather than making them sign in again.
       return {
@@ -281,6 +298,13 @@ export const completeProfile: ReturnType<typeof action> = action({
       locale: args.locale,
       timezone: args.timezone,
     })) as { profileId: Id<"auth_user_profiles"> };
+
+    // Burn only after the write succeeded (see the peek-first note above).
+    await ctx.runMutation(internal.auth.claimGrants.consume, {
+      email: cleanEmail,
+      scope: CLAIM_SCOPE_ACCOUNT,
+      token_hash: sha256Hex(args.claim),
+    });
 
     return {
       ...result,
