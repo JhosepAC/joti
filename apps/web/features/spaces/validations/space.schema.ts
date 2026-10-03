@@ -26,17 +26,20 @@ const CONTROL_CHARS_REGEX = new RegExp(CONTROL_CHARS);
 /** Global: strips every occurrence, not just the first. */
 const CONTROL_CHARS_GLOBAL_REGEX = new RegExp(CONTROL_CHARS, "g");
 
-export function validateSpaceNameInput(name: string): string | null {
+export function validateSpaceNameInput(
+  name: string,
+  t: (key: "required" | "minLength" | "maxLength" | "invalidChars", vars?: Record<string, number>) => string,
+): string | null {
   const trimmed = name.trim();
-  if (trimmed.length === 0) return "El nombre del espacio es obligatorio";
+  if (trimmed.length === 0) return t("required");
   if (trimmed.length < SPACE_NAME_MIN_LENGTH) {
-    return `El nombre debe tener al menos ${SPACE_NAME_MIN_LENGTH} caracteres`;
+    return t("minLength", { min: SPACE_NAME_MIN_LENGTH });
   }
   if (trimmed.length > SPACE_NAME_MAX_LENGTH) {
-    return `El nombre no puede superar ${SPACE_NAME_MAX_LENGTH} caracteres`;
+    return t("maxLength", { max: SPACE_NAME_MAX_LENGTH });
   }
   if (CONTROL_CHARS_REGEX.test(trimmed)) {
-    return "El nombre contiene caracteres no permitidos";
+    return t("invalidChars");
   }
   return null;
 }

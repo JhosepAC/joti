@@ -1,0 +1,437 @@
+{
+  "common": {
+    "appName": "Joti",
+    "settings": {
+      "button": "Settings",
+      "menu": "Settings menu",
+      "language": "Language"
+    },
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "close": "Close",
+      "confirm": "Confirm",
+      "back": "Back",
+      "next": "Next",
+      "continue": "Continue",
+      "retry": "Retry",
+      "loading": "Loading...",
+      "send": "Send",
+      "resend": "Resend code",
+      "verify": "Verify",
+      "create": "Create",
+      "skip": "Skip",
+      "start": "Start",
+      "signIn": "Sign In",
+      "signOut": "Sign out",
+      "new": "New",
+      "or": "or"
+    }
+  },
+  "metadata": {
+    "app": {
+      "title": "Joti",
+      "description": "Your personal spaces for notes, tasks and more"
+    },
+    "login": {
+      "title": "Sign In - Joti",
+      "description": "Sign in to access your Joti dashboard"
+    },
+    "register": {
+      "title": "Create account - Joti",
+      "description": "Create your Joti account"
+    },
+    "forgotPassword": {
+      "title": "Recover password - Joti",
+      "description": "Regain access to your Joti account"
+    },
+    "resetPassword": {
+      "title": "Reset password - Joti",
+      "description": "Choose a new password for your account"
+    },
+    "completeProfile": {
+      "title": "Complete your profile - Joti",
+      "description": "Complete your profile to start using Joti"
+    },
+    "spacesNew": {
+      "title": "Your first space - Joti",
+      "description": "Create the first space in your Joti account"
+    },
+    "workspace": {
+      "title": "Space - Joti",
+      "description": "Your workspace in Joti"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Continue to access your dashboard",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot Password?",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create Account",
+      "activationTitle": "Your account is not activated. Enter the code we sent to {email}.",
+      "activationResend": "Resend code",
+      "activationResendIn": "Resend in {seconds}s",
+      "activationVerify": "Verify & Activate"
+    },
+    "register": {
+      "step1": {
+        "title": "Create Account",
+        "subtitle": "Enter your email and password to get started",
+        "email": "Email",
+        "password": "Password",
+        "passwordHint": "12+ characters, max 72 bytes, not containing your email or username",
+        "confirmPassword": "Confirm Password",
+        "submit": "Continue",
+        "footer": "Already have an account?",
+        "signIn": "Sign In"
+      },
+      "verify": {
+        "title": "Confirm your email",
+        "description": "We sent a 6-digit code to <b>{email}</b>. Enter it below.",
+        "expiresAt": "Expires at {time}",
+        "code": "Verification Code",
+        "codeHint": "Enter the 6 digits without spaces or dashes.",
+        "submit": "Verify & Continue",
+        "resendPrompt": "Didn't receive it?",
+        "resend": "Resend code",
+        "resendIn": "Resend in {seconds}s",
+        "note": "If you close this screen, you'll need to verify when you sign in."
+      },
+      "step2": {
+        "title": "Create your profile",
+        "subtitle": "Choose how you'll appear in Joti",
+        "username": "Username",
+        "displayName": "Display Name",
+        "displayNamePlaceholder": "Joti User",
+        "displayNameHint": "1-100 characters, emoji allowed, no control chars",
+        "restrictionsTitle": "Restrictions:",
+        "restrictionLength": "3-20 characters, lowercase only",
+        "restrictionAllowed": "Allowed:",
+        "restrictionReserved": "No spaces or reserved names (admin, api, auth, etc.)",
+        "restrictionUnique": "Unique, case-insensitive",
+        "submit": "Continue"
+      },
+      "step3": {
+        "title": "Add avatar",
+        "subtitle": "Upload an image or choose a recommended one",
+        "upload": "Upload image",
+        "recommended": "Recommended avatars",
+        "recommendedAlt": "recommended",
+        "useRecommended": "Use recommended",
+        "previewAlt": "avatar preview",
+        "skip": "Skip",
+        "submit": "Continue",
+        "skipNote": "Skip will use the first letter of your name",
+        "avatarErrorImage": "Please upload an image file",
+        "avatarErrorSize": "Avatar must be less than 5MB",
+        "uploadFailed": "Failed to upload avatar"
+      },
+      "step4": {
+        "title": "Tell us about you",
+        "subtitle": "Add a short bio — you can change it later",
+        "bio": "Biography",
+        "bioPlaceholder": "A little bit about yourself...",
+        "bioHint": "Max 500 characters, no control chars",
+        "bioCount": "{count}/500",
+        "submit": "Start"
+      },
+      "step": "Step {current} of {total}",
+      "back": "← Back"
+    },
+    "forgotPassword": {
+      "title": "Forgot password?",
+      "subtitle": "Enter your email and we'll send you a reset link",
+      "email": "Email",
+      "submit": "Send reset link",
+      "submitWait": "Wait {seconds}s",
+      "submitCooldownNote": "Please wait before requesting another link.",
+      "footer": "Remembered your password?",
+      "signIn": "Sign In",
+      "successTitle": "Check your email",
+      "successDescription": "If an account exists for <b>{email}</b>, we've sent a password reset link. It expires in 60 minutes.",
+      "resendPrompt": "Didn't receive it? Check spam. The link is single-use. You can request a new one after 60 seconds.",
+      "resendAvailableIn": "Resend available in {seconds}s",
+      "resend": "Resend link",
+      "backToSignIn": "Back to Sign In"
+    },
+    "resetPassword": {
+      "title": "Reset password",
+      "subtitle": "Choose a new password. At least 12 characters, max 72 bytes, and not containing your email or username.",
+      "newPassword": "New password",
+      "newPasswordHint": "12+ characters, max 72 bytes. Spaces allowed. Must not contain your email or username.",
+      "confirmPassword": "Confirm new password",
+      "submit": "Update password",
+      "verifying": "Verifying reset link...",
+      "missingToken": "Missing reset token. Please use the link from your email.",
+      "requestNew": "Request new link",
+      "expiredTitle": "Link expired",
+      "expiredDescription": "This reset link is invalid, already used, or has expired (60 minutes).",
+      "backToSignIn": "Back to Sign In",
+      "successTitle": "Password updated",
+      "successDescription": "Your password was changed successfully. A confirmation email was sent.",
+      "signIn": "Sign In"
+    },
+    "completeProfile": {
+      "title": "Complete your profile",
+      "subtitle": "Your account is active but a profile is required for {email}",
+      "username": "Username",
+      "usernameHint": "3-20 chars, a-z 0-9 _ only",
+      "usernameRule": "Username may only contain a-z, 0-9 and _",
+      "usernameLength": "Username must be 3-20 characters",
+      "displayName": "Display Name",
+      "displayNamePlaceholder": "Joti User",
+      "avatar": "Avatar",
+      "skipAvatar": "Skip uses first letter",
+      "previewAlt": "preview",
+      "useRecommended": "Use recommended",
+      "recommendedAlt": "recommended",
+      "bio": "Bio",
+      "bioPlaceholder": "A little bit about yourself...",
+      "bioCount": "{count}/500",
+      "submit": "Complete Profile",
+      "missingEmail": "Missing email. Please sign in again.",
+      "required": "Username and display name are required",
+      "avatarImageError": "Please upload an image file",
+      "avatarSizeError": "Avatar must be less than 5MB",
+      "avatarUploadError": "Failed to upload avatar"
+    },
+    "oauth": {
+      "continueWithGoogle": "Continue with Google",
+      "recommended": "Recommended"
+    },
+    "activation": {
+      "codeMustBeDigits": "Code must be 6 digits"
+    }
+  },
+  "validation": {
+    "email": {
+      "required": "Email is required",
+      "tooLong": "Email must not exceed 320 characters",
+      "noSpaces": "Email must not contain spaces",
+      "invalid": "Please enter a valid email address"
+    },
+    "password": {
+      "required": "Password is required",
+      "tooShort": "Password must be at least 12 characters",
+      "tooLongBytes": "Password must not exceed 72 bytes",
+      "containsEmail": "Password must not contain your email",
+      "sameAsEmail": "Password must not be the same as your email",
+      "containsUsername": "Password must not contain your username",
+      "sameAsUsername": "Password must not be the same as your username",
+      "mismatch": "Passwords do not match",
+      "confirmRequired": "Please confirm your password"
+    },
+    "username": {
+      "required": "Username is required",
+      "length": "Username must be 3-20 characters",
+      "charset": "Use only a-z, 0-9 and _",
+      "reserved": "This username is reserved"
+    },
+    "displayName": {
+      "required": "Display name is required",
+      "tooLong": "Display name must not exceed 100 characters",
+      "invalidChars": "Invalid characters"
+    },
+    "bio": {
+      "tooLong": "Bio must not exceed 500 characters",
+      "invalidChars": "Bio contains invalid characters"
+    },
+    "code": {
+      "digits": "Code must be 6 digits",
+      "invalid": "Invalid or expired code"
+    },
+    "general": {
+      "verifyEmailFirst": "Please verify your email first",
+      "sessionExpired": "Your verification session expired. Please request a new code.",
+      "completeProfileFailed": "Failed to complete profile",
+      "accountFailed": "Failed to create account",
+      "resendFailed": "Failed to resend code",
+      "resetFailed": "Failed to reset password",
+      "resetLinkFailed": "Failed to send reset link",
+      "signInFailed": "We couldn't sign you in. Please try again."
+    }
+  },
+  "errors": {
+    "invalidCredentials": "Invalid email or password.",
+    "validation": "Please check your input and try again.",
+    "emailNotVerified": "Please verify your email before signing in. Check your inbox for the code.",
+    "rateLimited": "Please wait a moment before trying again.",
+    "deliveryFailed": "We could not send the email. Please try again later.",
+    "fallback": "Something went wrong. Please try again.",
+    "sessionExpired": "Your session expired. Please sign in again.",
+    "sessionInvalid": "This session is no longer valid. Please sign in again.",
+    "entryUnknown": "We couldn't determine the next step. Please sign in again.",
+    "spaceUnavailable": "This space is not available.",
+    "spaceSignIn": "Your session is not active. Sign in to enter this space.",
+    "sectionUnavailable": "We couldn't open this section",
+    "createSpaceFailed": "We couldn't create your space. Please try again.",
+    "codeInvalid": "Invalid or expired code.",
+    "tooManyAttempts": "Too many attempts. Request a new code.",
+    "profileRequired": "Complete your profile to continue.",
+    "spaceExists": "You already have a space.",
+    "storageLimit": "Uploads are temporarily unavailable. Please try again later."
+  },
+  "spaces": {
+    "tools": {
+      "notes": "Notes",
+      "tasks": "Tasks",
+      "journal": "Journal",
+      "projects": "Projects",
+      "meetings": "Meetings",
+      "assignments": "Assignments",
+      "calendar": "Calendar"
+    },
+    "new": {
+      "title": "Create your first space",
+      "subtitle": "Everything in Joti lives inside a space. Let's start with the first one.",
+      "sectionLabel": "Step {step} of {total}"
+    },
+    "steps": {
+      "identity": "Identity",
+      "purpose": "Purpose",
+      "review": "Review",
+      "progress": "Step {current} of {total}",
+      "navLabel": "Space creation progress"
+    },
+    "identity": {
+      "title": "Space identity",
+      "subtitle": "Give it a name and an icon to recognize it easily.",
+      "name": "Space name",
+      "namePlaceholder": "Ana's Space",
+      "nameHint": "Between {min} and {max} characters.",
+      "nameCount": "{count}/{max}",
+      "nameError": {
+        "required": "Space name is required",
+        "minLength": "Name must be at least {min} characters",
+        "maxLength": "Name must not exceed {max} characters",
+        "invalidChars": "Name contains disallowed characters"
+      },
+      "icon": "Space icon",
+      "iconHint": "Pick the one that represents it best. You can change it later.",
+      "iconGroup": "Available icons",
+      "iconUse": "Use the {icon} icon"
+    },
+    "purpose": {
+      "title": "Space purpose",
+      "subtitle": "Choose what you'll use it for. This sets the starter template and enabled tools.",
+      "options": {
+        "personal": {
+          "title": "Personal",
+          "description": "Designed for personal projects, quick notes and daily organization."
+        },
+        "work": {
+          "title": "Work / Business",
+          "description": "Designed for task management, meeting notes and projects."
+        },
+        "study": {
+          "title": "Study / University",
+          "description": "Designed for class notes, deliverables and exam dates."
+        },
+        "blank": {
+          "title": "Blank / Minimal",
+          "description": "Fully clean space with no templates or sample data."
+        }
+      }
+    },
+    "summary": {
+      "title": "Space summary",
+      "subtitle": "Review before creating. You can change everything later.",
+      "tools": "Enabled tools",
+      "submit": "Create my space"
+    },
+    "creating": {
+      "title": "Creating your space",
+      "step1": "Creating space in Convex...",
+      "step2": "Injecting starter template and welcome notes...",
+      "step3": "All set! Entering joti..."
+    },
+    "onboarding": {
+      "checking": "Checking your account",
+      "unavailableTitle": "We couldn't open this section",
+      "signIn": "Go to sign in"
+    },
+    "workspace": {
+      "loading": "Loading space",
+      "unavailableTitle": "Space unavailable",
+      "signIn": "Sign in",
+      "signingOut": "Signing out…",
+      "signOut": "Sign out",
+      "sidebar": {
+        "tools": "Space tools",
+        "toolsNav": "Tools",
+        "collapse": "Collapse",
+        "expandBar": "Expand sidebar",
+        "collapseBar": "Collapse sidebar"
+      },
+      "content": {
+        "selectTool": "Select a tool",
+        "selectToolHint": "Pick a tool in the sidebar to start working in your space.",
+        "position": "Tool {current} of {total}",
+        "search": "Search",
+        "filter": "Filter",
+        "createNew": "Create new {label}",
+        "new": "New",
+        "create": "Create {label}",
+        "listPlaceholder": "The list view will appear here once you add items.",
+        "emptyFallbackTitle": "No {label}",
+        "emptyFallbackDescription": "Create your first {label} to get started.",
+        "tools": {
+          "notes": {
+            "title": "No notes yet",
+            "description": "Create your first note to start capturing ideas, thoughts or anything important."
+          },
+          "tasks": {
+            "title": "No tasks",
+            "description": "Add a task to start organizing your work. You can create lists, assign dates and mark as done."
+          },
+          "journal": {
+            "title": "Empty journal",
+            "description": "Start writing your daily reflections. The journal is your private space for thoughts and learnings."
+          },
+          "projects": {
+            "title": "No projects",
+            "description": "Create a project to group related tasks, notes and resources. Projects help you stay focused."
+          },
+          "meetings": {
+            "title": "No meeting notes",
+            "description": "Record your meeting notes: attendees, decisions, pending tasks and follow-ups."
+          },
+          "assignments": {
+            "title": "No deliverables",
+            "description": "Track your assignments and deliverables with due dates, status and priority."
+          },
+          "calendar": {
+            "title": "No events",
+            "description": "Add exam dates, deliverables and important events so you never miss anything."
+          }
+        }
+      }
+    }
+  },
+  "providers": {
+    "convex": {
+      "title": "Configuration error",
+      "description": "The app backend is not configured (missing <code>{variable}</code>). Set it in <code>{file}</code> and restart the dev server."
+    }
+  },
+  "boilerplate": {
+    "logoAlt": "Turborepo logo",
+    "getStarted": "Get started by editing <code>{path}</code>",
+    "saveInstantly": "Save and see your changes instantly.",
+    "deployNow": "Deploy now",
+    "vercelAlt": "Vercel logomark",
+    "readDocs": "Read our docs",
+    "openAlert": "Open alert",
+    "alertMessage": "Hello from your web app!",
+    "windowAlt": "Window icon",
+    "examples": "Examples",
+    "globeAlt": "Globe icon",
+    "goToDocs": "Go to turborepo.dev →"
+  }
+}

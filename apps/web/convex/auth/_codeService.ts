@@ -19,8 +19,9 @@ import type { GenericActionCtx } from "convex/server";
 import { internal } from "../_generated/api";
 import type { DataModel } from "../_generated/dataModel";
 import { validateEmail } from "./validators";
-import { sha256Hex } from "./crypto";
+import { hashEmailCode } from "./crypto";
 import { sendVerificationCodeEmail } from "./email";
+import { resolveEmailLocale } from "./emailCopy";
 import {
   VERIFICATION_CODE_COOLDOWN_MS,
   VERIFICATION_CODE_EXPIRY_MS,
@@ -46,8 +47,10 @@ type Ctx = GenericActionCtx<DataModel>;
 export async function issueVerificationCode(
   ctx: Ctx,
   rawEmail: string,
+  rawLocale?: string,
 ): Promise<{ expiresAt: number }> {
   const email = validateEmail(rawEmail);
+  const locale = resolveEmailLocale(rawLocale);
 
   // Cooldown first, then the hourly cap, so a burst cannot fan out into
   // hundreds of provider calls.
@@ -78,11 +81,22 @@ export async function issueVerificationCode(
 
   await ctx.runMutation(internal.auth.verificationInternal.upsertCode, {
     email,
-    code_hash: sha256Hex(code),
+    code_hash: hashEmailCode(code),
     expires_at: expiresAt,
   });
 
-  await sendVerificationCodeEmail(email, code);
+  const delivery = await sendVerificationCodeEmail(email, code, locale);
+  if (!delivery.delivered) {
+    // Roll back the row so a later retry (once the provider is fixed) starts
+    // clean instead of tripping over this attempt's cooldown. The hourly send
+    // cap is deliberately NOT refunded: it bounds how fast anyone can make us
+    // hit the provider, working or not.
+    await ctx.runMutation(internal.auth.verificationInternal.clearByEmail, { email });
+    throw new ConvexError({
+      code: "EMAIL_DELIVERY_FAILED",
+      message: "We could not send the verification email. Please try again later.",
+    });
+  }
 
   return { expiresAt };
 }

@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAction } from "convex/react";
+import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
-import { getAuthErrorCode, getAuthErrorMessage } from "../utils/get-auth-error-message";
+import { getAuthErrorCode } from "../utils/get-auth-error-message";
+import { useAuthErrorMessage } from "../utils/get-auth-error-message";
+import { useValidationTranslator } from "@/i18n/translate";
 import {
   RegisterFlowData,
   RegisterFlowErrors,
@@ -49,6 +52,11 @@ const initialData: RegisterFlowData = {
 };
 
 export function useRegisterFlow() {
+  const tValidation = useValidationTranslator();
+  const tErrors = useAuthErrorMessage();
+  const tGeneral = useTranslations("validation.general");
+  const tAvatar = useTranslations("auth.register.step3");
+  const locale = useLocale();
   const [step, setStep] = useState<RegisterStep>(1);
   const [data, setData] = useState<RegisterFlowData>(initialData);
   const [errors, setErrors] = useState<RegisterFlowErrors>({});
@@ -68,6 +76,35 @@ export function useRegisterFlow() {
   const completeProfileAction = useAction(api.auth.actions.completeProfile);
   const generateUploadUrl = useAction(api.auth.storage.generateAvatarUploadUrl);
 
+  // Synchronous in-flight guard (see use-login): button state flips only
+  // after a render, so rapid double submits could otherwise fire twice --
+  // burning a single-use claim on the second call.
+  const inFlight = useRef(false);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cooldown ticker owned in one place: every resend path funnels through
+  // here, previous tickers are replaced (never stacked), and unmount clears
+  // the timer so no setState fires on an unmounted hook.
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  const startResendCooldown = (seconds: number) => {
+    setResendCooldown(seconds);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const updateField = useCallback(
     <K extends keyof RegisterFlowData>(field: K, value: RegisterFlowData[K]) => {
       setData((prev) => ({ ...prev, [field]: value }));
@@ -81,19 +118,20 @@ export function useRegisterFlow() {
   const validateStep1 = (): boolean => {
     const newErrors: RegisterFlowErrors = {};
     const email = data.email.trim().toLowerCase();
-    if (!email) newErrors.email = "Email is required";
-    else if (email.length > 320) newErrors.email = "Email must not exceed 320 characters";
-    else if (/\s/.test(email)) newErrors.email = "Email must not contain spaces";
-    else if (!EMAIL_REGEX.test(email)) newErrors.email = "Please enter a valid email address";
+    if (!email) newErrors.email = tValidation("email.required");
+    else if (email.length > 320) newErrors.email = tValidation("email.tooLong");
+    else if (/\s/.test(email)) newErrors.email = tValidation("email.noSpaces");
+    else if (!EMAIL_REGEX.test(email)) newErrors.email = tValidation("email.invalid");
 
-    if (!data.password) newErrors.password = "Password is required";
-    else if (data.password.length < 12) newErrors.password = "Password must be at least 12 characters";
-    else if (data.password.length > 128) newErrors.password = "Password must not exceed 128 characters";
+    if (!data.password) newErrors.password = tValidation("password.required");
+    else if (data.password.length < 12) newErrors.password = tValidation("password.tooShort");
+    // Bytes, not chars: the server caps passwords at 72 UTF-8 bytes (bcrypt limit).
+    else if (new TextEncoder().encode(data.password).length > 72) newErrors.password = tValidation("password.tooLongBytes");
     else if (email && data.password.toLowerCase().includes(email.split("@")[0] ?? "") && (email.split("@")[0]?.length ?? 0) >= 3) {
-      newErrors.password = "Password must not contain your email";
+      newErrors.password = tValidation("password.containsEmail");
     }
 
-    if (data.password !== data.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (data.password !== data.confirmPassword) newErrors.confirmPassword = tValidation("password.mismatch");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -102,18 +140,18 @@ export function useRegisterFlow() {
   const validateStep2 = (): boolean => {
     const newErrors: RegisterFlowErrors = {};
     const username = data.username.trim().toLowerCase();
-    if (!username) newErrors.username = "Username is required";
-    else if (username.length < 3 || username.length > 20) newErrors.username = "Username must be 3-20 characters";
-    else if (!USERNAME_REGEX.test(username)) newErrors.username = "Use only a-z, 0-9 and _";
-    else if (RESERVED.has(username)) newErrors.username = "This username is reserved";
+    if (!username) newErrors.username = tValidation("username.required");
+    else if (username.length < 3 || username.length > 20) newErrors.username = tValidation("username.length");
+    else if (!USERNAME_REGEX.test(username)) newErrors.username = tValidation("username.charset");
+    else if (RESERVED.has(username)) newErrors.username = tValidation("username.reserved");
 
     const displayName = data.displayName.trim();
-    if (!displayName) newErrors.displayName = "Display name is required";
-    else if (displayName.length > 100) newErrors.displayName = "Display name must not exceed 100 characters";
-    else if (/[\u0000-\u001F\u007F-\u009F]/.test(displayName)) newErrors.displayName = "Invalid characters";
+    if (!displayName) newErrors.displayName = tValidation("displayName.required");
+    else if (displayName.length > 100) newErrors.displayName = tValidation("displayName.tooLong");
+    else if (/[\u0000-\u001F\u007F-\u009F]/.test(displayName)) newErrors.displayName = tValidation("displayName.invalidChars");
 
     if (data.password.toLowerCase().includes(username) && username.length >= 3) {
-      newErrors.password = "Password must not contain your username";
+      newErrors.password = tValidation("password.containsUsername");
     }
 
     setErrors(newErrors);
@@ -122,43 +160,38 @@ export function useRegisterFlow() {
 
   const validateStep4 = (): boolean => {
     const newErrors: RegisterFlowErrors = {};
-    if (data.bio.trim().length > 500) newErrors.bio = "Bio must not exceed 500 characters";
-    else if (/[\u0000-\u001F\u007F-\u009F]/.test(data.bio)) newErrors.bio = "Bio contains invalid characters";
+    if (data.bio.trim().length > 500) newErrors.bio = tValidation("bio.tooLong");
+    else if (/[\u0000-\u001F\u007F-\u009F]/.test(data.bio)) newErrors.bio = tValidation("bio.invalidChars");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleStep1Next = async () => {
     if (!validateStep1()) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsLoading(true);
     try {
       // Spec: email+password already creates inactive account
       const res = (await registerPendingAction({
         email: data.email.trim().toLowerCase(),
         password: data.password,
+        locale,
       })) as { expiresAt: number };
       setCodeExpiresAt(res.expiresAt);
       setStep(1.1);
       setErrors({});
     } catch (err: unknown) {
-      const msg = getAuthErrorMessage(err, "Failed to create account");
+      const msg = tErrors(err, tGeneral("accountFailed"));
       const code = getAuthErrorCode(err);
       if (code === "RATE_LIMITED") {
         const m = msg.match(/(\d+)s/);
         const wait = m?.[1] ? parseInt(m[1], 10) : 60;
-        setResendCooldown(wait);
-        const interval = setInterval(() => {
-          setResendCooldown((prev) => {
-            if (prev <= 1) {
-              clearInterval(interval);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+        startResendCooldown(wait);
       }
       setErrors({ general: msg });
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   };
@@ -168,6 +201,8 @@ export function useRegisterFlow() {
       setErrors({ code: "Code must be 6 digits" });
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsLoading(true);
     try {
       const res = (await confirmCodeAction({
@@ -179,48 +214,34 @@ export function useRegisterFlow() {
       setStep(2);
       setErrors({});
     } catch (err: unknown) {
-      setErrors({ code: getAuthErrorMessage(err, "Invalid or expired code") });
+      setErrors({ code: tErrors(err, tValidation("code.invalid")) });
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   };
 
   const handleResendCode = async () => {
     if (resendCooldown > 0) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsLoading(true);
     try {
-      const res = await requestCodeAction({ email: data.email.trim().toLowerCase() });
+      const res = await requestCodeAction({ email: data.email.trim().toLowerCase(), locale });
       setCodeExpiresAt((res as { expiresAt: number }).expiresAt);
-      setResendCooldown(30);
-      const interval = setInterval(() => {
-        setResendCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      startResendCooldown(30);
       setErrors({});
     } catch (err: unknown) {
-      const msg = getAuthErrorMessage(err, "Failed to resend code");
+      const msg = tErrors(err, tGeneral("resendFailed"));
       const code = getAuthErrorCode(err);
       if (code === "RATE_LIMITED") {
         const m = msg.match(/(\d+)s/);
         const wait = m?.[1] ? parseInt(m[1], 10) : 60;
-        setResendCooldown(wait);
-        const interval = setInterval(() => {
-          setResendCooldown((prev) => {
-            if (prev <= 1) {
-              clearInterval(interval);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+        startResendCooldown(wait);
       }
       setErrors({ general: msg });
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   };
@@ -242,25 +263,34 @@ export function useRegisterFlow() {
   const handleFinalSubmit = async () => {
     if (!validateStep4()) return;
     if (!isVerified) {
-      setErrors({ general: "Please verify your email first" });
+      setErrors({ general: tGeneral("verifyEmailFirst") });
       setStep(1.1);
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setIsLoading(true);
+    // Set when the failure originates in the avatar upload block below, so
+    // the catch routes it to the avatar field. Server messages stay English
+    // (backend contracts), so the substring routing further down keeps
+    // working in every UI locale.
+    let avatarError: string | null = null;
     try {
       let avatar: string | undefined = data.avatarUrl ?? undefined;
 
       if (data.avatarFile) {
         if (data.avatarFile.size > 5 * 1024 * 1024) {
-          setErrors({ avatar: "Avatar must be less than 5MB", general: "Avatar must be less than 5MB" });
-          throw new Error("Avatar must be less than 5MB");
+          avatarError = tAvatar("avatarErrorSize");
+          setErrors({ avatar: avatarError, general: avatarError });
+          throw new Error("avatar-validation");
         }
         if (!data.avatarFile.type.startsWith("image/")) {
-          setErrors({ avatar: "Please upload an image file", general: "Please upload an image file" });
-          throw new Error("Please upload an image file");
+          avatarError = tAvatar("avatarErrorImage");
+          setErrors({ avatar: avatarError, general: avatarError });
+          throw new Error("avatar-validation");
         }
         if (!claim) {
-          const msg = "Your verification session expired. Please request a new code.";
+          const msg = tGeneral("sessionExpired");
           setErrors({ general: msg, avatar: msg });
           throw new Error(msg);
         }
@@ -273,13 +303,17 @@ export function useRegisterFlow() {
           headers: { "Content-Type": data.avatarFile.type || "image/png" },
           body: data.avatarFile,
         });
-        if (!res.ok) throw new Error("Failed to upload avatar");
+        if (!res.ok) {
+          avatarError = tAvatar("uploadFailed");
+          setErrors({ avatar: avatarError, general: avatarError });
+          throw new Error("avatar-upload");
+        }
         const json = (await res.json()) as { storageId: string };
         avatar = json.storageId;
       }
 
       if (!claim) {
-        const msg = "Your verification session expired. Please request a new code.";
+        const msg = tGeneral("sessionExpired");
         setErrors({ general: msg });
         throw new Error(msg);
       }
@@ -300,17 +334,25 @@ export function useRegisterFlow() {
       setErrors({});
       return result;
     } catch (err: unknown) {
-      const msg = getAuthErrorMessage(err, "Failed to complete profile");
-      // Route avatar-specific errors to the avatar field so Step3 can display inline
-      if (msg.toLowerCase().includes("avatar")) {
-        setErrors({ avatar: msg, general: msg });
-        // Optionally guide user back to avatar step if they used an invalid preset
-        // but keep them on bio step to show context; user can navigate back
+      if (avatarError) {
+        setErrors({ avatar: avatarError, general: avatarError });
       } else {
-        setErrors({ general: msg });
+        const msg = tErrors(err, tGeneral("completeProfileFailed"));
+        // Route avatar-specific errors to the avatar field so Step3 can display inline.
+        // Server messages stay English (backend contracts), so this substring
+        // check holds in every UI locale; local avatar failures set
+        // `avatarError` above instead.
+        if (msg.toLowerCase().includes("avatar")) {
+          setErrors({ avatar: msg, general: msg });
+          // Optionally guide user back to avatar step if they used an invalid preset
+          // but keep them on bio step to show context; user can navigate back
+        } else {
+          setErrors({ general: msg });
+        }
       }
       throw err;
     } finally {
+      inFlight.current = false;
       setIsLoading(false);
     }
   };

@@ -1,4 +1,5 @@
 import { RegisterPayload, ValidationErrors } from "../types/auth.types";
+import type { ValidationTranslator } from "@/i18n/translate";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_REGEX = /^[a-z0-9_]+$/;
@@ -27,7 +28,10 @@ const RESERVED = new Set([
   "profile",
 ]);
 
-export function validateRegisterPayload(payload: RegisterPayload): {
+export function validateRegisterPayload(
+  payload: RegisterPayload,
+  t: ValidationTranslator,
+): {
   isValid: boolean;
   errors: ValidationErrors;
 } {
@@ -39,31 +43,32 @@ export function validateRegisterPayload(payload: RegisterPayload): {
   const displayName = payload.displayName.trim();
   const bio = payload.bio?.trim();
 
-  if (!email) errors.email = "Email is required";
-  else if (email.length > 320) errors.email = "Email must not exceed 320 characters";
-  else if (/\s/.test(email)) errors.email = "Email must not contain spaces";
-  else if (!EMAIL_REGEX.test(email)) errors.email = "Please enter a valid email address";
+  if (!email) errors.email = t("email.required");
+  else if (email.length > 320) errors.email = t("email.tooLong");
+  else if (/\s/.test(email)) errors.email = t("email.noSpaces");
+  else if (!EMAIL_REGEX.test(email)) errors.email = t("email.invalid");
 
-  if (!password) errors.password = "Password is required";
-  else if (password.length < 12) errors.password = "Password must be at least 12 characters";
-  else if (password.length > 128) errors.password = "Password must not exceed 128 characters";
+  if (!password) errors.password = t("password.required");
+  else if (password.length < 12) errors.password = t("password.tooShort");
+  // Bytes, not chars: the server caps passwords at 72 UTF-8 bytes (bcrypt limit).
+  else if (new TextEncoder().encode(password).length > 72) errors.password = t("password.tooLongBytes");
   else if (password.toLowerCase().includes(email.split("@")[0] ?? "" ) && (email.split("@")[0]?.length ?? 0) >= 3) {
-    errors.password = "Password must not contain your email";
+    errors.password = t("password.containsEmail");
   } else if (username && password.toLowerCase().includes(username) && username.length >= 3) {
-    errors.password = "Password must not contain your username";
+    errors.password = t("password.containsUsername");
   }
 
-  if (!username) errors.username = "Username is required";
-  else if (username.length < 3 || username.length > 20) errors.username = "Username must be 3-20 characters";
-  else if (!USERNAME_REGEX.test(username)) errors.username = "Username may only contain a-z, 0-9 and _";
-  else if (RESERVED.has(username)) errors.username = "This username is reserved";
+  if (!username) errors.username = t("username.required");
+  else if (username.length < 3 || username.length > 20) errors.username = t("username.length");
+  else if (!USERNAME_REGEX.test(username)) errors.username = t("username.charset");
+  else if (RESERVED.has(username)) errors.username = t("username.reserved");
 
-  if (!displayName) errors.displayName = "Display name is required";
-  else if (displayName.length > 100) errors.displayName = "Display name must not exceed 100 characters";
-  else if (/[\u0000-\u001F\u007F-\u009F]/.test(displayName)) errors.displayName = "Display name contains invalid characters";
+  if (!displayName) errors.displayName = t("displayName.required");
+  else if (displayName.length > 100) errors.displayName = t("displayName.tooLong");
+  else if (/[\u0000-\u001F\u007F-\u009F]/.test(displayName)) errors.displayName = t("displayName.invalidChars");
 
-  if (bio && bio.length > 500) errors.bio = "Bio must not exceed 500 characters";
-  else if (bio && /[\u0000-\u001F\u007F-\u009F]/.test(bio)) errors.bio = "Bio contains invalid characters";
+  if (bio && bio.length > 500) errors.bio = t("bio.tooLong");
+  else if (bio && /[\u0000-\u001F\u007F-\u009F]/.test(bio)) errors.bio = t("bio.invalidChars");
 
   return { isValid: Object.keys(errors).length === 0, errors };
 }

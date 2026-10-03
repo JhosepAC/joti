@@ -2,12 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAction } from "convex/react";
+import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { ValidationErrors } from "../types/auth.types";
 import { validateForgotPasswordEmail } from "../validations/forgot-password.schema";
-import { getAuthErrorCode, getAuthErrorMessage } from "../utils/get-auth-error-message";
+import { getAuthErrorCode, useAuthErrorMessage } from "../utils/get-auth-error-message";
+import { useValidationTranslator } from "@/i18n/translate";
 
 export function useForgotPassword() {
+  const tValidation = useValidationTranslator();
+  const tErrors = useAuthErrorMessage();
+  const tGeneral = useTranslations("validation.general");
+  const locale = useLocale();
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -16,6 +22,10 @@ export function useForgotPassword() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const requestAction = useAction(api.auth.passwordReset.requestPasswordReset);
+
+  // Synchronous in-flight guard: `cooldown`/`status` flip only after a
+  // render, so rapid double submits could otherwise fire twice.
+  const inFlight = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -46,15 +56,17 @@ export function useForgotPassword() {
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (cooldown > 0) return;
-    const { isValid, errors: vErrors } = validateForgotPasswordEmail(email);
+    const { isValid, errors: vErrors } = validateForgotPasswordEmail(email, tValidation);
     if (!isValid) {
       setErrors(vErrors);
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setStatus("loading");
     setErrors({});
     try {
-      await requestAction({ email: email.trim().toLowerCase() });
+      await requestAction({ email: email.trim().toLowerCase(), locale });
       setIsSuccess(true);
       setStatus("success");
       startCooldown(60);
@@ -62,16 +74,17 @@ export function useForgotPassword() {
       setStatus("error");
       const code = getAuthErrorCode(err);
       if (code === "RATE_LIMITED") {
-        const msg = getAuthErrorMessage(err);
+        const msg = tErrors(err);
         setErrors({ general: msg });
         // Parse wait seconds from message e.g. "Please wait 42s"
         const match = msg.match(/(\d+)s/);
         const wait = match?.[1] ? parseInt(match[1], 10) : 60;
         startCooldown(wait);
       } else {
-        setErrors({ general: getAuthErrorMessage(err, "Failed to send reset link") });
+        setErrors({ general: tErrors(err, tGeneral("resetLinkFailed")) });
       }
     } finally {
+      inFlight.current = false;
       setStatus("idle");
     }
   };

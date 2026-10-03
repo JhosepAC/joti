@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAction, useQuery } from "convex/react";
+import { useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { defaultSpaceName } from "../catalog";
 import { storeSpaceGrant } from "@/features/auth/utils/claim-store";
-import { getAuthErrorMessage } from "@/features/auth/utils/get-auth-error-message";
+import { useAuthErrorMessage } from "@/features/auth/utils/get-auth-error-message";
 import {
   FIRST_SPACE_TOTAL_STEPS,
   SPACE_ICON_DEFAULT,
@@ -21,12 +22,8 @@ import {
   validateSpaceNameInput,
 } from "../validations/space.schema";
 
-/** Narration shown while the space is created, one every `STEP_MESSAGE_MS`. */
-const CREATION_MESSAGES = [
-  "Creando espacio en Convex...",
-  "Inyectando plantilla inicial y notas de bienvenida...",
-  "¡Todo listo! Entrando a joti...",
-] as const;
+/** Message keys narrated while the space is created, one every `STEP_MESSAGE_MS`. */
+const CREATION_MESSAGE_KEYS = ["step1", "step2", "step3"] as const;
 
 const STEP_MESSAGE_MS = 500;
 /** The spec asks for a short, deliberate pause so the transition reads as progress. */
@@ -52,6 +49,10 @@ export function useFirstSpaceFlow(options: {
   const [messageIndex, setMessageIndex] = useState(0);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
+  const tCreating = useTranslations("spaces.creating");
+  const tErrors = useAuthErrorMessage();
+  const tGeneral = useTranslations("errors");
+
   const createFirstSpace = useAction(api.spaces.actions.createFirstSpace);
 
   // The summary must show what will actually be created, so the tool list is
@@ -68,7 +69,15 @@ export function useFirstSpaceFlow(options: {
     });
   }, [displayName]);
 
-  const nameProblem = useMemo(() => validateSpaceNameInput(draft.name), [draft.name]);
+  const tNameError = useTranslations("spaces.identity.nameError");
+
+  const nameProblem = useMemo(
+    () =>
+      validateSpaceNameInput(draft.name, (key, vars) =>
+        tNameError(key as never, vars as never),
+      ),
+    [draft.name, tNameError],
+  );
 
   // Live feedback: nothing is shown for an empty field (the requirement hint is
   // enough), but an out-of-range value is reported as it is typed.
@@ -126,7 +135,7 @@ export function useFirstSpaceFlow(options: {
     // flight. A fast backend would otherwise show all three lines at once, which
     // reads as a glitch rather than as progress.
     const interval = setInterval(() => {
-      setMessageIndex((prev) => Math.min(prev + 1, CREATION_MESSAGES.length - 1));
+      setMessageIndex((prev) => Math.min(prev + 1, CREATION_MESSAGE_KEYS.length - 1));
     }, STEP_MESSAGE_MS);
 
     try {
@@ -143,12 +152,12 @@ export function useFirstSpaceFlow(options: {
       const remaining = Math.max(0, MIN_LOADING_MS - (Date.now() - startedAt));
       await new Promise((resolve) => setTimeout(resolve, remaining));
 
-      setMessageIndex(CREATION_MESSAGES.length - 1);
+      setMessageIndex(CREATION_MESSAGE_KEYS.length - 1);
       onReady(result.slug);
     } catch (err: unknown) {
       setShowCreating(false);
       setGeneralError(
-        getAuthErrorMessage(err, "No pudimos crear tu espacio. Inténtalo de nuevo."),
+        tErrors(err, tGeneral("createSpaceFailed")),
       );
     } finally {
       clearInterval(interval);
@@ -168,7 +177,7 @@ export function useFirstSpaceFlow(options: {
     generalError,
     isCreating,
     showCreating,
-    message: CREATION_MESSAGES[messageIndex] ?? CREATION_MESSAGES[0],
+    message: tCreating(CREATION_MESSAGE_KEYS[messageIndex] ?? "step1"),
     tools,
     isLoadingTools: purposePreview === undefined,
     setName,

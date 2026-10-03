@@ -2,7 +2,6 @@
 
 import { action } from "../_generated/server";
 import { v } from "convex/values";
-import { ConvexError } from "convex/values";
 import type { GenericActionCtx } from "convex/server";
 import { internal } from "../_generated/api";
 import type { DataModel, Id } from "../_generated/dataModel";
@@ -29,9 +28,10 @@ import {
 // token and returns a fresh one for whatever comes next. A token captured during
 // one step therefore cannot be replayed against a later one, and a token scoped
 // to a space cannot be used to finish the profile.
+//
+// Grant validation and rotation happen inside the spaces mutations (single
+// atomic transactions), never as peek-then-consume round trips from here.
 // ---------------------------------------------------------------------------
-
-const SESSION_INVALID = "This session is no longer valid. Please sign in again.";
 
 type OnboardingSpace = {
   id: Id<"spaces">;
@@ -147,10 +147,11 @@ export const getEntryContext: ReturnType<typeof action> = action({
 // ---------------------------------------------------------------------------
 // createFirstSpace -- the onboarding's terminal step.
 //
-// The owner is resolved from the grant, never from an argument: a caller cannot
-// choose whose space to create. The account grant is burned only after the space
-// exists, so a validation failure leaves the user able to fix the form and retry
-// instead of stranding them with a dead token.
+// The owner is resolved from the grant inside the mutation, never from an
+// argument: a caller cannot choose whose space to create. Grant validation,
+// the guards, the insert and the burn happen in ONE atomic transaction (see
+// spaces/mutations), so concurrent requests cannot double-pass and a
+// validation failure leaves the grant live for a retry.
 // ---------------------------------------------------------------------------
 
 export const createFirstSpace: ReturnType<typeof action> = action({
@@ -169,18 +170,9 @@ export const createFirstSpace: ReturnType<typeof action> = action({
     const icon = validateSpaceIcon(args.icon);
     const purpose = validateSpacePurpose(args.purpose);
 
-    const grant = (await ctx.runQuery(internal.auth.claimGrants.peek, {
-      scope: CLAIM_SCOPE_ACCOUNT,
-      token_hash: sha256Hex(args.claim),
-    })) as { email: string; userId: Id<"auth_users"> | null; spaceId: Id<"spaces"> | null };
-
-    if (grant.email !== cleanEmail || !grant.userId) {
-      throw new ConvexError({ code: "VALIDATION_ERROR", message: SESSION_INVALID });
-    }
-    const ownerId = grant.userId;
-
     const created = (await ctx.runMutation(internal.spaces.mutations.createFirstSpace, {
-      owner_id: ownerId,
+      email: cleanEmail,
+      token_hash: sha256Hex(args.claim),
       name,
       icon,
       purpose,
@@ -190,14 +182,8 @@ export const createFirstSpace: ReturnType<typeof action> = action({
       name: string;
       icon: string;
       purpose: string;
+      owner_id: Id<"auth_users">;
     };
-
-    // The space exists, so the onboarding grant has done its job.
-    await ctx.runMutation(internal.auth.claimGrants.consume, {
-      email: cleanEmail,
-      scope: CLAIM_SCOPE_ACCOUNT,
-      token_hash: sha256Hex(args.claim),
-    });
 
     return {
       slug: created.slug,
@@ -212,7 +198,7 @@ export const createFirstSpace: ReturnType<typeof action> = action({
       // straight back to the sign-in page.
       spaceGrant: await mintGrant(ctx, {
         email: cleanEmail,
-        user_id: ownerId,
+        user_id: created.owner_id,
         scope: CLAIM_SCOPE_SPACE,
         space_id: created.spaceId,
       }),
@@ -236,66 +222,31 @@ export const getWorkspace: ReturnType<typeof action> = action({
   args: { slug: v.string(), grant: v.string() },
   handler: async (ctx, args) => {
     const cleanSlug = validateSlug(args.slug);
-    const tokenHash = sha256Hex(args.grant);
 
-    const grant = (await ctx.runQuery(internal.auth.claimGrants.peek, {
-      scope: CLAIM_SCOPE_SPACE,
-      token_hash: tokenHash,
-    })) as { email: string; userId: Id<"auth_users"> | null; spaceId: Id<"spaces"> | null };
+    // The successor token is minted up front (it needs Node randomness); the
+    // mutation stores it atomically together with the burn of the presented
+    // grant, so rotation cannot double-pass under concurrency.
+    const nextGrant = issueClaimGrant();
 
-    if (!grant.spaceId || !grant.userId) {
-      throw new ConvexError({ code: "VALIDATION_ERROR", message: SESSION_INVALID });
-    }
-
-    const space = (await ctx.runQuery(internal.spaces.queries.getById, {
-      spaceId: grant.spaceId,
+    const loaded = (await ctx.runMutation(internal.spaces.mutations.loadWorkspace, {
+      token_hash: sha256Hex(args.grant),
+      slug: cleanSlug,
+      next_token_hash: sha256Hex(nextGrant),
     })) as {
-      _id: Id<"spaces">;
-      owner_id: Id<"auth_users">;
-      name: string;
-      slug: string;
-      icon: string;
-      purpose: "personal" | "work" | "study" | "blank";
-      is_private: boolean;
-      created_at: number;
-    } | null;
+      space: {
+        slug: string;
+        name: string;
+        icon: string;
+        purpose: "personal" | "work" | "study" | "blank";
+        is_private: boolean;
+        created_at: number;
+      };
+    };
 
-    // The grant is for a space; the URL names a (possibly different) one.
-    if (!space || space.slug !== cleanSlug) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "This space is not available.",
-      });
-    }
-
-    // Burn the presented grant before issuing its replacement: `issue` clears
-    // every grant for the same (scope, email), so consuming afterwards would be
-    // deleting the row that was just written.
-    await ctx.runMutation(internal.auth.claimGrants.consume, {
-      email: grant.email,
-      scope: CLAIM_SCOPE_SPACE,
-      space_id: space._id,
-      token_hash: tokenHash,
-    });
-
-    const nextGrant = await mintGrant(ctx, {
-      email: grant.email,
-      user_id: grant.userId,
-      scope: CLAIM_SCOPE_SPACE,
-      space_id: space._id,
-    });
-
-    const template = resolveTemplate(space.purpose);
+    const template = resolveTemplate(loaded.space.purpose);
 
     return {
-      space: {
-        slug: space.slug,
-        name: space.name,
-        icon: space.icon,
-        purpose: space.purpose,
-        is_private: space.is_private,
-        created_at: space.created_at,
-      },
+      space: loaded.space,
       template: {
         templateKey: template.templateKey,
         tools: template.tools.map((tool) => ({ key: tool.key, label: tool.label })),

@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { AuthSplitLayout, RegisterFlow } from "@/features/auth";
 
-export const metadata: Metadata = {
-  title: "Create Account - Joti",
-  description: "Create your Joti account in 4 steps",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata.register");
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 export default function RegisterPage() {
   return (

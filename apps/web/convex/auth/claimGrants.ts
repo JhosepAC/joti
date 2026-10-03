@@ -2,11 +2,23 @@ import { internalMutation, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import type { Id } from "../_generated/dataModel";
-import { CLAIM_GRANT_EXPIRY_MS } from "./constants";
+import {
+  SESSION_EXPIRED,
+  SESSION_INVALID,
+  burnGrant,
+  findGrantByHash,
+  insertGrant,
+  requireUsableGrant,
+  supersedeGrants,
+} from "./grantStore";
 
 // Note: this module exports Convex functions, so it runs in the V8 isolate and
 // must not import anything touching `node:*`. The raw-token generator lives in
 // `./crypto` (Node runtime) instead, and callers pass the digest in.
+//
+// Storage policy (lookup, scope/email/binding checks, expiry, rotation) lives
+// in `./grantStore` and is shared with the spaces mutations and the avatar
+// upload check, so there is exactly one place where grant semantics can drift.
 //
 // ---------------------------------------------------------------------------
 // SECURITY
@@ -36,9 +48,6 @@ function invalid(message: string): never {
   throw new ConvexError({ code: "VALIDATION_ERROR", message });
 }
 
-const SESSION_INVALID = "This session is no longer valid. Please sign in again.";
-const SESSION_EXPIRED = "This session expired. Please sign in again.";
-
 /** Mints a grant. Returns nothing — the raw token is the caller's own input. */
 export const issue = internalMutation({
   args: {
@@ -49,28 +58,14 @@ export const issue = internalMutation({
     token_hash: v.string(),
   },
   handler: async (ctx, args) => {
-    // One live grant per (scope, subject). Rotation means a new grant always
-    // supersedes the previous one, which also keeps the table bounded: without
-    // this, every login would leave another row behind until it expired.
-    const superseded = await ctx.db
-      .query("auth_claim_grants")
-      .withIndex("by_scope_and_email", (q) =>
-        q.eq("scope", args.scope).eq("email", args.email),
-      )
-      .collect();
-    for (const row of superseded) await ctx.db.delete(row._id);
-
-    const now = Date.now();
-    await ctx.db.insert("auth_claim_grants", {
-      token_hash: args.token_hash,
+    await supersedeGrants(ctx, { scope: args.scope, email: args.email });
+    return await insertGrant(ctx, {
       email: args.email,
       user_id: args.user_id,
       scope: args.scope,
       space_id: args.space_id,
-      issued_at: now,
-      expires_at: now + CLAIM_GRANT_EXPIRY_MS,
+      token_hash: args.token_hash,
     });
-    return { expiresAt: now + CLAIM_GRANT_EXPIRY_MS };
   },
 });
 
@@ -85,15 +80,12 @@ export const issue = internalMutation({
 export const peek = internalQuery({
   args: { token_hash: v.string(), scope: v.string() },
   handler: async (ctx, args) => {
-    const grant = await ctx.db
-      .query("auth_claim_grants")
-      .withIndex("by_token_hash", (q) => q.eq("token_hash", args.token_hash))
-      .first();
+    const grant = await findGrantByHash(ctx, args.token_hash);
 
     // One message for "unknown token", "wrong scope" and "not yet expired for
     // someone else" so a grant cannot be probed for existence.
-    if (!grant || grant.scope !== args.scope) invalid(SESSION_INVALID);
-    if (grant.expires_at < Date.now()) invalid(SESSION_EXPIRED);
+    // (`requireUsableGrant` throws on null, so `grant` narrows to non-null.)
+    requireUsableGrant(grant, { scope: args.scope });
 
     return {
       email: grant.email,
@@ -116,22 +108,18 @@ export const consume = internalMutation({
     space_id: v.optional(v.id("spaces")),
   },
   handler: async (ctx, args) => {
-    const grant = await ctx.db
-      .query("auth_claim_grants")
-      .withIndex("by_token_hash", (q) => q.eq("token_hash", args.token_hash))
-      .first();
-
+    const grant = await findGrantByHash(ctx, args.token_hash);
     if (!grant || grant.scope !== args.scope) invalid(SESSION_INVALID);
     if (grant.email !== args.email) invalid(SESSION_INVALID);
     if (args.space_id !== undefined && grant.space_id !== args.space_id) {
       invalid(SESSION_INVALID);
     }
     if (grant.expires_at < Date.now()) {
-      await ctx.db.delete(grant._id);
+      await burnGrant(ctx, grant._id);
       invalid(SESSION_EXPIRED);
     }
 
-    await ctx.db.delete(grant._id);
+    await burnGrant(ctx, grant._id);
     return {
       userId: (grant.user_id ?? null) as Id<"auth_users"> | null,
       spaceId: (grant.space_id ?? null) as Id<"spaces"> | null,
@@ -149,5 +137,27 @@ export const clearByEmail = internalMutation({
       .collect();
     for (const row of rows) await ctx.db.delete(row._id);
     return { removed: rows.length };
+  },
+});
+
+/**
+ * Deletes dead grants: expired ones, which can never validate again. Runs on
+ * a schedule (see convex/crons.ts) so the table stays bounded -- every `issue`
+ * already supersedes live siblings, so only leftovers of abandoned flows
+ * accumulate here.
+ */
+export const deleteExpired = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const rows = await ctx.db.query("auth_claim_grants").collect();
+    let deleted = 0;
+    for (const row of rows) {
+      if (row.expires_at < now) {
+        await ctx.db.delete(row._id);
+        deleted += 1;
+      }
+    }
+    return { deleted };
   },
 });

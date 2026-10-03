@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-lato), "Lato", sans-serif;
-  --font-lato: var(--font-lato), "Lato", sans-serif;
+  --font-sans: var(--font-inter), "Inter", sans-serif;
+  --font-inter: var(--font-inter), "Inter", sans-serif;
   --font-heading: var(--font-varela-round), "Varela Round", sans-serif;
   --font-varela: var(--font-varela-round), "Varela Round", sans-serif;
 
@@ -40,7 +40,7 @@
 }
 
 :root {
-  --font-lato: "Lato", sans-serif;
+  --font-inter: "Inter", sans-serif;
   --font-varela-round: "Varela Round", sans-serif;
 
   --primary: #0F172A;
@@ -112,6 +112,27 @@
   }
 }
 
+/* Rocket idle float (first-space CTA icon) */
+@keyframes rocket-hover {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(-8deg);
+  }
+}
+
+.animate-rocket {
+  animation: rocket-hover 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rocket {
+    animation: none;
+  }
+}
+
 /* Base Headings Default to Varela Round */
 h1,
 h2,
@@ -126,63 +147,63 @@ h6 {
    Typography Utility Classes (from Design Web spec)
    ========================================================================== */
 
-/* Lato Font Weights & Styles */
-.lato-thin {
-  font-family: var(--font-lato), "Lato", sans-serif;
+/* Inter Font Weights & Styles */
+.inter-thin {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 100;
   font-style: normal;
 }
 
-.lato-light {
-  font-family: var(--font-lato), "Lato", sans-serif;
+.inter-light {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 300;
   font-style: normal;
 }
 
-.lato-regular {
-  font-family: var(--font-lato), "Lato", sans-serif;
+.inter-regular {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 400;
   font-style: normal;
 }
 
-.lato-bold {
-  font-family: var(--font-lato), "Lato", sans-serif;
+.inter-bold {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 700;
   font-style: normal;
 }
 
-.lato-black {
-  font-family: var(--font-lato), "Lato", sans-serif;
+.inter-black {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 900;
   font-style: normal;
 }
 
-.lato-thin-italic {
-  font-family: var(--font-lato), "Lato", sans-serif;
+.inter-thin-italic {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 100;
   font-style: italic;
 }
 
-.lato-light-italic {
-  font-family: var(--font-lato), "Lato", sans-serif;
+.inter-light-italic {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 300;
   font-style: italic;
 }
 
-.lato-regular-italic {
-  font-family: var(--font-lato), "Lato", sans-serif;
+.inter-regular-italic {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 400;
   font-style: italic;
 }
 
-.lato-bold-italic {
-  font-family: var(--font-lato), "Lato", sans-serif;
+.inter-bold-italic {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 700;
   font-style: italic;
 }
 
-.lato-black-italic {
-  font-family: var(--font-lato), "Lato", sans-serif;
+.inter-black-italic {
+  font-family: var(--font-inter), "Inter", sans-serif;
   font-weight: 900;
   font-style: italic;
 }

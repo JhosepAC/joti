@@ -7,23 +7,34 @@ import {
   type SpaceIcon,
   type SpacePurpose,
 } from "./constants";
-import { toSlugBase, validateSpaceIcon, validateSpaceName, validateSpacePurpose } from "./validators";
+import { toSlugBase, validateSlug, validateSpaceIcon, validateSpaceName, validateSpacePurpose } from "./validators";
+import { validateEmail } from "../auth/validators";
+import { CLAIM_SCOPE_ACCOUNT, CLAIM_SCOPE_SPACE } from "../auth/constants";
+import {
+  SESSION_INVALID,
+  burnGrant,
+  findGrantByHash,
+  insertGrant,
+  requireUsableGrant,
+  supersedeGrants,
+} from "../auth/grantStore";
 
 // ---------------------------------------------------------------------------
-// Space creation.
+// Space creation and workspace reads.
 //
-// `internalMutation` on purpose: the caller cannot supply an owner id. The
-// public entry point is `spaces.actions.createFirstSpace`, which resolves the
-// owner from a claim grant and calls in here with the id it found.
-//
-// The guards live here rather than in the action because this is the write that
-// has to be atomic with them — Convex mutations are optimistically concurrent,
-// so a check performed in the action is a check that can be raced.
+// Grant checks live INSIDE these mutations (not in the calling action) so
+// check-and-burn is a single atomic transaction: concurrent requests with the
+// same grant cannot both pass, and a validation failure rolls everything --
+// including the burn -- back, leaving the caller able to fix the form and
+// retry with the same grant. A check performed one layer up is a check that
+// can be raced; a burn performed one layer up strands the user on retryable
+// errors. Doing both here avoids each failure in turn.
 // ---------------------------------------------------------------------------
 
 export const createFirstSpace = internalMutation({
   args: {
-    owner_id: v.id("auth_users"),
+    email: v.string(),
+    token_hash: v.string(),
     name: v.string(),
     icon: v.string(),
     purpose: v.string(),
@@ -31,12 +42,30 @@ export const createFirstSpace = internalMutation({
   handler: async (
     ctx,
     args,
-  ): Promise<{ spaceId: Id<"spaces">; slug: string; name: string; icon: SpaceIcon; purpose: SpacePurpose }> => {
+  ): Promise<{
+    spaceId: Id<"spaces">;
+    slug: string;
+    name: string;
+    icon: SpaceIcon;
+    purpose: SpacePurpose;
+    owner_id: Id<"auth_users">;
+  }> => {
+    const cleanEmail = validateEmail(args.email);
     const name = validateSpaceName(args.name);
     const icon = validateSpaceIcon(args.icon);
     const purpose = validateSpacePurpose(args.purpose);
 
-    const user = await ctx.db.get(args.owner_id);
+    // Owner resolved from the grant, never from an argument: a caller cannot
+    // choose whose space to create. Read-only so far -- nothing is written
+    // until every check below has passed.
+    const grant = await findGrantByHash(ctx, args.token_hash);
+    requireUsableGrant(grant, { email: cleanEmail, scope: CLAIM_SCOPE_ACCOUNT });
+    if (!grant.user_id) {
+      throw new ConvexError({ code: "VALIDATION_ERROR", message: SESSION_INVALID });
+    }
+    const ownerId = grant.user_id;
+
+    const user = await ctx.db.get(ownerId);
     if (!user || user.deleted_at) {
       throw new ConvexError({ code: "VALIDATION_ERROR", message: "Account not found." });
     }
@@ -45,7 +74,7 @@ export const createFirstSpace = internalMutation({
     // enforced here rather than trusted from the client.
     const profile = await ctx.db
       .query("auth_user_profiles")
-      .withIndex("by_user_id", (q) => q.eq("user_id", args.owner_id))
+      .withIndex("by_user_id", (q) => q.eq("user_id", ownerId))
       .first();
     if (!profile) {
       throw new ConvexError({
@@ -59,7 +88,7 @@ export const createFirstSpace = internalMutation({
     // therefore idempotent by construction and cannot be used to farm spaces.
     const existing = await ctx.db
       .query("spaces")
-      .withIndex("by_owner_id", (q) => q.eq("owner_id", args.owner_id))
+      .withIndex("by_owner_id", (q) => q.eq("owner_id", ownerId))
       .first();
     if (existing && !existing.deleted_at) {
       throw new ConvexError({
@@ -94,7 +123,7 @@ export const createFirstSpace = internalMutation({
     }
 
     const spaceId = await ctx.db.insert("spaces", {
-      owner_id: args.owner_id,
+      owner_id: ownerId,
       name,
       slug,
       icon,
@@ -105,6 +134,76 @@ export const createFirstSpace = internalMutation({
       created_at: Date.now(),
     });
 
-    return { spaceId, slug, name, icon, purpose };
+    // Burn only now that the space exists: everything above is one atomic
+    // transaction, so a validation failure rolls the burn back too and the
+    // caller keeps a live grant for the retry.
+    await burnGrant(ctx, grant._id);
+
+    return { spaceId, slug, name, icon, purpose, owner_id: ownerId };
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Workspace bootstrap for `/w/<slug>`.
+//
+// Same atomicity contract as creation: validate the grant, load the space,
+// burn the presented grant and insert its rotated successor in ONE
+// transaction. Two concurrent tabs presenting the same grant therefore cannot
+// both pass -- exactly one wins the rotation. The successor's raw token is
+// minted by the calling action (it needs Node randomness) and passed in as a
+// digest; this mutation only stores it.
+// ---------------------------------------------------------------------------
+
+export const loadWorkspace = internalMutation({
+  args: {
+    token_hash: v.string(),
+    slug: v.string(),
+    next_token_hash: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const cleanSlug = validateSlug(args.slug);
+
+    // No email check: the action does not know the address (the space store
+    // carries no email), exactly like the previous peek-based flow. The grant
+    // is still bound to one space_id, which is what authorizes this read.
+    const grant = await findGrantByHash(ctx, args.token_hash);
+    requireUsableGrant(grant, { scope: CLAIM_SCOPE_SPACE });
+    if (!grant.space_id || !grant.user_id) {
+      throw new ConvexError({ code: "VALIDATION_ERROR", message: SESSION_INVALID });
+    }
+
+    const space = await ctx.db.get(grant.space_id);
+    // The grant is for a space; the URL names a (possibly different) one.
+    if (!space || space.deleted_at || space.slug !== cleanSlug) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "This space is not available.",
+      });
+    }
+
+    // Rotate inside the same transaction: burn the presented grant, drop any
+    // leaked siblings for the pair (same supersede rule as issuance), and
+    // store the successor. A concurrent request with the same token finds no
+    // row and fails instead of double-passing a peek.
+    await burnGrant(ctx, grant._id);
+    await supersedeGrants(ctx, { scope: CLAIM_SCOPE_SPACE, email: grant.email });
+    await insertGrant(ctx, {
+      email: grant.email,
+      user_id: grant.user_id,
+      scope: CLAIM_SCOPE_SPACE,
+      space_id: space._id,
+      token_hash: args.next_token_hash,
+    });
+
+    return {
+      space: {
+        slug: space.slug,
+        name: space.name,
+        icon: space.icon,
+        purpose: space.purpose,
+        is_private: space.is_private,
+        created_at: space.created_at,
+      },
+    };
   },
 });

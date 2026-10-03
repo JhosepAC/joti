@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
+import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { AuthStatus, LoginCredentials, ValidationErrors } from "../types/auth.types";
 import { validateLoginCredentials } from "../validations/login.schema";
-import { getAuthErrorMessage, getAuthErrorCode } from "../utils/get-auth-error-message";
+import { getAuthErrorCode, useAuthErrorMessage } from "../utils/get-auth-error-message";
+import { useValidationTranslator } from "@/i18n/translate";
 import { storeAccountGrant, type AccountGrant } from "../utils/claim-store";
 import { useEntryGate } from "./use-entry-gate";
 
@@ -16,6 +19,11 @@ type LoginResult = {
 };
 
 export function useLogin() {
+  const tValidation = useValidationTranslator();
+  const tErrors = useAuthErrorMessage();
+  const tActivation = useTranslations("auth.activation");
+  const tGeneral = useTranslations("validation.general");
+  const locale = useLocale();
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: "",
     password: "",
@@ -26,6 +34,8 @@ export function useLogin() {
   const [requiresActivation, setRequiresActivation] = useState(false);
   const [activationCode, setActivationCode] = useState("");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Set once the password check succeeds. The entry gate consumes the claim and
   // routes to whichever stage comes next: profile, first space, or workspace.
   // It stays `undefined` until then, which tells the gate there is nothing to
@@ -38,6 +48,22 @@ export function useLogin() {
   const confirmCodeAction = useAction(api.auth.verification.confirmEmailCode);
 
   const gate = useEntryGate(entry);
+
+  // The gate navigates "profile" and "workspace" itself, but the "space"
+  // stage (first-space onboarding) renders on /spaces/new, so the login page
+  // has to send the user there. The rotated grant is already in
+  // sessionStorage (see use-entry-gate), so /spaces/new can resume.
+  const router = useRouter();
+  useEffect(() => {
+    if (gate.stage === "ready") {
+      router.replace("/spaces/new");
+    }
+  }, [gate.stage, router]);
+
+  // Synchronous in-flight guard. `status === "loading"` flips only after a
+  // render, so two rapid submits (Enter + click, double click) could otherwise
+  // dispatch the action twice before the button disables.
+  const inFlight = useRef(false);
 
   const handleFieldChange = (field: keyof LoginCredentials, value: string) => {
     setCredentials((prev) => ({ ...prev, [field]: value }));
@@ -53,23 +79,50 @@ export function useLogin() {
    */
   const enterFrom = (result: LoginResult) => {
     if (!result.claim) {
-      setErrors({ general: "No pudimos iniciar tu sesión. Inténtalo de nuevo." });
+      setErrors({ general: tGeneral("signInFailed") });
       setStatus("error");
       return;
     }
+    // Drop the password from memory now that it has served its purpose; the
+    // navigation ahead unmounts this screen anyway.
+    setCredentials((prev) => ({ ...prev, password: "" }));
     // Stored before navigating so a reload mid-redirect can still resume.
     storeAccountGrant(result.user.email, result.claim);
     setEntry({ email: result.user.email, token: result.claim });
   };
 
+  // Cooldown ticker for the activation-code resend. Cleared on unmount so no
+  // timer outlives the screen.
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  const startResendCooldown = (seconds: number) => {
+    setResendCooldown(seconds);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { isValid, errors: validationErrors } = validateLoginCredentials(credentials);
+    const { isValid, errors: validationErrors } = validateLoginCredentials(credentials, tValidation);
     if (!isValid) {
       setErrors(validationErrors);
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
 
     try {
       setStatus("loading");
@@ -88,11 +141,12 @@ export function useLogin() {
       if (code === "EMAIL_NOT_VERIFIED") {
         setRequiresActivation(true);
         setPendingEmail(credentials.email.trim().toLowerCase());
-        setErrors({ general: getAuthErrorMessage(err) });
+        setErrors({ general: tErrors(err) });
       } else {
-        setErrors({ general: getAuthErrorMessage(err, "Invalid email or password.") });
+        setErrors({ general: tErrors(err) });
       }
     } finally {
+      inFlight.current = false;
       setStatus("idle");
     }
   };
@@ -100,9 +154,11 @@ export function useLogin() {
   const handleActivationVerify = async () => {
     if (!pendingEmail) return;
     if (!/^\d{6}$/.test(activationCode.trim())) {
-      setErrors({ general: "Code must be 6 digits" });
+      setErrors({ general: tActivation("codeMustBeDigits") });
       return;
     }
+    if (inFlight.current) return;
+    inFlight.current = true;
     try {
       setStatus("loading");
       await confirmCodeAction({ email: pendingEmail, code: activationCode.trim() });
@@ -116,22 +172,33 @@ export function useLogin() {
       setStatus("success");
       enterFrom(result);
     } catch (err: unknown) {
-      setErrors({ general: getAuthErrorMessage(err, "Invalid or expired code") });
+      setErrors({ general: tErrors(err) });
       setStatus("error");
     } finally {
+      inFlight.current = false;
       setStatus("idle");
     }
   };
 
   const handleResendActivation = async () => {
-    if (!pendingEmail) return;
+    if (!pendingEmail || resendCooldown > 0) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     try {
       setStatus("loading");
-      await requestCodeAction({ email: pendingEmail });
+      await requestCodeAction({ email: pendingEmail, locale });
       setErrors({});
+      startResendCooldown(30);
     } catch (err: unknown) {
-      setErrors({ general: getAuthErrorMessage(err, "Failed to resend code") });
+      const code = getAuthErrorCode(err);
+      const msg = tErrors(err);
+      setErrors({ general: msg });
+      if (code === "RATE_LIMITED") {
+        const match = msg.match(/(\d+)s/);
+        startResendCooldown(match?.[1] ? parseInt(match[1], 10) : 60);
+      }
     } finally {
+      inFlight.current = false;
       setStatus("idle");
     }
   };
@@ -162,6 +229,7 @@ export function useLogin() {
     activationCode,
     setActivationCode,
     pendingEmail,
+    resendCooldown,
     handleActivationVerify,
     handleResendActivation,
     handleFieldChange,

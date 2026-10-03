@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { validateEmail } from "./validators";
 import { AVATAR_UPLOADS_PER_HOUR, CLAIM_SCOPE_ACCOUNT, MAX_STORAGE_OBJECTS } from "./constants";
+import { SESSION_EXPIRED, SESSION_INVALID, burnGrant, findGrantByHash } from "./grantStore";
 
 // ---------------------------------------------------------------------------
 // Avatar upload URL minting.
@@ -36,26 +37,27 @@ export const mintAvatarUploadUrl = internalMutation({
       });
     }
 
-    // Validate the claim grant against this address. It is deliberately NOT
-    // burned here: the wizard needs it for two steps (this upload, then the
-    // profile submit), and `actions.completeProfile` is the terminal step that
-    // consumes it. Abuse is bounded by the per-account rate limit below and by
-    // the grant's 15 minute lifetime.
-    const grant = await ctx.db
-      .query("auth_claim_grants")
-      .withIndex("by_token_hash", (q) => q.eq("token_hash", args.claim_hash))
-      .first();
+    // Validate the claim grant against this address. Lookup and message texts
+    // come from the shared grant policy; the structure below preserves the
+    // original semantics exactly: a mismatch burns nothing (the presenter
+    // does not own that row), while an expired-but-otherwise-valid row is
+    // dropped as hygiene. The grant itself is deliberately NOT burned here:
+    // the wizard needs it for two steps (this upload, then the profile
+    // submit), and `actions.completeProfile` is the terminal step that
+    // consumes it. Abuse is bounded by the per-account rate limit below and
+    // by the grant's 15 minute lifetime.
+    const grant = await findGrantByHash(ctx, args.claim_hash);
     if (!grant || grant.email !== cleanEmail || grant.scope !== CLAIM_SCOPE_ACCOUNT) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
-        message: "This session is no longer valid. Please sign in again.",
+        message: SESSION_INVALID,
       });
     }
     if (grant.expires_at < Date.now()) {
-      await ctx.db.delete(grant._id);
+      await burnGrant(ctx, grant._id);
       throw new ConvexError({
         code: "VALIDATION_ERROR",
-        message: "This session expired. Please sign in again.",
+        message: SESSION_EXPIRED,
       });
     }
 

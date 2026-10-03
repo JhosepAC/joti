@@ -43,7 +43,11 @@ export function getGoogleClientId(): string {
 }
 
 function getStateSecret(): string {
-  return process.env.OAUTH_STATE_SECRET ?? requireEnv("GOOGLE_CLIENT_SECRET");
+  // Independent secret on purpose: sharing GOOGLE_CLIENT_SECRET between
+  // Google confidential-client auth and login-CSRF HMAC would couple two
+  // purposes to one key (a Google-secret rotation would silently rekey CSRF
+  // protection, and vice versa). Fail closed like the other key material.
+  return requireEnv("OAUTH_STATE_SECRET");
 }
 
 // --- base64url, without Buffer ---------------------------------------------
@@ -91,10 +95,12 @@ async function hmacBase64Url(secret: string, message: string): Promise<string> {
 function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
-  // `entries()` yields `[number, number]`, so this stays fully typed under
-  // `noUncheckedIndexedAccess` without asserting an index into the buffer.
-  for (const [x, y] of a.entries()) {
-    diff |= x ^ y;
+  // Index-based loop: `entries()` yields `[index, value-of-a]` pairs, so
+  // destructuring it would compare the index against the value and never read
+  // `b` at all. Indices are safe under `noUncheckedIndexedAccess` because the
+  // loop is bounded by the length check above.
+  for (let i = 0; i < a.length; i++) {
+    diff |= (a[i] as number) ^ (b[i] as number);
   }
   return diff === 0;
 }

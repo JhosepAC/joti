@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RegisterFlowData, RECOMMENDED_AVATARS } from "../../types/register-flow.types";
@@ -14,16 +15,17 @@ interface Props {
 }
 
 export const Step3Avatar: React.FC<Props> = ({ data, onChange, onNext, onSkip, error }) => {
+  const t = useTranslations("auth.register.step3");
   const [fileError, setFileError] = React.useState<string | null>(null);
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setFileError("Please upload an image file");
+      setFileError(t("avatarErrorImage"));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setFileError("Avatar must be less than 5MB");
+      setFileError(t("avatarErrorSize"));
       return;
     }
     setFileError(null);
@@ -49,8 +51,8 @@ export const Step3Avatar: React.FC<Props> = ({ data, onChange, onNext, onSkip, e
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-2xl font-semibold text-text-primary font-heading">Add avatar</h2>
-        <p className="text-sm font-light text-text-secondary mt-1.5">Upload an image or choose a recommended one</p>
+        <h2 className="text-2xl font-semibold text-text-primary font-heading">{t("title")}</h2>
+        <p className="text-sm font-light text-text-secondary mt-1.5">{t("subtitle")}</p>
       </header>
 
       {(error || fileError) && (
@@ -61,14 +63,14 @@ export const Step3Avatar: React.FC<Props> = ({ data, onChange, onNext, onSkip, e
         <div className="w-28 h-28 rounded-full bg-surface border-2 border-border flex items-center justify-center overflow-hidden text-3xl font-semibold text-text-secondary">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="avatar preview" className="w-full h-full object-cover" />
+            <img src={preview} alt={t("previewAlt")} className="w-full h-full object-cover" />
           ) : (
             <span>{fallbackLetter}</span>
           )}
         </div>
 
         <div className="w-full space-y-2">
-          <Label htmlFor="avatar">Upload image</Label>
+          <Label htmlFor="avatar">{t("upload")}</Label>
           <input
             id="avatar"
             type="file"
@@ -80,17 +82,18 @@ export const Step3Avatar: React.FC<Props> = ({ data, onChange, onNext, onSkip, e
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-medium text-text-secondary">Recommended avatars</p>
+        <p className="text-xs font-medium text-text-secondary">{t("recommended")}</p>
         <div className="grid grid-cols-6 gap-2">
           {RECOMMENDED_AVATARS.map((url) => (
             <button
               key={url}
               type="button"
               onClick={() => selectRecommended(url)}
+              aria-label={t("useRecommended")}
               className={`w-12 h-12 rounded-full overflow-hidden border-2 transition ${data.avatarUrl === url ? "border-primary" : "border-border hover:border-border-strong"}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="recommended" className="w-full h-full object-cover" />
+              <img src={url} alt={t("recommendedAlt")} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
@@ -98,13 +101,13 @@ export const Step3Avatar: React.FC<Props> = ({ data, onChange, onNext, onSkip, e
 
       <div className="flex gap-3">
         <Button type="button" variant="outline" className="flex-1 h-11 rounded-full" onClick={onSkip}>
-          Skip
+          {t("skip")}
         </Button>
         <Button type="button" variant="primary" className="flex-1 h-11 rounded-full" onClick={onNext}>
-          Continue
+          {t("submit")}
         </Button>
       </div>
-      <p className="text-xs text-text-muted text-center">Skip will use the first letter of your name</p>
+      <p className="text-xs text-text-muted text-center">{t("skipNote")}</p>
     </div>
   );
 };

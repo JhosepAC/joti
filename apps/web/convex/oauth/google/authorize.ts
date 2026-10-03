@@ -10,6 +10,10 @@ import { buildGoogleAuthorizeUrl, createSignedState } from "../../auth/_oauthSha
  * No `"use node"`: an `httpAction` always runs in the V8 isolate, and a Node
  * file may only contain actions. The state helpers it depends on use Web Crypto
  * for exactly that reason.
+ *
+ * No rate limit here on purpose: this endpoint does one HMAC plus a redirect
+ * (cheaper than any public query) and mints nothing. The expensive side --
+ * the callback's Google fetches -- carries the global cap instead.
  */
 export const googleAuthorize = httpAction(async (ctx, request) => {
   // The request URL origin is this deployment's site URL.

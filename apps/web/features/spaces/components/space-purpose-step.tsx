@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { PURPOSE_OPTIONS } from "../catalog";
+import { useTranslations } from "next-intl";
+import { PURPOSE_KEYS } from "../catalog";
 import { CheckIcon, iconForPurpose } from "./icons";
 import type { SpacePurposeKey } from "../types/space.types";
 
@@ -20,52 +21,75 @@ interface Props {
  * the label carries the presentation.
  */
 export const SpacePurposeStep: React.FC<Props> = ({ value, onChange }) => {
+  const t = useTranslations("spaces.purpose");
+  // Static record (not a dynamic key lookup) so every title/description stays
+  // type-checked against the dictionary.
+  const copy: Record<SpacePurposeKey, { title: string; description: string }> = {
+    personal: {
+      title: t("options.personal.title"),
+      description: t("options.personal.description"),
+    },
+    work: {
+      title: t("options.work.title"),
+      description: t("options.work.description"),
+    },
+    study: {
+      title: t("options.study.title"),
+      description: t("options.study.description"),
+    },
+    blank: {
+      title: t("options.blank.title"),
+      description: t("options.blank.description"),
+    },
+  };
+
   return (
-    <div className="space-y-6">
-      <header>
-        <h2 className="text-2xl font-semibold text-text-primary font-heading">
-          Propósito del espacio
+    <div>
+      <header className="mb-6">
+        <h2 className="text-xl font-semibold text-text-primary font-heading">
+          {t("title")}
         </h2>
-        <p className="text-sm font-light text-text-secondary mt-1.5">
-          Elige para qué lo vas a usar. Esto define la plantilla inicial.
+        <p className="mt-1 text-sm font-light text-text-secondary">
+          {t("subtitle")}
         </p>
       </header>
 
       <fieldset>
-        <legend className="sr-only">Propósito del espacio</legend>
-        <div className="space-y-3">
-          {PURPOSE_OPTIONS.map((option) => {
-            const selected = option.key === value;
-            const Icon = iconForPurpose(option.key);
-            const id = `space-purpose-${option.key}`;
+        <legend className="sr-only">{t("title")}</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {PURPOSE_KEYS.map((key) => {
+            const selected = key === value;
+            const Icon = iconForPurpose(key);
+            const id = `space-purpose-${key}`;
+            const option = copy[key];
             return (
               <label
-                key={option.key}
+                key={key}
                 htmlFor={id}
-                className={`flex cursor-pointer items-start gap-3.5 rounded-2xl border p-4 transition-all ${
+                className={`relative flex cursor-pointer flex-col gap-3 rounded-2xl border bg-surface p-5 transition-all focus-within:ring-2 focus-within:ring-focus-ring ${
                   selected
-                    ? "border-primary bg-surface"
-                    : "border-border bg-background hover:border-border-strong hover:bg-surface"
+                    ? "border-primary shadow-sm ring-1 ring-primary"
+                    : "border-border hover:border-border-strong hover:shadow-sm"
                 }`}
               >
                 <input
                   id={id}
                   type="radio"
                   name="spacePurpose"
-                  value={option.key}
+                  value={key}
                   checked={selected}
-                  onChange={() => onChange(option.key)}
+                  onChange={() => onChange(key)}
                   className="sr-only"
                 />
                 <span
                   aria-hidden="true"
-                  className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                    selected ? "bg-primary text-white" : "bg-surface text-icon"
+                  className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-colors ${
+                    selected ? "bg-primary text-white" : "bg-background text-icon ring-1 ring-border"
                   }`}
                 >
-                  <Icon className="text-lg" />
+                  <Icon className="text-xl" />
                 </span>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0">
                   <span className="block text-sm font-medium text-text-primary">
                     {option.title}
                   </span>
@@ -75,11 +99,11 @@ export const SpacePurposeStep: React.FC<Props> = ({ value, onChange }) => {
                 </span>
                 <span
                   aria-hidden="true"
-                  className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
-                    selected ? "border-primary bg-primary text-white" : "border-border-strong"
+                  className={`absolute top-4 right-4 flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
+                    selected ? "border-primary bg-primary text-white" : "border-border-strong bg-background"
                   }`}
                 >
-                  {selected && <CheckIcon className="h-2.5 w-2.5" strokeWidth={3} />}
+                  {selected && <CheckIcon className="h-3 w-3" strokeWidth={3} />}
                 </span>
               </label>
             );

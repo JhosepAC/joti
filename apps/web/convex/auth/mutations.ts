@@ -38,7 +38,9 @@ export const createUserInternal = internalMutation({
       .withIndex("by_email", (q) => q.eq("email", cleanEmail))
       .first();
     if (existingEmail && !existingEmail.deleted_at) {
-      throw new ConvexError("Email is already registered.");
+      // Generic on purpose: this mutation is reachable from the public
+      // `register` action, so a distinct message would be an existence oracle.
+      throw new ConvexError("Could not create an account with the provided details.");
     }
 
     const existingUsername = await ctx.db
@@ -46,7 +48,8 @@ export const createUserInternal = internalMutation({
       .withIndex("by_username", (q) => q.eq("username", cleanUsername))
       .first();
     if (existingUsername) {
-      throw new ConvexError("Username is already taken.");
+      // Same generic message as above (see the email branch).
+      throw new ConvexError("Could not create an account with the provided details.");
     }
 
     const userId = await ctx.db.insert("auth_users", {
@@ -182,9 +185,15 @@ export const handleFailedLogin = internalMutation({
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) return;
-    const newAttempts = user.failed_login_attempts + 1;
+    // Capped: the counter is only a tripwire for arming the lockout, and an
+    // unbounded value would keep growing under a sustained attack.
+    const newAttempts = Math.min(user.failed_login_attempts + 1, MAX_FAILED_ATTEMPTS);
     let lockedUntil = user.locked_until;
-    if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+    const alreadyLocked = lockedUntil !== undefined && lockedUntil > Date.now();
+    // Arm the lockout only on the transition into it. Re-arming on every
+    // failure while locked would let anyone keep any account locked forever
+    // with a trickle of bad guesses; the lockout must expire on its own.
+    if (newAttempts >= MAX_FAILED_ATTEMPTS && !alreadyLocked) {
       lockedUntil = Date.now() + LOCKOUT_DURATION_MS;
     }
     await ctx.db.patch(args.userId, {

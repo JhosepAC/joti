@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { SpaceWorkspace } from "@/features/spaces/components/space-workspace";
 
-export const metadata: Metadata = {
-  title: "Espacio - Joti",
-  description: "Tu espacio de trabajo en Joti",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata.workspace");
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 /**
  * `/w/[slug]`

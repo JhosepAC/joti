@@ -1,0 +1,436 @@
+{
+  "common": {
+    "appName": "Joti",
+    "settings": {
+      "button": "Ajustes",
+      "menu": "Menú de ajustes",
+      "language": "Idioma"
+    },    "actions": {
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "close": "Cerrar",
+      "confirm": "Confirmar",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "continue": "Continuar",
+      "retry": "Reintentar",
+      "loading": "Cargando...",
+      "send": "Enviar",
+      "resend": "Reenviar código",
+      "verify": "Verificar",
+      "create": "Crear",
+      "skip": "Omitir",
+      "start": "Comenzar",
+      "signIn": "Iniciar sesión",
+      "signOut": "Cerrar sesión",
+      "new": "Nuevo",
+      "or": "o"
+    }
+  },
+  "metadata": {
+    "app": {
+      "title": "Joti",
+      "description": "Tus espacios personales para notas, tareas y más"
+    },
+    "login": {
+      "title": "Iniciar sesión - Joti",
+      "description": "Inicia sesión para acceder a tu panel de Joti"
+    },
+    "register": {
+      "title": "Crear cuenta - Joti",
+      "description": "Crea tu cuenta de Joti"
+    },
+    "forgotPassword": {
+      "title": "Recuperar contraseña - Joti",
+      "description": "Recupera el acceso a tu cuenta de Joti"
+    },
+    "resetPassword": {
+      "title": "Restablecer contraseña - Joti",
+      "description": "Elige una nueva contraseña para tu cuenta"
+    },
+    "completeProfile": {
+      "title": "Completa tu perfil - Joti",
+      "description": "Completa tu perfil para empezar a usar Joti"
+    },
+    "spacesNew": {
+      "title": "Tu primer espacio - Joti",
+      "description": "Crea el primer espacio de tu cuenta en Joti"
+    },
+    "workspace": {
+      "title": "Espacio - Joti",
+      "description": "Tu espacio de trabajo en Joti"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Continúa para acceder a tu panel",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "submit": "Iniciar sesión",
+      "noAccount": "¿No tienes una cuenta?",
+      "createAccount": "Crear cuenta",
+      "activationTitle": "Tu cuenta no está activada. Ingresa el código que enviamos a {email}.",
+      "activationResend": "Reenviar código",
+      "activationResendIn": "Reenviar en {seconds}s",
+      "activationVerify": "Verificar y activar"
+    },
+    "register": {
+      "step1": {
+        "title": "Crear cuenta",
+        "subtitle": "Ingresa tu correo y contraseña para empezar",
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "passwordHint": "12+ caracteres, máx. 72 bytes, sin tu correo o usuario",
+        "confirmPassword": "Confirmar contraseña",
+        "submit": "Continuar",
+        "footer": "¿Ya tienes una cuenta?",
+        "signIn": "Iniciar sesión"
+      },
+      "verify": {
+        "title": "Confirma tu correo",
+        "description": "Enviamos un código de 6 dígitos a <b>{email}</b>. Ingrésalo abajo.",
+        "expiresAt": "Vence a las {time}",
+        "code": "Código de verificación",
+        "codeHint": "Ingresa los 6 dígitos sin espacios ni guiones.",
+        "submit": "Verificar y continuar",
+        "resendPrompt": "¿No lo recibiste?",
+        "resend": "Reenviar código",
+        "resendIn": "Reenviar en {seconds}s",
+        "note": "Si cierras esta pantalla, tendrás que verificar al iniciar sesión."
+      },
+      "step2": {
+        "title": "Crea tu perfil",
+        "subtitle": "Elige cómo aparecerás en Joti",
+        "username": "Nombre de usuario",
+        "displayName": "Nombre visible",
+        "displayNamePlaceholder": "Usuario Joti",
+        "displayNameHint": "1-100 caracteres, emoji permitido, sin caracteres de control",
+        "restrictionsTitle": "Restricciones:",
+        "restrictionLength": "3-20 caracteres, solo minúsculas",
+        "restrictionAllowed": "Permitido:",
+        "restrictionReserved": "Sin espacios ni nombres reservados (admin, api, auth, etc.)",
+        "restrictionUnique": "Único, sin distinguir mayúsculas",
+        "submit": "Continuar"
+      },
+      "step3": {
+        "title": "Agrega un avatar",
+        "subtitle": "Sube una imagen o elige uno recomendado",
+        "upload": "Subir imagen",
+        "recommended": "Avatares recomendados",
+        "recommendedAlt": "recomendado",
+        "useRecommended": "Usar recomendado",
+        "previewAlt": "vista previa del avatar",
+        "skip": "Omitir",
+        "submit": "Continuar",
+        "skipNote": "Omitir usará la primera letra de tu nombre",
+        "avatarErrorImage": "Sube un archivo de imagen",
+        "avatarErrorSize": "El avatar debe pesar menos de 5MB",
+        "uploadFailed": "No se pudo subir el avatar"
+      },
+      "step4": {
+        "title": "Cuéntanos de ti",
+        "subtitle": "Agrega una bio corta — podrás cambiarla después",
+        "bio": "Biografía",
+        "bioPlaceholder": "Algo sobre ti...",
+        "bioHint": "Máx. 500 caracteres, sin caracteres de control",
+        "bioCount": "{count}/500",
+        "submit": "Comenzar"
+      },
+      "step": "Paso {current} de {total}",
+      "back": "← Atrás"
+    },
+    "forgotPassword": {
+      "title": "¿Olvidaste tu contraseña?",
+      "subtitle": "Ingresa tu correo y te enviaremos un enlace",
+      "email": "Correo electrónico",
+      "submit": "Enviar enlace",
+      "submitWait": "Espera {seconds}s",
+      "submitCooldownNote": "Espera antes de pedir otro enlace.",
+      "footer": "¿Recordaste tu contraseña?",
+      "signIn": "Iniciar sesión",
+      "successTitle": "Revisa tu correo",
+      "successDescription": "Si existe una cuenta para <b>{email}</b>, enviamos un enlace para restablecer tu contraseña. Vence en 60 minutos.",
+      "resendPrompt": "¿No lo recibiste? Revisa spam. El enlace es de un solo uso. Puedes pedir otro después de 60 segundos.",
+      "resendAvailableIn": "Reenvío disponible en {seconds}s",
+      "resend": "Reenviar enlace",
+      "backToSignIn": "Volver a iniciar sesión"
+    },
+    "resetPassword": {
+      "title": "Restablecer contraseña",
+      "subtitle": "Elige una nueva contraseña. Al menos 12 caracteres, máx. 72 bytes, sin tu correo o usuario.",
+      "newPassword": "Nueva contraseña",
+      "newPasswordHint": "12+ caracteres, máx. 72 bytes. Espacios permitidos. Sin tu correo o usuario.",
+      "confirmPassword": "Confirmar nueva contraseña",
+      "submit": "Actualizar contraseña",
+      "verifying": "Verificando enlace...",
+      "missingToken": "Falta el token. Usa el enlace de tu correo.",
+      "requestNew": "Pedir nuevo enlace",
+      "expiredTitle": "Enlace vencido",
+      "expiredDescription": "Este enlace es inválido, ya fue usado o venció (60 minutos).",
+      "backToSignIn": "Volver a iniciar sesión",
+      "successTitle": "Contraseña actualizada",
+      "successDescription": "Tu contraseña cambió correctamente. Te enviamos un correo de confirmación.",
+      "signIn": "Iniciar sesión"
+    },
+    "completeProfile": {
+      "title": "Completa tu perfil",
+      "subtitle": "Tu cuenta está activa pero el perfil es obligatorio para {email}",
+      "username": "Nombre de usuario",
+      "usernameHint": "3-20 caracteres, solo a-z 0-9 _",
+      "usernameRule": "El usuario solo puede contener a-z, 0-9 y _",
+      "usernameLength": "El usuario debe tener 3-20 caracteres",
+      "displayName": "Nombre visible",
+      "displayNamePlaceholder": "Usuario Joti",
+      "avatar": "Avatar",
+      "skipAvatar": "Omitir usa la primera letra",
+      "previewAlt": "vista previa",
+      "useRecommended": "Usar recomendado",
+      "recommendedAlt": "recomendado",
+      "bio": "Biografía",
+      "bioPlaceholder": "Algo sobre ti...",
+      "bioCount": "{count}/500",
+      "submit": "Completar perfil",
+      "missingEmail": "Falta el correo. Inicia sesión de nuevo.",
+      "required": "Usuario y nombre visible son obligatorios",
+      "avatarImageError": "Sube un archivo de imagen",
+      "avatarSizeError": "El avatar debe pesar menos de 5MB",
+      "avatarUploadError": "No se pudo subir el avatar"
+    },
+    "oauth": {
+      "continueWithGoogle": "Continuar con Google",
+      "recommended": "Recomendado"
+    },
+    "activation": {
+      "codeMustBeDigits": "El código debe tener 6 dígitos"
+    }
+  },
+  "validation": {
+    "email": {
+      "required": "El correo es obligatorio",
+      "tooLong": "El correo no debe exceder 320 caracteres",
+      "noSpaces": "El correo no debe contener espacios",
+      "invalid": "Ingresa un correo válido"
+    },
+    "password": {
+      "required": "La contraseña es obligatoria",
+      "tooShort": "La contraseña debe tener al menos 12 caracteres",
+      "tooLongBytes": "La contraseña no debe exceder 72 bytes",
+      "containsEmail": "La contraseña no debe contener tu correo",
+      "sameAsEmail": "La contraseña no debe ser igual a tu correo",
+      "containsUsername": "La contraseña no debe contener tu usuario",
+      "sameAsUsername": "La contraseña no debe ser igual a tu usuario",
+      "mismatch": "Las contraseñas no coinciden",
+      "confirmRequired": "Confirma tu contraseña"
+    },
+    "username": {
+      "required": "El usuario es obligatorio",
+      "length": "El usuario debe tener 3-20 caracteres",
+      "charset": "Usa solo a-z, 0-9 y _",
+      "reserved": "Este usuario está reservado"
+    },
+    "displayName": {
+      "required": "El nombre visible es obligatorio",
+      "tooLong": "El nombre visible no debe exceder 100 caracteres",
+      "invalidChars": "Caracteres inválidos"
+    },
+    "bio": {
+      "tooLong": "La bio no debe exceder 500 caracteres",
+      "invalidChars": "La bio contiene caracteres inválidos"
+    },
+    "code": {
+      "digits": "El código debe tener 6 dígitos",
+      "invalid": "Código inválido o vencido"
+    },
+    "general": {
+      "verifyEmailFirst": "Verifica tu correo primero",
+      "sessionExpired": "Tu sesión expiró. Pide un código nuevo.",
+      "completeProfileFailed": "No se pudo completar el perfil",
+      "accountFailed": "No se pudo crear la cuenta",
+      "resendFailed": "No se pudo reenviar el código",
+      "resetFailed": "No se pudo restablecer la contraseña",
+      "resetLinkFailed": "No se pudo enviar el enlace",
+      "signInFailed": "No pudimos iniciar tu sesión. Inténtalo de nuevo."
+    }
+  },
+  "errors": {
+    "invalidCredentials": "Correo o contraseña inválidos.",
+    "validation": "Revisa los datos e inténtalo de nuevo.",
+    "emailNotVerified": "Verifica tu correo antes de iniciar sesión. Revisa tu bandeja por el código.",
+    "rateLimited": "Espera un momento antes de intentarlo de nuevo.",
+    "deliveryFailed": "No pudimos enviar el correo. Inténtalo más tarde.",
+    "fallback": "Algo salió mal. Inténtalo de nuevo.",
+    "sessionExpired": "Tu sesión expiró. Inicia sesión de nuevo.",
+    "sessionInvalid": "Tu sesión ya no es válida. Inicia sesión de nuevo.",
+    "entryUnknown": "No pudimos determinar el siguiente paso. Vuelve a iniciar sesión.",
+    "spaceUnavailable": "Este espacio no está disponible.",
+    "spaceSignIn": "Tu sesión no está activa. Inicia sesión para entrar a este espacio.",
+    "sectionUnavailable": "No pudimos abrir esta sección",
+    "createSpaceFailed": "No pudimos crear tu espacio. Inténtalo de nuevo.",
+    "codeInvalid": "Código inválido o vencido.",
+    "tooManyAttempts": "Demasiados intentos. Pide un código nuevo.",
+    "profileRequired": "Completa tu perfil antes de continuar.",
+    "spaceExists": "Ya tienes un espacio.",
+    "storageLimit": "Las subidas no están disponibles. Inténtalo más tarde."
+  },
+  "spaces": {
+    "tools": {
+      "notes": "Notas",
+      "tasks": "Tareas",
+      "journal": "Diario",
+      "projects": "Proyectos",
+      "meetings": "Reuniones",
+      "assignments": "Entregables",
+      "calendar": "Calendario"
+    },
+    "new": {
+      "title": "Crea tu primer espacio",
+      "subtitle": "Todo en Joti vive dentro de un espacio. Empecemos por el primero.",
+      "sectionLabel": "Paso {step} de {total}"
+    },
+    "steps": {
+      "identity": "Identidad",
+      "purpose": "Propósito",
+      "review": "Resumen",
+      "progress": "Paso {current} de {total}",
+      "navLabel": "Progreso de la creación del espacio"
+    },
+    "identity": {
+      "title": "Identidad del espacio",
+      "subtitle": "Dale un nombre y un ícono para reconocerlo fácilmente.",
+      "name": "Nombre del espacio",
+      "namePlaceholder": "Espacio de Ana",
+      "nameHint": "Entre {min} y {max} caracteres.",
+      "nameCount": "{count}/{max}",
+      "nameError": {
+        "required": "El nombre del espacio es obligatorio",
+        "minLength": "El nombre debe tener al menos {min} caracteres",
+        "maxLength": "El nombre no puede superar {max} caracteres",
+        "invalidChars": "El nombre contiene caracteres no permitidos"
+      },
+      "icon": "Ícono del espacio",
+      "iconHint": "Elige el que mejor lo represente. Podrás cambiarlo más adelante.",
+      "iconGroup": "Íconos disponibles",
+      "iconUse": "Usar el ícono {icon}"
+    },
+    "purpose": {
+      "title": "Propósito del espacio",
+      "subtitle": "Elige para qué lo vas a usar. Esto define la plantilla inicial y las herramientas habilitadas.",
+      "options": {
+        "personal": {
+          "title": "Personal",
+          "description": "Diseñado para proyectos propios, notas rápidas y organización diaria."
+        },
+        "work": {
+          "title": "Trabajo / Negocios",
+          "description": "Diseñado para gestión de tareas, actas de reuniones y proyectos."
+        },
+        "study": {
+          "title": "Estudios / Universidad",
+          "description": "Diseñado para apuntes de clases, entregables y fechas de exámenes."
+        },
+        "blank": {
+          "title": "En blanco / Minimalista",
+          "description": "Espacio totalmente limpio sin plantillas ni datos de ejemplo."
+        }
+      }
+    },
+    "summary": {
+      "title": "Resumen del espacio",
+      "subtitle": "Revisa antes de crear. Podrás cambiarlo todo más adelante.",
+      "tools": "Herramientas habilitadas",
+      "submit": "Crear mi espacio"
+    },
+    "creating": {
+      "title": "Creando tu espacio",
+      "step1": "Creando espacio en Convex...",
+      "step2": "Inyectando plantilla inicial y notas de bienvenida...",
+      "step3": "¡Todo listo! Entrando a joti..."
+    },
+    "onboarding": {
+      "checking": "Comprobando tu cuenta",
+      "unavailableTitle": "No pudimos abrir esta sección",
+      "signIn": "Ir a iniciar sesión"
+    },
+    "workspace": {
+      "loading": "Cargando espacio",
+      "unavailableTitle": "Espacio no disponible",
+      "signIn": "Iniciar sesión",
+      "signingOut": "Saliendo…",
+      "signOut": "Cerrar sesión",
+      "sidebar": {
+        "tools": "Herramientas del espacio",
+        "toolsNav": "Herramientas",
+        "collapse": "Colapsar",
+        "expandBar": "Expandir barra lateral",
+        "collapseBar": "Colapsar barra lateral"
+      },
+      "content": {
+        "selectTool": "Selecciona una herramienta",
+        "selectToolHint": "Elige una herramienta en la barra lateral para empezar a trabajar en tu espacio.",
+        "position": "Herramienta {current} de {total}",
+        "search": "Buscar",
+        "filter": "Filtrar",
+        "createNew": "Crear nuevo {label}",
+        "new": "Nuevo",
+        "create": "Crear {label}",
+        "listPlaceholder": "La vista de lista aparecerá aquí cuando añadas elementos.",
+        "emptyFallbackTitle": "Sin {label}",
+        "emptyFallbackDescription": "Crea tu primer {label} para empezar.",
+        "tools": {
+          "notes": {
+            "title": "Sin notas aún",
+            "description": "Crea tu primera nota para empezar a capturar ideas, pensamientos o cualquier cosa importante."
+          },
+          "tasks": {
+            "title": "Sin tareas",
+            "description": "Añade una tarea para empezar a organizar tu trabajo. Puedes crear listas, asignar fechas y marcar como completadas."
+          },
+          "journal": {
+            "title": "Diario vacío",
+            "description": "Empieza a escribir tus reflexiones diarias. El diario es tu espacio privado para pensamientos y aprendizajes."
+          },
+          "projects": {
+            "title": "Sin proyectos",
+            "description": "Crea un proyecto para agrupar tareas, notas y recursos relacionados. Los proyectos te ayudan a mantener el foco."
+          },
+          "meetings": {
+            "title": "Sin actas de reunión",
+            "description": "Registra las actas de tus reuniones: asistentes, decisiones, tareas pendientes y seguimientos."
+          },
+          "assignments": {
+            "title": "Sin entregables",
+            "description": "Haz seguimiento de tus asignaciones y entregables con fechas límite, estado y prioridad."
+          },
+          "calendar": {
+            "title": "Sin eventos",
+            "description": "Añade fechas de exámenes, entregas y eventos importantes para no perderte nada."
+          }
+        }
+      }
+    }
+  },
+  "providers": {
+    "convex": {
+      "title": "Error de configuración",
+      "description": "El backend no está configurado (falta <code>{variable}</code>). Defínelo en <code>{file}</code> y reinicia el servidor."
+    }
+  },
+  "boilerplate": {
+    "logoAlt": "Logo de Turborepo",
+    "getStarted": "Empieza editando <code>{path}</code>",
+    "saveInstantly": "Guarda y ve tus cambios al instante.",
+    "deployNow": "Desplegar ahora",
+    "vercelAlt": "Logotipo de Vercel",
+    "readDocs": "Lee nuestra documentación",
+    "openAlert": "Abrir alerta",
+    "alertMessage": "¡Hola desde tu app web!",
+    "windowAlt": "Ícono de ventana",
+    "examples": "Ejemplos",
+    "globeAlt": "Ícono de globo",
+    "goToDocs": "Ir a turborepo.dev →"
+  }
+}

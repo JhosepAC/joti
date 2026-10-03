@@ -108,10 +108,54 @@ export const PencilIcon = (props: IconProps) => (
   </Svg>
 );
 
+export const MoreHorizontalIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <circle cx="12" cy="12" r="1" />
+    <circle cx="19" cy="12" r="1" />
+    <circle cx="5" cy="12" r="1" />
+  </Svg>
+);
+
+export const FilterIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </Svg>
+);
+
+export const SearchIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </Svg>
+);
+
+export const PlusIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </Svg>
+);
+
 export const LayersIcon = (props: IconProps) => (
   <Svg {...props}>
     <path d="m12 3 9 5-9 5-9-5 9-5Z" />
     <path d="m3 13 9 5 9-5" />
+  </Svg>
+);
+
+export const LogoutIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="m16 17 5-5-5-5" />
+    <path d="M21 12H9" />
+  </Svg>
+);
+
+export const GlobeIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18" />
+    <path d="M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3Z" />
   </Svg>
 );
 

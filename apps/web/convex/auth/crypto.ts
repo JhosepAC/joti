@@ -118,6 +118,41 @@ export function sha256Hex(raw: string): string {
   return createHash("sha256").update(raw, "utf8").digest("hex");
 }
 
+/**
+ * Resolves EMAIL_CODE_PEPPER. Throws instead of degrading to an unpeppered
+ * digest: a silent no-op here would store 6-digit codes under a fast,
+ * unsalted hash that any database dump can brute-force offline (1M space).
+ */
+function getCodePepper(): string {
+  const raw = process.env.EMAIL_CODE_PEPPER;
+  if (!raw || raw.trim().length < 32) {
+    throw new Error(
+      "EMAIL_CODE_PEPPER is not set (or shorter than 32 characters). " +
+        "Refusing to store verification codes under a brute-forceable digest.",
+    );
+  }
+  return raw.trim();
+}
+
+/**
+ * Digest stored for email verification codes. The server-side pepper means a
+ * leaked table alone is not enough to recover codes offline; it is mixed in
+ * with a domain separator so the digest cannot be confused with any other
+ * SHA-256 value in the database.
+ */
+export function hashEmailCode(code: string): string {
+  return sha256Hex(`joti-email-code-v1:${getCodePepper()}:${code}`);
+}
+
+/**
+ * Pre-pepper digest, accepted only so rows written before the pepper was
+ * introduced still verify until they expire (10 minutes). New rows are always
+ * peppered; re-issuance migrates the address automatically.
+ */
+export function hashEmailCodeLegacy(code: string): string {
+  return sha256Hex(code);
+}
+
 /** Raw claim-grant token: 32 bytes of CSPRNG entropy, base64url encoded. */
 export function issueClaimGrant(): string {
   return randomBytes(32).toString("base64url");

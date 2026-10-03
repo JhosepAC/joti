@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,11 +19,13 @@ interface Props {
 }
 
 export const Step1Credentials: React.FC<Props> = ({ data, errors, isLoading, onChange, onNext, onGoogle }) => {
+  const t = useTranslations("auth.register.step1");
+  const tCommon = useTranslations("common.actions");
   return (
     <div className="space-y-5">
       <header className="mb-2">
-        <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text-primary font-heading">Create Account</h1>
-        <p className="text-[0.9rem] font-light text-text-secondary mt-1.5">Enter your email and password to get started</p>
+        <h1 className="text-2xl font-semibold tracking-[-0.03em] text-text-primary font-heading">{t("title")}</h1>
+        <p className="text-[0.9rem] font-light text-text-secondary mt-1.5">{t("subtitle")}</p>
       </header>
 
       {errors.general && (
@@ -31,7 +34,7 @@ export const Step1Credentials: React.FC<Props> = ({ data, errors, isLoading, onC
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("email")}</Label>
           <Input
             id="email"
             type="email"
@@ -45,7 +48,7 @@ export const Step1Credentials: React.FC<Props> = ({ data, errors, isLoading, onC
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("password")}</Label>
           <Input
             id="password"
             type="password"
@@ -56,11 +59,11 @@ export const Step1Credentials: React.FC<Props> = ({ data, errors, isLoading, onC
             autoComplete="new-password"
           />
           {errors.password && <p className="text-xs text-error pl-2">{errors.password}</p>}
-          <p className="text-[11px] text-text-muted pl-1">12-128 characters, not containing your email or username</p>
+          <p className="text-[11px] text-text-muted pl-1">{t("passwordHint")}</p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -75,10 +78,10 @@ export const Step1Credentials: React.FC<Props> = ({ data, errors, isLoading, onC
       </div>
 
       <Button type="button" variant="primary" className="w-full h-12 rounded-full" isLoading={isLoading} onClick={onNext}>
-        Continue
+        {t("submit")}
       </Button>
 
-      <Divider>or</Divider>
+      <Divider>{tCommon("or")}</Divider>
 
       <SocialLoginButton provider="google" isRecommended={false} onClick={onGoogle} disabled={isLoading} />
     </div>

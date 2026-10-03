@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { Lato, Varela_Round } from "next/font/google";
+import { Inter, Varela_Round } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
 import { ConvexClientProvider } from "@/providers/convex-provider";
+import { SettingsMenu } from "@/components/ui/settings-menu";
 
-const lato = Lato({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["100", "300", "400", "700", "900"],
-  style: ["normal", "italic"],
-  variable: "--font-lato",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -18,20 +20,28 @@ const varelaRound = Varela_Round({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Joti",
-  description: "Joti Web Application",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("app.title"),
+    description: t("app.description"),
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
   return (
-    <html lang="en" className={`${lato.variable} ${varelaRound.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${varelaRound.variable}`}>
       <body className="font-sans bg-background text-text-primary antialiased">
-        <ConvexClientProvider>{children}</ConvexClientProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ConvexClientProvider>{children}</ConvexClientProvider>
+          <SettingsMenu />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

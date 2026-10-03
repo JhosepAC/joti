@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
+import { useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { storeAccountGrant, storeSpaceGrant, type AccountGrant } from "../utils/claim-store";
-import { getAuthErrorMessage } from "../utils/get-auth-error-message";
+import { useAuthErrorMessage } from "../utils/get-auth-error-message";
 
 /**
  * Decides where a freshly authenticated user belongs.
@@ -34,6 +35,8 @@ export interface EntryResult {
 
 export function useEntryGate(grant: AccountGrant | null | undefined): EntryResult {
   const router = useRouter();
+  const tErrors = useTranslations("errors");
+  const tErr = useAuthErrorMessage();
   const [result, setResult] = useState<EntryResult>({
     stage: "loading",
     error: null,
@@ -68,7 +71,9 @@ export function useEntryGate(grant: AccountGrant | null | undefined): EntryResul
         if (context.stage === "profile" && context.claim) {
           storeAccountGrant(grant.email, context.claim);
           setResult({ stage: "redirecting", error: null, displayName: null, claim: null });
-          router.replace(`/auth/complete-profile?email=${encodeURIComponent(grant.email)}`);
+          // No address in the URL: the next screen reads it from the stored
+          // grant, so it never lands in history, Referer headers or logs.
+          router.replace("/auth/complete-profile");
           return;
         }
 
@@ -93,7 +98,7 @@ export function useEntryGate(grant: AccountGrant | null | undefined): EntryResul
         // A stage this client does not know about: refuse rather than guess.
         setResult({
           stage: "error",
-          error: "No pudimos determinar el siguiente paso. Vuelve a iniciar sesión.",
+          error: tErrors("entryUnknown"),
           displayName: null,
           claim: null,
         });
@@ -101,7 +106,7 @@ export function useEntryGate(grant: AccountGrant | null | undefined): EntryResul
         if (cancelled) return;
         setResult({
           stage: "error",
-          error: getAuthErrorMessage(err, "Tu sesión no es válida. Inicia sesión de nuevo."),
+          error: tErr(err, tErrors("sessionInvalid")),
           displayName: null,
           claim: null,
         });
@@ -111,7 +116,7 @@ export function useEntryGate(grant: AccountGrant | null | undefined): EntryResul
     return () => {
       cancelled = true;
     };
-  }, [grant, getEntryContext, router]);
+  }, [grant, getEntryContext, router, tErr, tErrors]);
 
   return result;
 }

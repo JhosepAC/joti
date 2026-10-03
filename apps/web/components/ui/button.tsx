@@ -6,6 +6,8 @@ export interface ButtonProps
   variant?: "primary" | "secondary" | "outline" | "ghost";
   size?: "default" | "sm" | "lg";
   isLoading?: boolean;
+  /** Accessible/translated loading text. Rendered only when provided. */
+  loadingText?: string;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -16,6 +18,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "primary",
       size = "default",
       isLoading = false,
+      loadingText,
       disabled,
       ...props
     },
@@ -74,7 +77,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 d="M4 12a8 8 0 018-8v8H4z"
               />
             </svg>
-            <span>Loading...</span>
+            {loadingText && <span>{loadingText}</span>}
           </span>
         ) : (
           children

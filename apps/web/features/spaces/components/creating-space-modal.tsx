@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { SpinnerIcon } from "./icons";
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
  */
 export const CreatingSpaceModal: React.FC<Props> = ({ message }) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("spaces.creating");
 
   useEffect(() => {
     panelRef.current?.focus();
@@ -34,7 +36,7 @@ export const CreatingSpaceModal: React.FC<Props> = ({ message }) => {
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label="Creando tu espacio"
+        aria-label={t("title")}
         className="flex w-full max-w-[340px] flex-col items-center gap-4 rounded-3xl border border-border bg-background px-8 py-9 text-center shadow-xl shadow-black/5 outline-none"
       >
         <SpinnerIcon className="text-2xl text-icon" strokeWidth={2} />

@@ -2,51 +2,16 @@ import { type SpacePurposeKey } from "./types/space.types";
 import { sanitizeSpaceNameInput } from "./validations/space.schema";
 
 /**
- * Copy for the first-space flow.
+ * Choice keys for the first-space flow.
  *
- * Only the *choice* copy lives here. The consequences of a choice (which
- * template is applied, which tools are enabled) are derived on the server and
- * fetched for the summary step, so the preview cannot drift from what will
- * actually be created.
+ * Display copy lives in the `spaces.purpose.options` i18n namespace, not here:
+ * titles and descriptions are presentation, while this module owns only which
+ * choices exist and the default-name rule below.
  *
- * Per the design rules, no emoji appear in this copy: icons are inline SVG and
+ * Per the design rules, no emoji appear in copy: icons are inline SVG and
  * the only emoji in the product is the space's own icon.
  */
-export interface PurposeOption {
-  key: SpacePurposeKey;
-  title: string;
-  description: string;
-}
-
-export const PURPOSE_OPTIONS: readonly PurposeOption[] = [
-  {
-    key: "personal",
-    title: "Personal",
-    description:
-      "Diseñado para proyectos propios, notas rápidas y organización diaria.",
-  },
-  {
-    key: "work",
-    title: "Trabajo / Negocios",
-    description:
-      "Diseñado para gestión de tareas, actas de reuniones y proyectos.",
-  },
-  {
-    key: "study",
-    title: "Estudios / Universidad",
-    description:
-      "Diseñado para apuntes de clases, entregables y fechas de exámenes.",
-  },
-  {
-    key: "blank",
-    title: "En blanco / Minimalista",
-    description: "Espacio totalmente limpio sin plantillas ni datos de ejemplo.",
-  },
-];
-
-export function purposeTitle(key: SpacePurposeKey): string {
-  return PURPOSE_OPTIONS.find((option) => option.key === key)?.title ?? "";
-}
+export const PURPOSE_KEYS = ["personal", "work", "study", "blank"] as const satisfies ReadonlyArray<SpacePurposeKey>;
 
 /**
  * Default name offered in step 1, per the flow spec.

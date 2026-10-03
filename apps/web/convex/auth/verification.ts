@@ -4,26 +4,27 @@ import { action } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { internal } from "../_generated/api";
-import { issueClaimGrant, sha256Hex } from "./crypto";
+import { hashEmailCode, hashEmailCodeLegacy, issueClaimGrant, sha256Hex } from "./crypto";
 import { CLAIM_SCOPE_ACCOUNT } from "./constants";
 import { issueVerificationCode } from "./_codeService";
+import { validateEmail } from "./validators";
 
 // `requestEmailCode` and `resendEmailCode` both delegate to
 // `_codeService.issueVerificationCode`, which owns generation, throttling,
 // hashing and delivery.
 
 export const requestEmailCode: ReturnType<typeof action> = action({
-  args: { email: v.string() },
+  args: { email: v.string(), locale: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const { expiresAt } = await issueVerificationCode(ctx, args.email);
+    const { expiresAt } = await issueVerificationCode(ctx, args.email, args.locale);
     return { sent: true, expiresAt };
   },
 });
 
 export const resendEmailCode: ReturnType<typeof action> = action({
-  args: { email: v.string() },
+  args: { email: v.string(), locale: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const { expiresAt } = await issueVerificationCode(ctx, args.email);
+    const { expiresAt } = await issueVerificationCode(ctx, args.email, args.locale);
     return { sent: true, expiresAt };
   },
 });
@@ -39,7 +40,9 @@ export const resendEmailCode: ReturnType<typeof action> = action({
 export const confirmEmailCode: ReturnType<typeof action> = action({
   args: { email: v.string(), code: v.string() },
   handler: async (ctx, args) => {
-    const cleanEmail = args.email.trim().toLowerCase();
+    // Canonical validation, not trim-only: overlong or malformed addresses
+    // must not reach the DB lookup or mint grants for junk rows.
+    const cleanEmail = validateEmail(args.email);
     const cleanCode = args.code.trim();
 
     if (!/^\d{6}$/.test(cleanCode)) {
@@ -48,7 +51,14 @@ export const confirmEmailCode: ReturnType<typeof action> = action({
 
     const result = (await ctx.runMutation(
       internal.auth.verificationInternal.verifyCode,
-      { email: cleanEmail, code: cleanCode, code_hash: sha256Hex(cleanCode) },
+      {
+        email: cleanEmail,
+        code: cleanCode,
+        code_hash: hashEmailCode(cleanCode),
+        // Grace period for rows issued before the pepper existed (they expire
+        // within 10 minutes; re-issuance stores only the peppered digest).
+        code_hash_legacy: hashEmailCodeLegacy(cleanCode),
+      },
     )) as { verified: boolean };
 
     if (!result.verified) {

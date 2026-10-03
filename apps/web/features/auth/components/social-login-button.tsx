@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,8 @@ export const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
   onClick,
   ...props
 }) => {
+  const t = useTranslations("auth.oauth");
+
   return (
     <button
       type="button"
@@ -55,11 +58,11 @@ export const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
           </svg>
         )}
         <span className="font-normal text-text-primary">
-          {provider === "google" && "Continue with Google"}
+          {provider === "google" && t("continueWithGoogle")}
         </span>
       </div>
 
-      {isRecommended && <Badge variant="recommended">Recommended</Badge>}
+      {isRecommended && <Badge variant="recommended">{t("recommended")}</Badge>}
     </button>
   );
 };
