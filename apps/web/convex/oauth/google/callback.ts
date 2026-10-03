@@ -34,6 +34,23 @@ export const googleCallback = httpAction(async (ctx, request) => {
   const fail = (reason: string) =>
     Response.redirect(`${appUrl}/auth/login?error=${encodeURIComponent(reason)}`, 302);
 
+  // Global abuse cap for the callback: it performs 2-3 outbound Google
+  // fetches plus encryption and writes per hit, so unbounded calls are
+  // compute/bandwidth amplification. Per-actor limiting is not available --
+  // the httpAction context exposes no client IP -- so this is a shared
+  // fixed window sized far above legitimate login traffic. All rejections
+  // (including this one) answer identically via `fail`, so the cap reveals
+  // nothing.
+  try {
+    await ctx.runMutation(internal.auth.rateLimit.consumeRateLimit, {
+      key: "oauth-callback-global",
+      limit: 120,
+      windowMs: 60 * 1000,
+    });
+  } catch {
+    return fail("oauth_failed");
+  }
+
   const oauthError = url.searchParams.get("error");
   if (oauthError) return fail("oauth_denied");
 

@@ -353,10 +353,16 @@ export const login: ReturnType<typeof action> = action({
     }
 
     if (!user.password_hash) {
-      // Equalize timing before reporting: this branch used to reveal that an
-      // OAuth-only account exists for a given address.
+      // Equalize timing before reporting, exactly like the missing-account
+      // branch: the reply below is identical to it, so neither timing nor
+      // text reveals whether the address exists or how it signs in.
+      //
+      // Google-only users are not stranded: requesting a password reset for
+      // the address emails them a notice pointing back to Google sign-in
+      // (see sendOAuthOnlyAccountNotice), which is the safe place for that
+      // hint instead of the login response.
       await equalizePasswordTiming(args.password);
-      throw new ConvexError("This account uses Google sign-in. Please continue with Google.");
+      throw invalidCredentials;
     }
 
     // Verify the password BEFORE reporting any account state. The
