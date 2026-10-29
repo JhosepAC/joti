@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useLogout } from "@/features/auth/hooks/use-logout";
-import { useLocaleSwitcher } from "@/i18n/use-locale-switcher";
+import { AccountSettings } from "@/features/settings/components/account-settings";
+import { AccountGlyph } from "@/features/settings/components/account-glyph";
 import {
   BlankIcon,
   HomeIcon,
@@ -37,7 +38,8 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
   const t = useTranslations("spaces.dashboard");
   const tLists = useTranslations("lists");
   const locale = useLocale();
-  const { switchLocale } = useLocaleSwitcher();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsButton = useRef<HTMLButtonElement>(null);
   const model = useWorkspaceDashboard(slug);
   const { data, view, drafts, error, loading, busy, page, draft, dirty } =
     model;
@@ -407,9 +409,6 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             </div>
           </div>
           <footer className="workspace-account">
-            <Link href="/settings" className="workspace-settings-link">
-              {t("settings")}
-            </Link>
             <div className="workspace-person">
               <span>
                 {data.profile.avatarUrl ? (
@@ -431,20 +430,20 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 <strong>
                   {data.profile.displayName || data.profile.username}
                 </strong>
-                <span>{t("personalAccount")}</span>
+                <span>@{data.profile.username}</span>
               </div>
             </div>
             <div className="workspace-account-actions">
-              <select
-                aria-label={t("language")}
-                value={locale}
-                onChange={(event) =>
-                  switchLocale(event.target.value as "es" | "en")
-                }
+              <button
+                type="button"
+                className="workspace-settings-trigger"
+                ref={settingsButton}
+                aria-label={t("settings")}
+                title={t("settings")}
+                onClick={() => setSettingsOpen(true)}
               >
-                <option value="es">Español</option>
-                <option value="en">English</option>
-              </select>
+                <AccountGlyph name="settings" />
+              </button>
               <button
                 aria-label={t("signOut")}
                 title={t("signOut")}
@@ -717,6 +716,14 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
           onClose={() => setResolveConflict(false)}
           onResolve={async () => {
             if (await model.useSavedVersion()) setResolveConflict(false);
+          }}
+        />
+      )}
+      {settingsOpen && (
+        <AccountSettings
+          onClose={() => {
+            setSettingsOpen(false);
+            requestAnimationFrame(() => settingsButton.current?.focus());
           }}
         />
       )}

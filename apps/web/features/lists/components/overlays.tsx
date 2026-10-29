@@ -85,11 +85,13 @@ export function Modal({
   onClose,
   children,
   wide = false,
+  className = "",
 }: {
   label: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useLayoutEffect(() => {
@@ -100,10 +102,19 @@ export function Modal({
   return createPortal(
     <dialog
       ref={ref}
-      className={`lists-surface lists-modal ${wide ? "lists-modal-wide" : ""}`}
+      closedby="none"
+      className={`lists-surface lists-modal ${wide ? "lists-modal-wide" : ""} ${className}`}
       aria-label={label}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.stopPropagation();
+          onClose();
+        }
+      }}
       onCancel={(event) => {
         event.preventDefault();
+        event.stopPropagation();
         onClose();
       }}
       onClick={(event) => {

@@ -1121,6 +1121,9 @@
       "RATE_LIMITED": "Demasiados intentos. Espera unos minutos antes de reintentar.",
       "NOT_FOUND": "La sesión ya no está disponible. Actualiza la página.",
       "UNAVAILABLE": "No se pudo completar la operación. Conservamos tus datos; vuelve a intentarlo."
-    }
+    },
+    "close": "Cerrar configuración",
+    "discard": "Descartar cambios",
+    "discardHint": "Si cierras ahora, perderás los cambios que todavía no hayas guardado."
   }
 }

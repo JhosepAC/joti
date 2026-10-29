@@ -1121,6 +1121,9 @@
       "RATE_LIMITED": "Too many attempts. Wait a few minutes and retry.",
       "NOT_FOUND": "This session is no longer available. Refresh the page.",
       "UNAVAILABLE": "Could not complete this operation. Your input is preserved; retry."
-    }
+    },
+    "close": "Close settings",
+    "discard": "Discard changes",
+    "discardHint": "Closing now discards changes you have not saved."
   }
 }
