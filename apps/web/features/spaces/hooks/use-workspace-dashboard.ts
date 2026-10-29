@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DashboardData } from "../types/dashboard.types";
 
-type Draft = { title: string; body: string };
+type Draft = { title: string; body: string; baseRevision?: number };
 class WorkspaceError extends Error {
   constructor(public code: string) {
     super(code);
@@ -47,6 +47,7 @@ export function useWorkspaceDashboard(slug: string) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [conflictId, setConflictId] = useState<string>();
   const [recoveryKey, setRecoveryKey] = useState("");
   const sending = useRef(false);
   const load = useCallback(
@@ -69,7 +70,14 @@ export function useWorkspaceDashboard(slug: string) {
               draft.title.length <= 120 &&
               draft.body.length <= 30000
             )
-              recovered[page.id] = draft;
+              recovered[page.id] = {
+                title: draft.title,
+                body: draft.body,
+                // Legacy drafts must never silently overwrite a newer server document.
+                baseRevision: Number.isSafeInteger(draft.baseRevision)
+                  ? draft.baseRevision
+                  : -1,
+              };
           }
         } catch {
           /* Optional drafts never prevent loading saved pages. */
@@ -113,7 +121,14 @@ export function useWorkspaceDashboard(slug: string) {
     setError("");
   };
   const edit = (next: Draft) => {
-    if (page) setDrafts((previous) => ({ ...previous, [page.id]: next }));
+    if (page)
+      setDrafts((previous) => ({
+        ...previous,
+        [page.id]: {
+          ...next,
+          baseRevision: previous[page.id]?.baseRevision ?? page.revision,
+        },
+      }));
   };
   async function createPage() {
     if (sending.current) return;
@@ -131,20 +146,21 @@ export function useWorkspaceDashboard(slug: string) {
       setBusy(false);
     }
   }
-  async function savePage() {
+  async function savePage(targetId?: string) {
+    const page = data?.pages.find((item) => item.id === (targetId ?? view));
+    const draft = page ? drafts[page.id] : undefined;
     if (!page || !draft || sending.current || !draft.title.trim()) return;
     const snapshot = { ...draft };
     sending.current = true;
     setBusy(true);
     setError("");
     try {
-      setData(
-        await request(slug, "PATCH", {
-          pageId: page.id,
-          ...snapshot,
-          revision: page.revision,
-        }),
-      );
+      const result = await request(slug, "PATCH", {
+        pageId: page.id,
+        ...snapshot,
+        revision: snapshot.baseRevision ?? -1,
+      });
+      setData(result);
       setDrafts((previous) => {
         const current = previous[page.id];
         if (
@@ -152,13 +168,51 @@ export function useWorkspaceDashboard(slug: string) {
           current.title !== snapshot.title ||
           current.body !== snapshot.body
         )
-          return previous;
+          return current && current.baseRevision === snapshot.baseRevision
+            ? {
+                ...previous,
+                [page.id]: {
+                  ...current,
+                  baseRevision:
+                    result.pages.find((item) => item.id === page.id)
+                      ?.revision ?? current.baseRevision,
+                },
+              }
+            : previous;
         const next = { ...previous };
         delete next[page.id];
         return next;
       });
     } catch (cause) {
+      if (cause instanceof WorkspaceError && cause.code === "CONFLICT")
+        setConflictId(page.id);
       setError(cause instanceof WorkspaceError ? cause.code : "UNAVAILABLE");
+    } finally {
+      sending.current = false;
+      setBusy(false);
+    }
+  }
+  async function useSavedVersion() {
+    if (!conflictId || sending.current) return;
+    setBusy(true);
+    sending.current = true;
+    try {
+      const fresh = await request(slug);
+      setData(fresh);
+      setDrafts((previous) => {
+        const next = { ...previous };
+        delete next[conflictId];
+        return next;
+      });
+      setView(
+        fresh.pages.some((p) => p.id === conflictId) ? conflictId : "pages",
+      );
+      setConflictId(undefined);
+      setError("");
+      return true;
+    } catch (cause) {
+      setError(cause instanceof WorkspaceError ? cause.code : "UNAVAILABLE");
+      return false;
     } finally {
       sending.current = false;
       setBusy(false);
@@ -166,8 +220,8 @@ export function useWorkspaceDashboard(slug: string) {
   }
   async function itemAction(
     pageId: string,
-    action: "rename" | "duplicate" | "favorite",
-    input: { title?: string; favorite?: boolean } = {},
+    action: "rename" | "duplicate" | "favorite" | "delete" | "icon",
+    input: { title?: string; favorite?: boolean; icon?: string } = {},
   ) {
     if (sending.current) return;
     const target = data?.pages.find((item) => item.id === pageId);
@@ -180,7 +234,9 @@ export function useWorkspaceDashboard(slug: string) {
         pageId,
         action,
         ...input,
-        ...(action === "rename" ? { revision: target.revision } : {}),
+        ...(["rename", "delete"].includes(action)
+          ? { revision: target.revision }
+          : {}),
       });
       setData(result);
       if (action === "rename")
@@ -188,10 +244,25 @@ export function useWorkspaceDashboard(slug: string) {
           previous[pageId]
             ? {
                 ...previous,
-                [pageId]: { ...previous[pageId]!, title: input.title! },
+                [pageId]: {
+                  ...previous[pageId]!,
+                  title: input.title!,
+                  baseRevision:
+                    previous[pageId]!.baseRevision === target.revision
+                      ? target.revision + 1
+                      : previous[pageId]!.baseRevision,
+                },
               }
             : previous,
         );
+      if (action === "delete") {
+        setDrafts((previous) => {
+          const next = { ...previous };
+          delete next[pageId];
+          return next;
+        });
+        if (view === pageId) select("pages");
+      }
       if (action === "duplicate" && result.selectedPageId)
         select(result.selectedPageId);
       return true;
@@ -203,6 +274,28 @@ export function useWorkspaceDashboard(slug: string) {
       setBusy(false);
     }
   }
+  const saveRef = useRef(savePage);
+  saveRef.current = savePage;
+  const pendingDraft = data?.pages.find((item) => {
+    const value = drafts[item.id];
+    return (
+      value &&
+      value.title.trim() &&
+      value.body.length <= 30000 &&
+      (value.title !== item.title || value.body !== item.body)
+    );
+  });
+  useEffect(() => {
+    if (!pendingDraft || busy || error) return;
+    const timer = setTimeout(() => void saveRef.current(pendingDraft.id), 1200);
+    return () => clearTimeout(timer);
+  }, [pendingDraft, drafts, busy, error]);
+  useEffect(() => {
+    if (!Object.keys(drafts).length) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [drafts]);
   return {
     data,
     view,
@@ -219,5 +312,7 @@ export function useWorkspaceDashboard(slug: string) {
     savePage,
     load,
     itemAction,
+    conflictId,
+    useSavedVersion,
   };
 }

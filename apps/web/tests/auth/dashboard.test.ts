@@ -38,7 +38,14 @@ async function fixture(purpose: "personal" | "blank" = "personal") {
   const call = (
     input: {
       operation?:
-        "load" | "create" | "save" | "favorite" | "rename" | "duplicate";
+        | "load"
+        | "create"
+        | "save"
+        | "favorite"
+        | "rename"
+        | "duplicate"
+        | "icon"
+        | "delete";
       [key: string]: unknown;
     } = {},
   ) =>
@@ -53,6 +60,24 @@ async function fixture(purpose: "personal" | "blank" = "personal") {
 }
 
 describe("workspace pages", () => {
+  test("icons persist on copies and deletion respects revisions without recreating the starter", async () => {
+    const { call } = await fixture();
+    const page = (await call()).pages[0]!;
+    await call({ operation: "icon", pageId: page.id, icon: "book" });
+    expect((await call()).pages[0]!.icon).toBe("book");
+    await expect(
+      call({ operation: "icon", pageId: page.id, icon: "invalid" }),
+    ).rejects.toThrow("VALIDATION_ERROR");
+    const copied = await call({ operation: "duplicate", pageId: page.id });
+    const copy = copied.pages.find((p) => p.id === copied.selectedPageId)!;
+    expect(copy.icon).toBe("book");
+    await expect(
+      call({ operation: "delete", pageId: page.id, revision: 0 }),
+    ).rejects.toThrow("CONFLICT");
+    await call({ operation: "delete", pageId: page.id, revision: 1 });
+    await call({ operation: "delete", pageId: copy.id, revision: 1 });
+    expect((await call()).pages).toHaveLength(0);
+  });
   test("page tree actions persist favorites, copy content and protect renames with revisions", async () => {
     const { call } = await fixture();
     const page = (await call()).pages[0]!;
@@ -169,6 +194,12 @@ describe("workspace pages", () => {
       });
     });
     await expect(call({ slug: "private" })).rejects.toThrow("NOT_FOUND");
+    await expect(
+      call({ operation: "delete", pageId: foreign, revision: 1 }),
+    ).rejects.toThrow("NOT_FOUND");
+    await expect(
+      call({ operation: "icon", pageId: foreign, icon: "book" }),
+    ).rejects.toThrow("NOT_FOUND");
     await expect(
       call({
         operation: "save",

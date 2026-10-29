@@ -15,6 +15,7 @@ export function WorkspaceTreeItem({
   onAction,
   disabled = false,
   canDelete = false,
+  deleteLabel,
 }: {
   name: string;
   icon: ReactNode;
@@ -26,6 +27,7 @@ export function WorkspaceTreeItem({
   onAction: (action: TreeAction) => void;
   disabled?: boolean;
   canDelete?: boolean;
+  deleteLabel?: string;
 }) {
   const t = useTranslations("lists"),
     anchor = useRef<HTMLButtonElement>(null),
@@ -147,7 +149,7 @@ export function WorkspaceTreeItem({
                   className="lists-danger"
                   onClick={() => action("delete")}
                 >
-                  {t("deleteList")}
+                  {deleteLabel ?? t("deleteList")}
                 </button>
               </>
             )}

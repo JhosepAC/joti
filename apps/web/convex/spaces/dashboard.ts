@@ -18,12 +18,15 @@ export const operate = action({
       v.literal("duplicate"),
       v.literal("rename"),
       v.literal("favorite"),
+      v.literal("delete"),
+      v.literal("icon"),
     ),
     pageId: v.optional(v.id("space_pages")),
     title: v.optional(v.string()),
     body: v.optional(v.string()),
     revision: v.optional(v.number()),
     favorite: v.optional(v.boolean()),
+    icon: v.optional(v.string()),
   },
   handler: async (ctx, { token, ...args }): Promise<unknown> =>
     ctx.runMutation(internal.spaces.dashboardStore.operate, {

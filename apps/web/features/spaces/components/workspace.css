@@ -722,17 +722,6 @@
     400 15px/1.9 var(--font-inter),
     sans-serif;
 }
-.workspace-document-footer {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  border-top: 1px solid var(--ws-line);
-  padding-top: 16px;
-  margin-top: 24px;
-  color: var(--ws-muted);
-  font-size: 13px;
-}
 .workspace-field-error {
   color: var(--ws-error);
   font-size: 13px;
@@ -991,9 +980,6 @@
   .workspace-document-body {
     min-height: 380px;
     font-size: 16px;
-  }
-  .workspace-document-footer {
-    margin-top: 20px;
   }
   .workspace-section-title {
     align-items: flex-start;
