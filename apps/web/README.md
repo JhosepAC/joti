@@ -1,36 +1,18 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+# Aplicación web de Nook
 
-## Getting Started
+Aplicación Next.js con React, Convex y traducciones en español e inglés.
 
-First, run the development server:
+El workspace de `/w/[slug]` presenta los espacios de la cuenta, los módulos Inicio/Páginas y un editor de texto. La primera visita crea una página de inicio una sola vez; los espacios en blanco reciben una página vacía. Crear y guardar páginas usa `/api/workspace`, que conserva el token de sesión en la cookie HttpOnly y comprueba propietario, vencimiento y revisión en Convex. Los borradores de cada página se recuperan desde `sessionStorage`; el botón Guardar conserva el contenido en la cuenta.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Desde la raíz del repositorio:
+
+```sh
+pnpm --filter web dev
+pnpm --filter web test
+pnpm --filter web check-types
+pnpm --filter web lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Desarrollo: http://localhost:3002. Configura `.env.local` a partir de `.env.example`; las variables privadas también deben existir en el backend de Convex. Desde esta carpeta, `pnpm exec convex dev` sincroniza el backend de desarrollo configurado.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Consulta [la guía de autenticación](../../docs/authentication.md), [el contexto del producto](../../docs/business_context.md) y [las instrucciones de contribución](../../AGENTS.md).
