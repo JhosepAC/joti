@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useTranslations } from "next-intl";
 import {
   clearGrants,
   readAccountGrant,
@@ -22,6 +23,8 @@ export function useLogout() {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const inFlight = useRef(false);
+  const t = useTranslations("errors");
+  const [logoutError, setLogoutError] = useState("");
   const logoutAction = useAction(api.auth.actions.logout);
 
   const signOut = useCallback(
@@ -29,25 +32,35 @@ export function useLogout() {
       if (inFlight.current) return;
       inFlight.current = true;
       setSigningOut(true);
+      setLogoutError("");
+      let cookieCleared = false;
       try {
         const account = readAccountGrant();
         const spaceToken = slug ? readSpaceGrant(slug) : undefined;
         // Local first: never leave live tokens in storage.
         clearGrants();
+        await fetch("/api/auth/session", {
+          method: "DELETE",
+          credentials: "same-origin",
+          signal: AbortSignal.timeout(15000),
+        });
+        cookieCleared = true;
         await logoutAction({
           email: account?.email,
           claim: account?.token,
           slug,
           grant: spaceToken,
         }).catch(() => undefined);
+      } catch {
+        setLogoutError(t("fallback"));
       } finally {
         inFlight.current = false;
         setSigningOut(false);
-        router.replace("/auth/login");
+        if (cookieCleared) router.replace("/auth/login");
       }
     },
-    [logoutAction, router],
+    [logoutAction, router, t],
   );
 
-  return { signOut, signingOut };
+  return { signOut, signingOut, logoutError };
 }

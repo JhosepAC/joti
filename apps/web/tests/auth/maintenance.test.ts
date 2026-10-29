@@ -22,6 +22,44 @@ async function loginClaim(t: ReturnType<typeof testClient>, email: string) {
 }
 
 describe("atomic space creation (L9)", () => {
+  test("a deleted older space cannot hide an existing active space", async () => {
+    const t = testClient();
+    const account = await registerVerifiedUser(t, {
+      email: "existing@example.com",
+      username: "existinguser",
+    });
+    await t.run(async (ctx) => {
+      const base = {
+        owner_id: account.userId as never,
+        icon: "🚀" as const,
+        purpose: "personal" as const,
+        is_private: true,
+        created_at: Date.now(),
+      };
+      await ctx.db.insert("spaces", {
+        ...base,
+        name: "Archived",
+        slug: "archived",
+        deleted_at: Date.now(),
+      });
+      await ctx.db.insert("spaces", {
+        ...base,
+        name: "Active",
+        slug: "active",
+      });
+    });
+    const claim = await loginClaim(t, account.email);
+    await expect(
+      t.action(api.spaces.actions.createFirstSpace, {
+        email: account.email,
+        claim,
+        name: "Duplicate",
+        icon: "🚀",
+        purpose: "personal",
+      }),
+    ).rejects.toThrow("Ya tienes un espacio");
+  });
+
   test("concurrent first-space calls with one grant create exactly one space", async () => {
     const t = testClient();
     const account = await registerVerifiedUser(t, {
@@ -54,7 +92,9 @@ describe("atomic space creation (L9)", () => {
     const spaces = await t.run(async (ctx) => {
       return await ctx.db
         .query("spaces")
-        .withIndex("by_owner_id", (q) => q.eq("owner_id", account.userId as never))
+        .withIndex("by_owner_id", (q) =>
+          q.eq("owner_id", account.userId as never),
+        )
         .collect();
     });
     expect(spaces.filter((s) => !s.deleted_at)).toHaveLength(1);
@@ -201,9 +241,15 @@ describe("scheduled cleaners (L13)", () => {
 
     // ...while dead rows are swept. The fresh address redeemed its code above,
     // which minted a live 15-minute grant -- that one must survive.
-    const grants = await t.mutation(internal.auth.claimGrants.deleteExpired, {});
+    const grants = await t.mutation(
+      internal.auth.claimGrants.deleteExpired,
+      {},
+    );
     expect(grants.deleted).toBe(1);
-    const codes = await t.mutation(internal.auth.verificationInternal.deleteExpired, {});
+    const codes = await t.mutation(
+      internal.auth.verificationInternal.deleteExpired,
+      {},
+    );
     expect(codes.deleted).toBe(1);
     const remaining = await t.run(async (ctx) => {
       return await ctx.db.query("auth_claim_grants").collect();
@@ -234,7 +280,8 @@ describe("fail-closed configuration (L11, L14)", () => {
   });
 
   test("OAuth state requires its own secret", async () => {
-    const { createSignedState } = await import("../../convex/auth/_oauthShared");
+    const { createSignedState } =
+      await import("../../convex/auth/_oauthShared");
     const saved = process.env.OAUTH_STATE_SECRET;
     delete process.env.OAUTH_STATE_SECRET;
     try {
@@ -275,7 +322,8 @@ describe("input validation wiring (L7, L8)", () => {
       display_name: "Locale",
       password: "Sup3r-S3cret-Pw!",
       locale: "en-US-extra-long-value",
-      timezone: "America/Argentina/Buenos_Aires/Extra/Segment/That/Goes/On/Forever/XX",
+      timezone:
+        "America/Argentina/Buenos_Aires/Extra/Segment/That/Goes/On/Forever/XX",
     });
     const profile = await t.run(async (ctx) => {
       const user = await ctx.db

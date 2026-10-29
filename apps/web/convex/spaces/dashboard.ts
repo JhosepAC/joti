@@ -1,0 +1,34 @@
+"use node";
+
+import { action } from "../_generated/server";
+import { v } from "convex/values";
+import { internal } from "../_generated/api";
+import { sha256Hex } from "../auth/crypto";
+import { validateSlug } from "./validators";
+
+export const operate = action({
+  args: {
+    token: v.string(),
+    slug: v.string(),
+    locale: v.string(),
+    operation: v.union(
+      v.literal("load"),
+      v.literal("create"),
+      v.literal("save"),
+      v.literal("duplicate"),
+      v.literal("rename"),
+      v.literal("favorite"),
+    ),
+    pageId: v.optional(v.id("space_pages")),
+    title: v.optional(v.string()),
+    body: v.optional(v.string()),
+    revision: v.optional(v.number()),
+    favorite: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { token, ...args }): Promise<unknown> =>
+    ctx.runMutation(internal.spaces.dashboardStore.operate, {
+      ...args,
+      slug: validateSlug(args.slug),
+      token_hash: sha256Hex(token),
+    }),
+});

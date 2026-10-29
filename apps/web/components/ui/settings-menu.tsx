@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LOCALES, LOCALE_LABELS, type AppLocale } from "@/i18n/config";
 import { useLocaleSwitcher } from "@/i18n/use-locale-switcher";
@@ -56,6 +57,7 @@ function ChevronIcon({ className }: { className?: string }) {
  */
 export const SettingsMenu: React.FC = () => {
   const t = useTranslations("common.settings");
+  const pathname = usePathname();
   const { locale, switchLocale } = useLocaleSwitcher();
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -81,7 +83,10 @@ export const SettingsMenu: React.FC = () => {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open ]);
+  }, [open]);
+
+  // Authentication provides its own inline language switcher, outside the form.
+  if (pathname.startsWith("/auth/") || pathname === "/spaces/new" || pathname.startsWith("/w/")) return null;
 
   return (
     <div ref={containerRef} className="fixed bottom-4 left-4 z-50">
@@ -91,7 +96,9 @@ export const SettingsMenu: React.FC = () => {
         aria-label={t("menu")}
         className={cn(
           "absolute bottom-full left-0 mb-2 w-60 origin-bottom-left rounded-2xl border border-border bg-surface p-2 shadow-xl shadow-black/10 transition-all duration-150",
-          open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0",
+          open
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-2 opacity-0",
         )}
       >
         <button
@@ -101,12 +108,18 @@ export const SettingsMenu: React.FC = () => {
           aria-expanded={langOpen}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-background"
         >
-          <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-lg bg-background text-icon ring-1 ring-border">
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-background text-icon ring-1 ring-border"
+          >
             <GlobeIcon className="text-base" />
           </span>
           <span className="flex-1 text-left">{t("language")}</span>
           <ChevronIcon
-            className={cn("text-sm text-text-muted transition-transform duration-150", langOpen && "rotate-180")}
+            className={cn(
+              "text-sm text-text-muted transition-transform duration-150",
+              langOpen && "rotate-180",
+            )}
           />
         </button>
 
@@ -114,11 +127,17 @@ export const SettingsMenu: React.FC = () => {
         <div
           className={cn(
             "grid transition-all duration-150",
-            langOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+            langOpen
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0",
           )}
         >
           <div className="overflow-hidden">
-            <div className="space-y-1 px-1 pb-1 pt-1" role="group" aria-label={t("language")}>
+            <div
+              className="space-y-1 px-1 pb-1 pt-1"
+              role="group"
+              aria-label={t("language")}
+            >
               {LOCALES.map((code: AppLocale) => {
                 const active = code === locale;
                 return (

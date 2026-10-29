@@ -41,7 +41,7 @@ interface SimpleCopy {
 
 const verification: Record<EmailLocale, VerificationCopy> = {
   es: {
-    subject: "Tu código de verificación de Joti",
+    subject: "Tu código de verificación de Nook",
     htmlBody: (code) => {
       const safe = escapeHtml(code);
       return (
@@ -49,10 +49,11 @@ const verification: Record<EmailLocale, VerificationCopy> = {
         `<p>Si no lo pediste, puedes ignorar este correo.</p>`
       );
     },
-    textBody: (code) => `Tu código de verificación de Joti es ${code}. Vence en 10 minutos.`,
+    textBody: (code) =>
+      `Tu código de verificación de Nook es ${code}. Vence en 10 minutos.`,
   },
   en: {
-    subject: "Your Joti verification code",
+    subject: "Your Nook verification code",
     htmlBody: (code) => {
       const safe = escapeHtml(code);
       return (
@@ -60,13 +61,14 @@ const verification: Record<EmailLocale, VerificationCopy> = {
         `<p>If you did not request this, you can ignore this email.</p>`
       );
     },
-    textBody: (code) => `Your Joti verification code is ${code}. It expires in 10 minutes.`,
+    textBody: (code) =>
+      `Your Nook verification code is ${code}. It expires in 10 minutes.`,
   },
 };
 
 const passwordReset: Record<EmailLocale, LinkCopy> = {
   es: {
-    subject: "Restablece tu contraseña de Joti",
+    subject: "Restablece tu contraseña de Nook",
     htmlBody: (to, link) => {
       const safeTo = escapeHtml(to);
       const safeLink = escapeHtml(link);
@@ -78,10 +80,10 @@ const passwordReset: Record<EmailLocale, LinkCopy> = {
       );
     },
     textBody: (to, link) =>
-      `Restablece tu contraseña de Joti (vence en 60 minutos): ${link}`,
+      `Restablece tu contraseña de Nook (vence en 60 minutos): ${link}`,
   },
   en: {
-    subject: "Reset your Joti password",
+    subject: "Reset your Nook password",
     htmlBody: (to, link) => {
       const safeTo = escapeHtml(to);
       const safeLink = escapeHtml(link);
@@ -92,26 +94,27 @@ const passwordReset: Record<EmailLocale, LinkCopy> = {
         `<p style="color:#666;font-size:12px;word-break:break-all;">Or copy: ${safeLink}</p>`
       );
     },
-    textBody: (to, link) => `Reset your Joti password (expires in 60 minutes): ${link}`,
+    textBody: (to, link) =>
+      `Reset your Nook password (expires in 60 minutes): ${link}`,
   },
 };
 
 const passwordChanged: Record<EmailLocale, SimpleCopy> = {
   es: {
-    subject: "Tu contraseña de Joti cambió",
+    subject: "Tu contraseña de Nook cambió",
     htmlBody: () =>
       `<p>Tu contraseña se cambió correctamente.</p>
        <p>Si no fuiste tú, restablécela de inmediato y contacta soporte.</p>`,
     textBody: () =>
-      `Tu contraseña de Joti cambió. Si no fuiste tú, restablécela de inmediato.`,
+      `Tu contraseña de Nook cambió. Si no fuiste tú, restablécela de inmediato.`,
   },
   en: {
-    subject: "Your Joti password was changed",
+    subject: "Your Nook password was changed",
     htmlBody: () =>
       `<p>Your password was successfully changed.</p>
        <p>If you did not make this change, reset your password immediately and contact support.</p>`,
     textBody: () =>
-      `Your Joti password was changed. If this was not you, reset it immediately.`,
+      `Your Nook password was changed. If this was not you, reset it immediately.`,
   },
 };
 
@@ -129,7 +132,8 @@ const oauthOnlyNotice: Record<EmailLocale, SimpleCopy> = {
     htmlBody: () =>
       `<p>You requested a password reset, but this account signs in with Google.</p>
        <p>Please continue with Google instead.</p>`,
-    textBody: () => `This account signs in with Google. Please continue with Google.`,
+    textBody: () =>
+      `This account signs in with Google. Please continue with Google.`,
   },
 };
 
@@ -143,8 +147,4 @@ export function passwordResetCopy(locale: EmailLocale): LinkCopy {
 
 export function passwordChangedCopy(locale: EmailLocale): SimpleCopy {
   return passwordChanged[locale];
-}
-
-export function oauthOnlyNoticeCopy(locale: EmailLocale): SimpleCopy {
-  return oauthOnlyNotice[locale];
 }

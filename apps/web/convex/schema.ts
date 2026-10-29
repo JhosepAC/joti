@@ -1,7 +1,84 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+  column as listColumn,
+  view as listView,
+  cellValue,
+} from "./lists/model";
 
 export default defineSchema({
+  list_catalog: defineTable({
+    favorite: v.optional(v.boolean()),
+    space_id: v.id("spaces"),
+    list_id: v.id("space_lists"),
+    key: v.string(),
+    name: v.string(),
+    icon: v.string(),
+    archived: v.boolean(),
+    revision: v.number(),
+  })
+    .index("by_space", ["space_id"])
+    .index("by_list", ["list_id"]),
+  list_access: defineTable({
+    token_hash: v.string(),
+    session_id: v.id("auth_sessions"),
+    user_id: v.id("auth_users"),
+    space_id: v.id("spaces"),
+    expires_at: v.number(),
+  })
+    .index("by_token_hash", ["token_hash"])
+    .index("by_session", ["session_id"])
+    .index("by_expires_at", ["expires_at"]),
+  space_lists: defineTable({
+    favorite: v.optional(v.boolean()),
+    space_id: v.id("spaces"),
+    key: v.string(),
+    name: v.string(),
+    description: v.string(),
+    icon: v.string(),
+    columns: v.array(listColumn),
+    views: v.array(listView),
+    revision: v.number(),
+    archived: v.boolean(),
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_space", ["space_id"])
+    .index("by_space_key", ["space_id", "key"]),
+  list_rows: defineTable({
+    space_id: v.id("spaces"),
+    list_id: v.id("space_lists"),
+    key: v.string(),
+    cells: v.record(v.string(), cellValue),
+    versions: v.record(v.string(), v.number()),
+    icon: v.string(),
+    notes: v.string(),
+    meta_version: v.number(),
+    position: v.number(),
+    archived: v.boolean(),
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_list", ["list_id"])
+    .index("by_list_key", ["list_id", "key"]),
+  list_operations: defineTable({
+    user_id: v.id("auth_users"),
+    space_id: v.id("spaces"),
+    op_id: v.string(),
+    created_at: v.number(),
+  })
+    .index("by_user_op", ["user_id", "op_id"])
+    .index("by_created_at", ["created_at"]),
+  /** Opaque browser sessions. Raw tokens are held only in HttpOnly cookies. */
+  auth_sessions: defineTable({
+    token_hash: v.string(),
+    user_id: v.id("auth_users"),
+    expires_at: v.number(),
+    created_at: v.number(),
+  })
+    .index("by_token_hash", ["token_hash"])
+    .index("by_user_id", ["user_id"])
+    .index("by_expires_at", ["expires_at"]),
   /**
    * Core auth user - holds credentials & security state.
    * Uses Convex native _id and _creationTime (replaces UUID/created_at).
@@ -100,8 +177,8 @@ export default defineSchema({
    * required by `actions.completeProfile`, `auth.storage.generateAvatarUploadUrl`
    * and the spaces actions.
    *
-   * This exists because the app has no session layer, so there is no identity to
-   * authorize against -- without it, knowing a verified address was enough to
+   * These scoped grants bridge browser sessions to Convex operations.
+   * Without an explicit authorization, knowing a verified address was enough to
    * claim that account's profile or mint avatar upload URLs. The token is stored
    * hashed, expires in 15 minutes, and is never logged. See auth/README.md.
    */
@@ -130,6 +207,17 @@ export default defineSchema({
    * makes slugs guessable, which is not a disclosure: the route only renders a
    * space to a caller holding a claim grant bound to that `space_id`.
    */
+  space_pages: defineTable({
+    favorite: v.optional(v.boolean()),
+    space_id: v.id("spaces"),
+    title: v.string(),
+    body: v.string(),
+    revision: v.number(),
+    created_at: v.number(),
+    updated_at: v.number(),
+    is_starter: v.boolean(),
+  }).index("by_space_id", ["space_id"]),
+
   spaces: defineTable({
     owner_id: v.id("auth_users"), // NOT NULL: a space cannot be orphaned
     name: v.string(), // 3-50 chars, trimmed, no control/zero-width characters
@@ -154,6 +242,7 @@ export default defineSchema({
     is_private: v.boolean(), // always true at creation
     created_at: v.number(),
     deleted_at: v.optional(v.number()), // soft delete
+    starter_initialized_at: v.optional(v.number()),
   })
     .index("by_owner_id", ["owner_id"])
     .index("by_slug", ["slug"]),

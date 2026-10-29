@@ -5,12 +5,21 @@ import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
-import { AuthStatus, LoginCredentials, ValidationErrors } from "../types/auth.types";
+import {
+  AuthStatus,
+  LoginCredentials,
+  ValidationErrors,
+} from "../types/auth.types";
 import { validateLoginCredentials } from "../validations/login.schema";
-import { getAuthErrorCode, useAuthErrorMessage } from "../utils/get-auth-error-message";
+import {
+  getAuthErrorCode,
+  getRetryAfterSeconds,
+  useAuthErrorMessage,
+} from "../utils/get-auth-error-message";
 import { useValidationTranslator } from "@/i18n/translate";
-import { storeAccountGrant, type AccountGrant } from "../utils/claim-store";
+import { clearGrants, type AccountGrant } from "../utils/claim-store";
 import { useEntryGate } from "./use-entry-gate";
+import { establishSession, resumeSession } from "../utils/session-client";
 
 type LoginResult = {
   user: { _id: string; email: string };
@@ -30,9 +39,9 @@ export function useLogin() {
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [status, setStatus] = useState<AuthStatus>("idle");
-  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [requiresActivation, setRequiresActivation] = useState(false);
   const [activationCode, setActivationCode] = useState("");
+  const [activationSent, setActivationSent] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -40,9 +49,38 @@ export function useLogin() {
   // routes to whichever stage comes next: profile, first space, or workspace.
   // It stays `undefined` until then, which tells the gate there is nothing to
   // resolve yet -- as opposed to `null`, which means "no grant, sign in".
-  const [entry, setEntry] = useState<AccountGrant | null | undefined>(undefined);
+  const [entry, setEntry] = useState<AccountGrant | null | undefined>(
+    undefined,
+  );
+  const [resuming, setResuming] = useState(true);
+  const resumeRequest = useRef<Promise<AccountGrant | null> | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    resumeRequest.current ??= (async () => {
+      if (new URL(window.location.href).searchParams.has("switch")) {
+        await fetch("/api/auth/session", {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        clearGrants();
+        return null;
+      }
+      return resumeSession();
+    })();
+    void resumeRequest.current
+      .then((grant) => {
+        if (!cancelled && grant) setEntry(grant);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setResuming(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  // Real Convex action — Argon2 verification + lockout logic lives server-side
+  // Password verification and lockout logic live server-side.
   const loginAction = useAction(api.auth.actions.login);
   const requestCodeAction = useAction(api.auth.verification.requestEmailCode);
   const confirmCodeAction = useAction(api.auth.verification.confirmEmailCode);
@@ -66,6 +104,19 @@ export function useLogin() {
   const inFlight = useRef(false);
 
   const handleFieldChange = (field: keyof LoginCredentials, value: string) => {
+    setErrors({});
+    if (field === "email") {
+      if (
+        value.trim().toLowerCase() !== credentials.email.trim().toLowerCase()
+      ) {
+        if (cooldownRef.current) clearInterval(cooldownRef.current);
+        setResendCooldown(0);
+      }
+      setRequiresActivation(false);
+      setPendingEmail(null);
+      setActivationCode("");
+      setActivationSent(false);
+    }
     setCredentials((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -77,7 +128,7 @@ export function useLogin() {
    * place that decides between the profile gate, the first space and an
    * existing workspace.
    */
-  const enterFrom = (result: LoginResult) => {
+  const enterFrom = async (result: LoginResult) => {
     if (!result.claim) {
       setErrors({ general: tGeneral("signInFailed") });
       setStatus("error");
@@ -87,8 +138,8 @@ export function useLogin() {
     // navigation ahead unmounts this screen anyway.
     setCredentials((prev) => ({ ...prev, password: "" }));
     // Stored before navigating so a reload mid-redirect can still resume.
-    storeAccountGrant(result.user.email, result.claim);
-    setEntry({ email: result.user.email, token: result.claim });
+    const grant = await establishSession(result.user.email, result.claim);
+    setEntry(grant);
   };
 
   // Cooldown ticker for the activation-code resend. Cleared on unmount so no
@@ -115,8 +166,12 @@ export function useLogin() {
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (entry !== undefined && gate.stage !== "error") return;
 
-    const { isValid, errors: validationErrors } = validateLoginCredentials(credentials, tValidation);
+    const { isValid, errors: validationErrors } = validateLoginCredentials(
+      credentials,
+      tValidation,
+    );
     if (!isValid) {
       setErrors(validationErrors);
       return;
@@ -134,14 +189,15 @@ export function useLogin() {
       })) as LoginResult;
 
       setStatus("success");
-      enterFrom(result);
+      await enterFrom(result);
     } catch (err: unknown) {
       setStatus("error");
       const code = getAuthErrorCode(err);
       if (code === "EMAIL_NOT_VERIFIED") {
         setRequiresActivation(true);
+        setActivationSent(false);
         setPendingEmail(credentials.email.trim().toLowerCase());
-        setErrors({ general: tErrors(err) });
+        setErrors({});
       } else {
         setErrors({ general: tErrors(err) });
       }
@@ -161,7 +217,10 @@ export function useLogin() {
     inFlight.current = true;
     try {
       setStatus("loading");
-      await confirmCodeAction({ email: pendingEmail, code: activationCode.trim() });
+      await confirmCodeAction({
+        email: pendingEmail,
+        code: activationCode.trim(),
+      });
       setRequiresActivation(false);
       setErrors({});
       // Retry login after activation, then continue into the app.
@@ -170,7 +229,7 @@ export function useLogin() {
         password: credentials.password,
       })) as LoginResult;
       setStatus("success");
-      enterFrom(result);
+      await enterFrom(result);
     } catch (err: unknown) {
       setErrors({ general: tErrors(err) });
       setStatus("error");
@@ -187,15 +246,15 @@ export function useLogin() {
     try {
       setStatus("loading");
       await requestCodeAction({ email: pendingEmail, locale });
+      setActivationSent(true);
       setErrors({});
-      startResendCooldown(30);
+      startResendCooldown(60);
     } catch (err: unknown) {
       const code = getAuthErrorCode(err);
       const msg = tErrors(err);
       setErrors({ general: msg });
       if (code === "RATE_LIMITED") {
-        const match = msg.match(/(\d+)s/);
-        startResendCooldown(match?.[1] ? parseInt(match[1], 10) : 60);
+        startResendCooldown(getRetryAfterSeconds(err));
       }
     } finally {
       inFlight.current = false;
@@ -203,37 +262,37 @@ export function useLogin() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setIsOAuthLoading(true);
-    const siteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
-    if (siteUrl && typeof window !== "undefined") {
-      window.location.href = `${siteUrl}/oauth/google/authorize`;
-      return;
-    }
-    setIsOAuthLoading(false);
-  };
-
   return {
     credentials,
     // A gate failure replaces the credentials screen with itself in place, so it
     // has to be reported here or the form would just silently re-enable.
-    errors: gate.stage === "error" && gate.error
-      ? { ...errors, general: gate.error }
-      : errors,
-    isLoading: status === "loading",
-    isOAuthLoading,
+    errors:
+      gate.stage === "error" && gate.error
+        ? { ...errors, general: gate.error }
+        : errors,
+    isLoading: status === "loading" || resuming,
     // While the gate resolves, the screen is about to be replaced: keep the form
     // from being resubmitted.
     isEntering: entry !== undefined && gate.stage !== "error",
     requiresActivation,
     activationCode,
-    setActivationCode,
+    activationSent,
+    setActivationCode: (value: string) => {
+      setActivationCode(value);
+      setErrors({});
+    },
     pendingEmail,
     resendCooldown,
     handleActivationVerify,
     handleResendActivation,
     handleFieldChange,
     handleCredentialsSubmit,
-    handleGoogleLogin,
+    cancelActivation: () => {
+      setRequiresActivation(false);
+      setPendingEmail(null);
+      setActivationCode("");
+      setActivationSent(false);
+      setErrors({});
+    },
   };
 }

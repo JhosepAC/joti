@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
-import { storeAccountGrant, storeSpaceGrant, type AccountGrant } from "../utils/claim-store";
+import {
+  storeAccountGrant,
+  storeSpaceGrant,
+  type AccountGrant,
+} from "../utils/claim-store";
 import { useAuthErrorMessage } from "../utils/get-auth-error-message";
 
 /**
@@ -33,7 +37,9 @@ export interface EntryResult {
   claim: string | null;
 }
 
-export function useEntryGate(grant: AccountGrant | null | undefined): EntryResult {
+export function useEntryGate(
+  grant: AccountGrant | null | undefined,
+): EntryResult {
   const router = useRouter();
   const tErrors = useTranslations("errors");
   const tErr = useAuthErrorMessage();
@@ -45,6 +51,11 @@ export function useEntryGate(grant: AccountGrant | null | undefined): EntryResul
   });
 
   const getEntryContext = useAction(api.spaces.actions.getEntryContext);
+  // Effect replay (Strict Mode, locale changes) must share one consumption.
+  const request = useRef<{
+    token: string;
+    promise: ReturnType<typeof getEntryContext>;
+  } | null>(null);
 
   useEffect(() => {
     // `undefined` means "not resolved yet" (the caller is still reading
@@ -58,28 +69,53 @@ export function useEntryGate(grant: AccountGrant | null | undefined): EntryResul
     }
 
     let cancelled = false;
-    setResult({ stage: "loading", error: null, displayName: null, claim: null });
+    setResult({
+      stage: "loading",
+      error: null,
+      displayName: null,
+      claim: null,
+    });
 
     void (async () => {
       try {
-        const context = await getEntryContext({
-          email: grant.email,
-          claim: grant.token,
-        });
+        if (request.current?.token !== grant.token) {
+          request.current = {
+            token: grant.token,
+            promise: getEntryContext({
+              email: grant.email,
+              claim: grant.token,
+            }),
+          };
+        }
+        const context = await request.current.promise;
         if (cancelled) return;
 
         if (context.stage === "profile" && context.claim) {
           storeAccountGrant(grant.email, context.claim);
-          setResult({ stage: "redirecting", error: null, displayName: null, claim: null });
+          setResult({
+            stage: "redirecting",
+            error: null,
+            displayName: null,
+            claim: null,
+          });
           // No address in the URL: the next screen reads it from the stored
           // grant, so it never lands in history, Referer headers or logs.
           router.replace("/auth/complete-profile");
           return;
         }
 
-        if (context.stage === "workspace" && context.slug && context.spaceGrant) {
+        if (
+          context.stage === "workspace" &&
+          context.slug &&
+          context.spaceGrant
+        ) {
           storeSpaceGrant(context.slug, context.spaceGrant);
-          setResult({ stage: "redirecting", error: null, displayName: null, claim: null });
+          setResult({
+            stage: "redirecting",
+            error: null,
+            displayName: null,
+            claim: null,
+          });
           router.replace(`/w/${context.slug}`);
           return;
         }

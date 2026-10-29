@@ -13,6 +13,14 @@ import { internal } from "./_generated/api";
  */
 
 const crons = cronJobs();
+crons.daily("lists-access-and-receipts",{hourUTC:4,minuteUTC:5},internal.lists.access.sweep,{});
+
+crons.daily(
+  "delete-expired-sessions",
+  { hourUTC: 4, minuteUTC: 10 },
+  internal.auth.sessionStore.deleteExpired,
+  {},
+);
 
 // Dead claim grants (15-minute TTL): sweep nightly.
 crons.daily(

@@ -17,7 +17,6 @@ import { hashPassword, sha256Hex, verifyPassword } from "./crypto";
 import { getAppUrl } from "./appUrl";
 import {
   resolveEmailLocale,
-  sendOAuthOnlyAccountNotice,
   sendPasswordChangedEmail,
   sendPasswordResetEmail,
 } from "./email";
@@ -36,7 +35,8 @@ type UserRow = {
 
 const HOUR_MS = 60 * 60 * 1000;
 
-const RESET_THROTTLE_MESSAGE = "Too many reset requests. Please try again later.";
+const RESET_THROTTLE_MESSAGE =
+  "Too many reset requests. Please try again later.";
 
 /**
  * Per-address reset quota, enforced identically for known and unknown
@@ -66,7 +66,10 @@ async function consumeResetQuota(
     });
   } catch (err) {
     if (err instanceof ConvexError) {
-      throw new ConvexError({ code: "RATE_LIMITED", message: RESET_THROTTLE_MESSAGE });
+      throw new ConvexError({
+        code: "RATE_LIMITED",
+        message: RESET_THROTTLE_MESSAGE,
+      });
     }
     throw err;
   }
@@ -104,40 +107,39 @@ export const requestPasswordReset: ReturnType<typeof action> = action({
       return { sent: true };
     }
 
-    if (!user.password_hash) {
-      const delivery = await sendOAuthOnlyAccountNotice(cleanEmail, locale);
-      if (!delivery.delivered) {
-        // No row was created on this path, so there is nothing to roll back;
-        // surface the failure instead of a fake success (see below).
-        throw new ConvexError({
-          code: "EMAIL_DELIVERY_FAILED",
-          message: "We could not send the email. Please try again later.",
-        });
-      }
-      return { sent: true };
-    }
-
+    // Legacy accounts without a password recover through the same email link.
+    // No disabled identity-provider option is offered as their only exit.
     const rawToken = generateSecureToken();
     const tokenHash = sha256Hex(rawToken);
     const expiresAt = Date.now() + PASSWORD_RESET_EXPIRY_MS;
 
-    await ctx.runMutation(internal.auth.passwordResetInternal.createResetToken, {
-      user_id: user._id as never,
-      email: cleanEmail,
-      token_hash: tokenHash,
-      expires_at: expiresAt,
-    });
+    await ctx.runMutation(
+      internal.auth.passwordResetInternal.createResetToken,
+      {
+        user_id: user._id as never,
+        email: cleanEmail,
+        token_hash: tokenHash,
+        expires_at: expiresAt,
+      },
+    );
 
     const resetLink = `${getAppUrl()}/auth/reset-password?token=${encodeURIComponent(rawToken)}`;
-    const delivery = await sendPasswordResetEmail(cleanEmail, resetLink, locale);
+    const delivery = await sendPasswordResetEmail(
+      cleanEmail,
+      resetLink,
+      locale,
+    );
     if (!delivery.delivered) {
       // Roll back the token row so a retry (once the provider is fixed) mints
       // a fresh link instead of tripping over this attempt. The hourly quota
       // stays consumed on purpose: it bounds how fast anyone can make us hit
       // the provider, working or not.
-      await ctx.runMutation(internal.auth.passwordResetInternal.deleteByTokenHash, {
-        token_hash: tokenHash,
-      });
+      await ctx.runMutation(
+        internal.auth.passwordResetInternal.deleteByTokenHash,
+        {
+          token_hash: tokenHash,
+        },
+      );
       throw new ConvexError({
         code: "EMAIL_DELIVERY_FAILED",
         message: "We could not send the reset email. Please try again later.",
@@ -162,11 +164,20 @@ export const resetPassword: ReturnType<typeof action> = action({
     const rawToken = args.token.trim();
     const locale = resolveEmailLocale(args.locale);
     if (!rawToken) {
-      throw new ConvexError({ code: "VALIDATION_ERROR", message: "Reset token is required." });
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Reset token is required.",
+      });
     }
 
-    if (args.confirmPassword !== undefined && args.password !== args.confirmPassword) {
-      throw new ConvexError({ code: "VALIDATION_ERROR", message: "Passwords do not match." });
+    if (
+      args.confirmPassword !== undefined &&
+      args.password !== args.confirmPassword
+    ) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Passwords do not match.",
+      });
     }
 
     const tokenHash = sha256Hex(rawToken);
@@ -174,12 +185,19 @@ export const resetPassword: ReturnType<typeof action> = action({
     const record = (await ctx.runQuery(
       internal.auth.passwordResetInternal.getByTokenHash,
       { token_hash: tokenHash },
-    )) as
-      | { _id: string; user_id: string; email: string; expires_at: number; used_at?: number }
-      | null;
+    )) as {
+      _id: string;
+      user_id: string;
+      email: string;
+      expires_at: number;
+      used_at?: number;
+    } | null;
 
     if (!record) {
-      throw new ConvexError({ code: "VALIDATION_ERROR", message: "Invalid or expired reset link." });
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Invalid or expired reset link.",
+      });
     }
     if (record.used_at) {
       throw new ConvexError({
@@ -199,11 +217,15 @@ export const resetPassword: ReturnType<typeof action> = action({
     })) as UserRow;
 
     if (!user || user.deleted_at) throw new ConvexError("Account not found.");
-    if (user._id !== record.user_id) throw new ConvexError("Invalid reset token.");
+    if (user._id !== record.user_id)
+      throw new ConvexError("Invalid reset token.");
 
-    const profile = (await ctx.runQuery(internal.auth.queries.getProfileByUserId, {
-      userId: user._id as never,
-    })) as { username?: string } | null;
+    const profile = (await ctx.runQuery(
+      internal.auth.queries.getProfileByUserId,
+      {
+        userId: user._id as never,
+      },
+    )) as { username?: string } | null;
 
     validatePassword(args.password, record.email, profile?.username);
 
@@ -225,16 +247,13 @@ export const resetPassword: ReturnType<typeof action> = action({
 
     const newHash = await hashPassword(args.password);
 
-    // Password + lockout reset happen in one atomic mutation, then the token
-    // is burned.
-    await ctx.runMutation(internal.auth.mutations.updatePasswordInternal, {
-      userId: user._id as never,
-      password_hash: newHash,
-    });
-
-    await ctx.runMutation(internal.auth.passwordResetInternal.markUsed, {
-      token_hash: tokenHash,
-    });
+    await ctx.runMutation(
+      internal.auth.passwordResetInternal.commitPasswordReset,
+      {
+        token_hash: tokenHash,
+        password_hash: newHash,
+      },
+    );
 
     await sendPasswordChangedEmail(record.email, locale);
 
@@ -245,7 +264,10 @@ export const resetPassword: ReturnType<typeof action> = action({
 /** Lets the UI show an expired/invalid state before rendering the form. */
 export const verifyResetToken: ReturnType<typeof action> = action({
   args: { token: v.string() },
-  handler: async (ctx, args): Promise<{ valid: boolean; expiresAt?: number }> => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ valid: boolean; expiresAt?: number }> => {
     const raw = args.token.trim();
     if (!raw) return { valid: false };
 

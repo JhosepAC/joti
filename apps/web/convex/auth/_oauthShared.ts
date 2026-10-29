@@ -55,7 +55,10 @@ function getStateSecret(): string {
 function toBase64Url(bytes: Uint8Array): string {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 function fromBase64Url(value: string): Uint8Array | null {
@@ -81,7 +84,11 @@ async function hmacBase64Url(secret: string, message: string): Promise<string> {
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(message));
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(message),
+  );
   return toBase64Url(new Uint8Array(signature));
 }
 
@@ -118,7 +125,7 @@ export async function verifySignedState(state: string): Promise<boolean> {
   // A malformed MAC must not throw: an attacker controls this string, and the
   // only acceptable answer to garbage is "rejected".
   const presented = fromBase64Url(mac);
-  if (!presented) return false;
+  if (!presented || toBase64Url(presented) !== mac) return false;
   const expected = fromBase64Url(await hmacBase64Url(getStateSecret(), nonce));
   if (!expected) return false;
   return constantTimeEqual(presented, expected);
@@ -126,7 +133,10 @@ export async function verifySignedState(state: string): Promise<boolean> {
 
 // --- Authorization URL -----------------------------------------------------
 
-export function buildGoogleAuthorizeUrl(redirectUri: string, state: string): string {
+export function buildGoogleAuthorizeUrl(
+  redirectUri: string,
+  state: string,
+): string {
   const url = new URL(GOOGLE_AUTH_ENDPOINT);
   url.searchParams.set("client_id", getGoogleClientId());
   url.searchParams.set("redirect_uri", redirectUri);
@@ -174,11 +184,16 @@ async function exchangeCode(
  * The request is server-to-server over TLS to a Google-owned endpoint, so the
  * claims cannot be forged by the browser.
  */
-async function verifyWithGoogle(token: string, kind: "access_token" | "id_token"): Promise<GoogleClaims> {
+async function verifyWithGoogle(
+  token: string,
+  kind: "access_token" | "id_token",
+): Promise<GoogleClaims> {
   const url = `${GOOGLE_TOKENINFO_ENDPOINT}?${kind}=${encodeURIComponent(token)}`;
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Google token verification failed with status ${res.status}.`);
+    throw new Error(
+      `Google token verification failed with status ${res.status}.`,
+    );
   }
   const claims = (await res.json()) as GoogleClaims & {
     error?: string;
@@ -190,7 +205,10 @@ async function verifyWithGoogle(token: string, kind: "access_token" | "id_token"
   if (claims.aud !== getGoogleClientId()) {
     throw new Error("Token audience does not match this application.");
   }
-  if (claims.iss !== "https://accounts.google.com" && claims.iss !== "accounts.google.com") {
+  if (
+    claims.iss !== "https://accounts.google.com" &&
+    claims.iss !== "accounts.google.com"
+  ) {
     throw new Error("Unexpected token issuer.");
   }
   if (!claims.sub) {
@@ -231,6 +249,8 @@ export async function completeGoogleLogin(
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token,
     expiresAt:
-      typeof tokens.expires_in === "number" ? Date.now() + tokens.expires_in * 1000 : undefined,
+      typeof tokens.expires_in === "number"
+        ? Date.now() + tokens.expires_in * 1000
+        : undefined,
   };
 }

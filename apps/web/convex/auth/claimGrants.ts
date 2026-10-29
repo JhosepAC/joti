@@ -26,8 +26,8 @@ import {
 // Short-lived proof that the caller controls an email address — and, for the
 // `space` scope, that they may act on one specific space.
 //
-// The app has no session layer, so there is no identity for Convex to check
-// against. Without this, "authorization" reduced to *knows a verified email
+// Browser sessions can mint these scoped authorizations. Convex operations
+// still check each grant explicitly. Without this, authorization reduced to *knows a verified email
 // address*, which let anyone claim a registered-but-incomplete account's
 // profile or mint avatar upload URLs for it.
 //

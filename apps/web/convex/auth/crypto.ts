@@ -25,7 +25,10 @@ export async function hashPassword(password: string): Promise<string> {
   return await bcrypt.hash(password, salt);
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
   return await bcrypt.compare(password, hash);
 }
 
@@ -84,7 +87,10 @@ export function encryptToken(plaintext: string): string {
   const key = getEncryptionKey();
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv);
-  const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  const ciphertext = Buffer.concat([
+    cipher.update(plaintext, "utf8"),
+    cipher.final(),
+  ]);
   return [
     TOKEN_VERSION,
     iv.toString("base64"),
@@ -141,7 +147,7 @@ function getCodePepper(): string {
  * SHA-256 value in the database.
  */
 export function hashEmailCode(code: string): string {
-  return sha256Hex(`joti-email-code-v1:${getCodePepper()}:${code}`);
+  return sha256Hex(`nook-email-code-v1:${getCodePepper()}:${code}`);
 }
 
 /**
