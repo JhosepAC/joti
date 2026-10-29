@@ -1050,7 +1050,10 @@
       "TIMEZONE_ERROR": "Enter a valid time zone, such as America/Bogota.",
       "END_BEFORE_START": "The end must be after the start.",
       "LIMIT_REACHED": "This space reached the 2,000-event limit. Delete events you no longer need.",
-      "UNAVAILABLE": "Could not save or load the calendar. Form data is preserved. Retry."
-    }
+      "UNAVAILABLE": "Could not save or load the calendar. Form data is preserved. Retry.",
+      "TIMEZONE_AMBIGUOUS": "This conversion falls in the second occurrence of a repeated hour. Keep the current zone to preserve the event instant."
+    },
+    "systemTimezone": "Automatic ({timezone})",
+    "conversionHint": "Changing the zone converts dates and times while preserving the same event instant."
   }
 }

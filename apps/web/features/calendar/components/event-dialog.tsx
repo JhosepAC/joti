@@ -7,11 +7,13 @@ import { ListSelect } from "@/features/lists/components/list-select";
 import {
   COLORS,
   validateEvent,
+  convertEventTimezone,
   type CalendarEvent,
   type EventInput,
 } from "@/convex/calendar/time";
 import { errorCode, type EventOperation } from "../hooks/use-calendar";
 import { addDays } from "../lib/dates";
+import { TimezoneSelect } from "./timezone-select";
 export function EventDialog({
   event,
   day,
@@ -251,14 +253,21 @@ export function EventDialog({
               <>
                 <label>
                   {t("timezone")}
-                  <input
+                  <TimezoneSelect
                     value={draft.timezone}
-                    required
-                    placeholder="America/Bogota"
-                    onChange={(e) => edit({ timezone: e.target.value })}
+                    onChange={(value) => {
+                      try {
+                        const converted = convertEventTimezone(draft, value);
+                        setDraft(converted);
+                        setError("");
+                      } catch (cause) {
+                        setError(errorCode(cause));
+                      }
+                    }}
                   />
                 </label>
                 <p className="calendar-help">{t("dstHint")}</p>
+                <p className="calendar-help">{t("conversionHint")}</p>
               </>
             )}
             <label>

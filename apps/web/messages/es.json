@@ -1050,7 +1050,10 @@
       "TIMEZONE_ERROR": "Escribe una zona horaria válida, por ejemplo America/Bogota.",
       "END_BEFORE_START": "La finalización debe ser posterior al inicio.",
       "LIMIT_REACHED": "Este espacio alcanzó el límite de 2000 eventos. Elimina eventos que ya no necesites.",
-      "UNAVAILABLE": "No se pudo guardar o cargar el calendario. Tus datos del formulario se conservan. Reintenta."
-    }
+      "UNAVAILABLE": "No se pudo guardar o cargar el calendario. Tus datos del formulario se conservan. Reintenta.",
+      "TIMEZONE_AMBIGUOUS": "La conversión cae en la segunda ocurrencia de una hora repetida. Conserva la zona actual para no cambiar el instante del evento."
+    },
+    "systemTimezone": "Automática ({timezone})",
+    "conversionHint": "Cambiar la zona convierte las fechas y horas conservando el mismo instante del evento."
   }
 }

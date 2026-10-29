@@ -6,6 +6,9 @@ import {
   inZone,
   layoutEvents,
   daySegment,
+  canonicalTimezone,
+  resolveTimezone,
+  convertEventTimezone,
   type EventInput,
   type CalendarEvent,
 } from "../../convex/calendar/time";
@@ -22,6 +25,86 @@ const input: EventInput = {
   timezone: "America/Bogota",
   color: "blue",
 };
+describe("calendar system timezone regression", () => {
+  test("system, missing and invalid profile zones resolve to the device, with UTC as last fallback", () => {
+    for (const value of ["system", undefined, "", "Invalid/Zone"])
+      expect(resolveTimezone(value, "America/Bogota")).toBe("America/Bogota");
+    expect(resolveTimezone("system", "Invalid/Zone")).toBe("UTC");
+    expect(resolveTimezone("Asia/Tokyo", "America/Bogota")).toBe("Asia/Tokyo");
+    expect(canonicalTimezone(" US/Eastern ")).toBe("America/New_York");
+    expect(inZone(Date.parse("2026-10-29T14:00:00Z"), "system")).toEqual(
+      inZone(Date.parse("2026-10-29T14:00:00Z"), resolveTimezone("system")),
+    );
+  });
+  test("changing zones preserves instants and converts across day boundaries", () => {
+    const converted = convertEventTimezone(input, "Asia/Tokyo");
+    expect(converted).toMatchObject({
+      startDate: "2026-10-29",
+      startTime: "23:00",
+      endDate: "2026-10-30",
+      endTime: "00:00",
+      timezone: "Asia/Tokyo",
+    });
+    expect(validateEvent(converted).startsAt).toBe(
+      validateEvent(input).startsAt,
+    );
+    expect(validateEvent(converted).endsAt).toBe(validateEvent(input).endsAt);
+  });
+  test("automatic event conversion resolves before persistence, never using the server timezone", () => {
+    const converted = convertEventTimezone(
+      { ...input, timezone: "UTC" },
+      "system",
+      "America/Bogota",
+    );
+    expect(converted.timezone).toBe("America/Bogota");
+    expect(converted.startTime).toBe("04:00");
+    expect(() => validateEvent({ ...input, timezone: "system" })).toThrow(
+      "TIMEZONE_ERROR",
+    );
+    expect(() => wallTime(input.startDate, input.startTime, "system")).toThrow(
+      "TIMEZONE_ERROR",
+    );
+  });
+  test("all-day conversion leaves dates unchanged and incomplete titles do not block timed conversion", () => {
+    expect(
+      convertEventTimezone({ ...input, allDay: true }, "Pacific/Auckland"),
+    ).toMatchObject({
+      startDate: input.startDate,
+      endDate: input.endDate,
+      timezone: "Pacific/Auckland",
+    });
+    expect(convertEventTimezone({ ...input, title: "" }, "UTC").startTime).toBe(
+      "14:00",
+    );
+  });
+  test("conversion observes DST and rejects unsupported ambiguous instants without rescheduling", () => {
+    const summer = {
+      ...input,
+      startDate: "2026-07-01",
+      endDate: "2026-07-01",
+      timezone: "UTC",
+    };
+    expect(convertEventTimezone(summer, "America/New_York").startTime).toBe(
+      "05:00",
+    );
+    expect(() =>
+      convertEventTimezone(
+        {
+          ...input,
+          startDate: "2026-11-01",
+          endDate: "2026-11-01",
+          startTime: "06:30",
+          endTime: "07:30",
+          timezone: "UTC",
+        },
+        "America/New_York",
+      ),
+    ).toThrow("TIMEZONE_AMBIGUOUS");
+    expect(() => convertEventTimezone(input, "Invalid/Zone")).toThrow(
+      "TIMEZONE_ERROR",
+    );
+  });
+});
 function event(key: string, part: Partial<EventInput> = {}): CalendarEvent {
   return { ...validateEvent({ ...input, ...part }), key, revision: 1 };
 }
@@ -82,6 +165,15 @@ async function fixture() {
   return { t, rows, ticket, apply, watch };
 }
 describe("calendar persistence and isolation", () => {
+  test("converted automatic zones persist as concrete zones with unchanged instants", async () => {
+    const f = await fixture();
+    const converted = convertEventTimezone(input, "system", "Asia/Tokyo");
+    await f.apply("create", undefined, converted);
+    const saved = (await f.watch()).events[0]!;
+    expect(saved.timezone).toBe("Asia/Tokyo");
+    expect(saved.startsAt).toBe(validateEvent(input).startsAt);
+    expect(saved.endsAt).toBe(validateEvent(input).endsAt);
+  });
   test("create, query, update and delete persist with idempotent request receipts", async () => {
     const f = await fixture();
     await f.apply("create", undefined, input, undefined, "stable-create");
