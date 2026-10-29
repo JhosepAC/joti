@@ -407,8 +407,26 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             </div>
           </div>
           <footer className="workspace-account">
+            <Link href="/settings" className="workspace-settings-link">
+              {t("settings")}
+            </Link>
             <div className="workspace-person">
-              <span>{initial}</span>
+              <span>
+                {data.profile.avatarUrl ? (
+                  <img
+                    src={data.profile.avatarUrl}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "50%",
+                    }}
+                  />
+                ) : (
+                  initial
+                )}
+              </span>
               <div>
                 <strong>
                   {data.profile.displayName || data.profile.username}

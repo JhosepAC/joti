@@ -120,6 +120,7 @@ export default defineSchema({
     username: v.string(), // normalized lowercase [a-z0-9_], 3-20 chars, unique
     display_name: v.string(), // 1-100 chars, unicode, trimmed
     avatar: v.optional(v.string()), // https URL or storage id
+    managed_avatar_id: v.optional(v.id("_storage")),
     bio: v.optional(v.string()), // max 500 chars
     locale: v.string(), // e.g. "en", "es", "system"
     timezone: v.string(), // IANA tz or "system"

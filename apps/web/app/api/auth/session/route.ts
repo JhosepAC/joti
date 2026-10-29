@@ -62,6 +62,12 @@ export async function POST(request: NextRequest) {
       path: "/",
       expires: new Date(session.expiresAt),
     });
+    if (session.locale === "es" || session.locale === "en")
+      result.cookies.set("nook-locale", session.locale, {
+        path: "/",
+        sameSite: "lax",
+        maxAge: 31536000,
+      });
     return result;
   } catch {
     return response({ error: "Could not establish session" }, 503);

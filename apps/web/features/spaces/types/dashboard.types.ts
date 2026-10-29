@@ -18,7 +18,12 @@ export interface DashboardSpace {
 export interface DashboardData {
   space: DashboardSpace;
   spaces: DashboardSpace[];
-  profile: { displayName: string; username: string; timezone?: string };
+  profile: {
+    displayName: string;
+    username: string;
+    avatarUrl?: string | null;
+    timezone?: string;
+  };
   pages: SpacePage[];
   selectedPageId?: string;
 }

@@ -16,6 +16,7 @@ export const createSession = action({
     claim: string;
     email: string;
     expiresAt: number;
+    locale?: string;
   }> => {
     const token = issueClaimGrant();
     const claim = issueClaimGrant();
