@@ -13,7 +13,18 @@ import { internal } from "./_generated/api";
  */
 
 const crons = cronJobs();
-crons.daily("lists-access-and-receipts",{hourUTC:4,minuteUTC:5},internal.lists.access.sweep,{});
+crons.daily(
+  "calendar-receipts",
+  { hourUTC: 4, minuteUTC: 8 },
+  internal.calendar.events.sweep,
+  {},
+);
+crons.daily(
+  "lists-access-and-receipts",
+  { hourUTC: 4, minuteUTC: 5 },
+  internal.lists.access.sweep,
+  {},
+);
 
 crons.daily(
   "delete-expired-sessions",

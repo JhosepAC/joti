@@ -38,8 +38,10 @@ export function useWorkspaceDashboard(slug: string) {
   const [view, setView] = useState("home");
   useEffect(() => {
     setView(
-      new URLSearchParams(location.search).get("module") === "lists"
-        ? "lists"
+      ["lists", "calendar"].includes(
+        new URLSearchParams(location.search).get("module") ?? "",
+      )
+        ? new URLSearchParams(location.search).get("module")!
         : (new URLSearchParams(location.search).get("page") ?? "home"),
     );
   }, [slug]);

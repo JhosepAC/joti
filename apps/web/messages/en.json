@@ -631,7 +631,8 @@
         "UNAVAILABLE": "We could not connect. Your changes are still here; try again."
       },
       "deletePage": "Delete page",
-      "resolveConflict": "Resolve conflict"
+      "resolveConflict": "Resolve conflict",
+      "calendar": "Calendar"
     }
   },
   "providers": {
@@ -990,5 +991,66 @@
     "resolveWarning": "Another version was saved. Export your draft to keep a copy. Continuing replaces your draft with the saved server version.",
     "exportDraft": "Export draft",
     "useSaved": "Use saved version"
+  },
+  "calendar": {
+    "name": "Calendar",
+    "new": "New event",
+    "edit": "Edit event",
+    "delete": "Delete event",
+    "details": "Event details",
+    "close": "Close",
+    "deleteWarning": "“{title}” will be permanently deleted. This cannot be undone.",
+    "title": "Title",
+    "description": "Description",
+    "location": "Location",
+    "allDay": "All day",
+    "start": "Start date",
+    "end": "End date",
+    "startTime": "Start time",
+    "endTime": "End time",
+    "timezone": "Time zone",
+    "dstHint": "Time format: HH:mm. Nonexistent daylight saving times are rejected; repeated hours use the first occurrence.",
+    "color": "Color",
+    "cancel": "Cancel",
+    "save": "Save event",
+    "saving": "Saving…",
+    "previous": "Previous",
+    "next": "Next",
+    "today": "Today",
+    "jump": "Jump to date",
+    "view": "Calendar view",
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "search": "Search events",
+    "filter": "Show colors",
+    "emptyDay": "No events for this day. Add one whenever you need it.",
+    "noMatches": "No events match these filters.",
+    "more": "+{count} more",
+    "eventCount": "{count, plural, one {# event} other {# events}}",
+    "createAt": "Create event on {date} at {time}",
+    "retry": "Retry",
+    "loading": "Loading calendar…",
+    "offline": "Offline. Changes from other devices will appear when the connection returns.",
+    "saved": "Event saved",
+    "deleted": "Event deleted",
+    "colors": {
+      "blue": "Blue",
+      "green": "Green",
+      "orange": "Orange",
+      "red": "Red",
+      "gray": "Gray"
+    },
+    "errors": {
+      "UNAUTHORIZED": "Your session cannot access this space. Sign in again.",
+      "CONFLICT": "This event changed in another tab. Your edits are preserved here: close and reopen the event to review the saved version.",
+      "NOT_FOUND": "This event no longer exists. Close this panel and refresh the calendar.",
+      "VALIDATION_ERROR": "Check the title, dates and times. Supported dates range from 1900 to 2100.",
+      "DST_GAP": "This time does not exist in that zone due to daylight saving. Choose another time.",
+      "TIMEZONE_ERROR": "Enter a valid time zone, such as America/Bogota.",
+      "END_BEFORE_START": "The end must be after the start.",
+      "LIMIT_REACHED": "This space reached the 2,000-event limit. Delete events you no longer need.",
+      "UNAVAILABLE": "Could not save or load the calendar. Form data is preserved. Retry."
+    }
   }
 }

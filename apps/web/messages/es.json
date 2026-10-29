@@ -631,7 +631,8 @@
         "UNAVAILABLE": "No pudimos conectar. Tus cambios siguen aquí; inténtalo de nuevo."
       },
       "deletePage": "Eliminar página",
-      "resolveConflict": "Resolver conflicto"
+      "resolveConflict": "Resolver conflicto",
+      "calendar": "Calendario"
     }
   },
   "providers": {
@@ -990,5 +991,66 @@
     "resolveWarning": "Hay otra versión guardada. Exporta tu borrador si quieres conservarlo. Al continuar, se sustituirá por la versión del servidor.",
     "exportDraft": "Exportar borrador",
     "useSaved": "Usar versión guardada"
+  },
+  "calendar": {
+    "name": "Calendario",
+    "new": "Nuevo evento",
+    "edit": "Editar evento",
+    "delete": "Eliminar evento",
+    "details": "Detalles del evento",
+    "close": "Cerrar",
+    "deleteWarning": "Se eliminará «{title}». Esta acción no se puede deshacer.",
+    "title": "Título",
+    "description": "Descripción",
+    "location": "Ubicación",
+    "allDay": "Todo el día",
+    "start": "Fecha de inicio",
+    "end": "Fecha de finalización",
+    "startTime": "Hora de inicio",
+    "endTime": "Hora de finalización",
+    "timezone": "Zona horaria",
+    "dstHint": "Formato de hora: HH:mm. Las horas inexistentes por cambio de horario se rechazan; las horas repetidas usan la primera ocurrencia.",
+    "color": "Color",
+    "cancel": "Cancelar",
+    "save": "Guardar evento",
+    "saving": "Guardando…",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "today": "Hoy",
+    "jump": "Ir a una fecha",
+    "view": "Vista del calendario",
+    "month": "Mes",
+    "week": "Semana",
+    "day": "Día",
+    "search": "Buscar eventos",
+    "filter": "Mostrar colores",
+    "emptyDay": "No hay eventos para este día. Puedes añadir uno cuando lo necesites.",
+    "noMatches": "No hay eventos que coincidan con estos filtros.",
+    "more": "+{count} más",
+    "eventCount": "{count, plural, one {# evento} other {# eventos}}",
+    "createAt": "Crear evento el {date} a las {time}",
+    "retry": "Reintentar",
+    "loading": "Cargando calendario…",
+    "offline": "Sin conexión. Los cambios de otros dispositivos se mostrarán cuando se restablezca.",
+    "saved": "Evento guardado",
+    "deleted": "Evento eliminado",
+    "colors": {
+      "blue": "Azul",
+      "green": "Verde",
+      "orange": "Naranja",
+      "red": "Rojo",
+      "gray": "Gris"
+    },
+    "errors": {
+      "UNAUTHORIZED": "Tu sesión no tiene acceso a este espacio. Vuelve a iniciar sesión.",
+      "CONFLICT": "Este evento cambió en otra pestaña. Conservamos tus cambios aquí: cierra y vuelve a abrir el evento para revisar la versión guardada.",
+      "NOT_FOUND": "Este evento ya no existe. Cierra este panel y actualiza el calendario.",
+      "VALIDATION_ERROR": "Revisa el título, las fechas y las horas. Las fechas admitidas van de 1900 a 2100.",
+      "DST_GAP": "Esta hora no existe en esa zona por el cambio de horario. Elige otra hora.",
+      "TIMEZONE_ERROR": "Escribe una zona horaria válida, por ejemplo America/Bogota.",
+      "END_BEFORE_START": "La finalización debe ser posterior al inicio.",
+      "LIMIT_REACHED": "Este espacio alcanzó el límite de 2000 eventos. Elimina eventos que ya no necesites.",
+      "UNAVAILABLE": "No se pudo guardar o cargar el calendario. Tus datos del formulario se conservan. Reintenta."
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { eventFields } from "./calendar/model";
 import {
   column as listColumn,
   view as listView,
@@ -7,6 +8,24 @@ import {
 } from "./lists/model";
 
 export default defineSchema({
+  calendar_events: defineTable({
+    ...eventFields,
+    space_id: v.id("spaces"),
+    key: v.string(),
+    revision: v.number(),
+    startsAt: v.number(),
+    endsAt: v.number(),
+  })
+    .index("by_space", ["space_id"])
+    .index("by_space_key", ["space_id", "key"]),
+  calendar_operations: defineTable({
+    space_id: v.id("spaces"),
+    op_id: v.string(),
+    hash: v.string(),
+    created_at: v.number(),
+  })
+    .index("by_space_op", ["space_id", "op_id"])
+    .index("by_created", ["created_at"]),
   list_catalog: defineTable({
     favorite: v.optional(v.boolean()),
     space_id: v.id("spaces"),
