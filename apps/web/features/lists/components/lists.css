@@ -812,16 +812,6 @@
 .lists-empty-table p {
   margin: 0;
 }
-.lists-module-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 24px 32px;
-  font-size: 12px;
-  color: var(--ls-muted);
-}
 .lists-welcome {
   padding: 48px 36px;
   max-width: 900px;
@@ -1525,13 +1515,6 @@
   }
   .lists-table td {
     height: 46px;
-  }
-  .lists-module-footer {
-    padding: 20px;
-    line-height: 1.6;
-  }
-  .lists-module-footer > span:last-child {
-    display: none;
   }
   .lists-welcome,
   .lists-loading {
