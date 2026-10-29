@@ -14,12 +14,15 @@ export const operate = internalMutation({
       v.literal("duplicate"),
       v.literal("rename"),
       v.literal("favorite"),
+      v.literal("delete"),
+      v.literal("icon"),
     ),
     pageId: v.optional(v.id("space_pages")),
     title: v.optional(v.string()),
     body: v.optional(v.string()),
     revision: v.optional(v.number()),
     favorite: v.optional(v.boolean()),
+    icon: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const fail = (code: string): never => {
@@ -116,11 +119,37 @@ export const operate = internalMutation({
         updated_at: now,
       });
     }
-    if (["rename", "duplicate", "favorite"].includes(args.operation)) {
+    if (
+      ["rename", "duplicate", "favorite", "delete", "icon"].includes(
+        args.operation,
+      )
+    ) {
       if (!args.pageId) return fail("VALIDATION_ERROR");
       const target = await ctx.db.get(args.pageId);
       if (!target || target.space_id !== space._id) return fail("NOT_FOUND");
-      if (args.operation === "favorite") {
+      if (args.operation === "delete") {
+        if (args.revision !== target.revision) return fail("CONFLICT");
+        await ctx.db.delete(target._id);
+        selectedPageId = undefined;
+      } else if (args.operation === "icon") {
+        if (
+          !args.icon ||
+          ![
+            "book",
+            "briefcase",
+            "heart",
+            "bolt",
+            "pin",
+            "tag",
+            "check",
+            "plane",
+            "basket",
+            "table",
+          ].includes(args.icon)
+        )
+          return fail("VALIDATION_ERROR");
+        await ctx.db.patch(target._id, { icon: args.icon });
+      } else if (args.operation === "favorite") {
         if (typeof args.favorite !== "boolean") return fail("VALIDATION_ERROR");
         await ctx.db.patch(target._id, { favorite: args.favorite });
       } else if (args.operation === "rename") {
@@ -149,6 +178,7 @@ export const operate = internalMutation({
             : target.title + " (copia)"
           ).slice(0, 120),
           body: target.body,
+          icon: target.icon,
           revision: 1,
           created_at: now,
           updated_at: now,
@@ -180,6 +210,7 @@ export const operate = internalMutation({
       },
       pages: pages.map((page) => ({
         id: page._id,
+        icon: page.icon,
         title: page.title,
         body: page.body,
         revision: page.revision,

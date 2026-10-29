@@ -27,8 +27,9 @@ async function operate(
     title?: string;
     body?: string;
     revision?: number;
-    action?: "rename" | "duplicate" | "favorite";
+    action?: "rename" | "duplicate" | "favorite" | "delete" | "icon";
     favorite?: boolean;
+    icon?: string;
   } = {};
   if (operation === "save" || operation === "item") {
     if (
@@ -51,12 +52,19 @@ async function operate(
           input.title.length > 120 ||
           input.body.length > 30000)) ||
       (operation === "item" &&
-        (!["rename", "duplicate", "favorite"].includes(input.action ?? "") ||
+        (!["rename", "duplicate", "favorite", "delete", "icon"].includes(
+          input.action ?? "",
+        ) ||
           (input.action === "rename" &&
             (typeof input.title !== "string" ||
               input.title.length > 120 ||
               !Number.isSafeInteger(input.revision))) ||
-          (input.action === "favorite" && typeof input.favorite !== "boolean")))
+          (input.action === "favorite" &&
+            typeof input.favorite !== "boolean") ||
+          (input.action === "delete" &&
+            !Number.isSafeInteger(input.revision)) ||
+          (input.action === "icon" &&
+            (typeof input.icon !== "string" || input.icon.length > 32))))
     )
       return reply({ code: "VALIDATION_ERROR" }, 400);
   }
@@ -82,6 +90,7 @@ async function operate(
             ? {
                 pageId: input.pageId as Id<"space_pages">,
                 ...(input.title !== undefined ? { title: input.title } : {}),
+                ...(input.icon !== undefined ? { icon: input.icon } : {}),
                 ...(input.revision !== undefined
                   ? { revision: input.revision }
                   : {}),

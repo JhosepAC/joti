@@ -1,5 +1,6 @@
 export interface SpacePage {
   id: string;
+  icon?: string;
   title: string;
   body: string;
   revision: number;

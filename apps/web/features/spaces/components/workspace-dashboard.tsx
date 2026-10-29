@@ -23,6 +23,11 @@ import { ListIcon } from "@/features/lists/components/list-icon";
 import type { ListSummary } from "@/features/lists/types";
 import { WorkspaceTreeItem, type TreeAction } from "./workspace-tree-item";
 import { RenameDialog } from "@/features/lists/components/list-dialogs";
+import {
+  PageEditor,
+  PageDeleteDialog,
+  PageConflictDialog,
+} from "@/features/pages/components/page-editor";
 import "./workspace.css";
 import "./workspace-tree-controls.css";
 
@@ -35,6 +40,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
   const { data, view, drafts, error, loading, busy, page, draft, dirty } =
     model;
   const [query, setQuery] = useState("");
+  const [resolveConflict, setResolveConflict] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
@@ -46,6 +52,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
     key: string;
     action: TreeAction;
   }>();
+  const [deletePage, setDeletePage] = useState<SpacePage | null>(null);
   const [renamePage, setRenamePage] = useState<SpacePage | null>(null);
   const [listsMounted, setListsMounted] = useState(false);
   useEffect(() => {
@@ -176,7 +183,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
       key={item.id}
       onClick={() => select(item.id)}
     >
-      <BlankIcon />
+      {item.icon ? <ListIcon name={item.icon} /> : <BlankIcon />}
       <span>
         <strong>{item.title}</strong>
         <span>
@@ -333,7 +340,15 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                       <WorkspaceTreeItem
                         key={item.id}
                         name={drafts[item.id]?.title || item.title}
-                        icon={<BlankIcon />}
+                        icon={
+                          item.icon ? (
+                            <ListIcon name={item.icon} />
+                          ) : (
+                            <BlankIcon />
+                          )
+                        }
+                        canDelete
+                        deleteLabel={t("deletePage")}
                         selected={view === item.id}
                         favorite={item.favorite}
                         href={`/w/${slug}?page=${encodeURIComponent(item.id)}`}
@@ -341,7 +356,8 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                         disabled={busy}
                         onAction={(action) => {
                           if (action === "rename") setRenamePage(item);
-                          else if (action !== "delete")
+                          else if (action === "delete") setDeletePage(item);
+                          else
                             void model.itemAction(
                               item.id,
                               action,
@@ -477,6 +493,11 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             ) : (
               <button onClick={() => void model.load()}>{t("retry")}</button>
             )}
+            {model.conflictId && (
+              <button onClick={() => setResolveConflict(true)}>
+                {t("resolveConflict")}
+              </button>
+            )}
           </div>
         )}
         {loading ? (
@@ -599,29 +620,17 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                     {t("titleRequired")}
                   </p>
                 )}
-                <label className="sr-only" htmlFor="page-body">
-                  {t("pageBody")}
-                </label>
-                <textarea
-                  id="page-body"
-                  className="workspace-document-body"
-                  value={draft.body}
-                  maxLength={30000}
-                  onChange={(event) =>
-                    model.edit({ ...draft, body: event.target.value })
+                <PageEditor
+                  key={page.id}
+                  body={draft.body}
+                  title={draft.title}
+                  icon={page.icon}
+                  onChange={(body) => model.edit({ ...draft, body })}
+                  onIcon={(icon) =>
+                    void model.itemAction(page.id, "icon", { icon })
                   }
-                  placeholder={t("bodyPlaceholder")}
+                  onSave={() => void model.savePage()}
                 />
-                <div className="workspace-document-footer">
-                  <span>
-                    {t("wordCount", {
-                      count: draft.body.trim()
-                        ? draft.body.trim().split(/\s+/).length
-                        : 0,
-                    })}
-                  </span>
-                  <span>{t("saveHint")}</span>
-                </div>
               </article>
             ) : (
               <section className="workspace-all-pages">
@@ -648,6 +657,28 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
           </main>
         )}
       </div>
+      {deletePage && (
+        <PageDeleteDialog
+          name={deletePage.title}
+          busy={busy}
+          error={error ? message(error) : undefined}
+          onClose={() => setDeletePage(null)}
+          onDelete={async () => {
+            if (await model.itemAction(deletePage.id, "delete"))
+              setDeletePage(null);
+          }}
+        />
+      )}
+      {resolveConflict && model.conflictId && (
+        <PageConflictDialog
+          busy={busy}
+          body={drafts[model.conflictId]?.body ?? ""}
+          onClose={() => setResolveConflict(false)}
+          onResolve={async () => {
+            if (await model.useSavedVersion()) setResolveConflict(false);
+          }}
+        />
+      )}
       {renamePage && (
         <RenameDialog
           name={renamePage.title}

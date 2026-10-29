@@ -208,6 +208,7 @@ export default defineSchema({
    * space to a caller holding a claim grant bound to that `space_id`.
    */
   space_pages: defineTable({
+    icon: v.optional(v.string()),
     favorite: v.optional(v.boolean()),
     space_id: v.id("spaces"),
     title: v.string(),
