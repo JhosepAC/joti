@@ -21,6 +21,7 @@ export function errorCode(error: unknown) {
       "VALIDATION_ERROR",
       "DST_GAP",
       "TIMEZONE_ERROR",
+      "TIMEZONE_AMBIGUOUS",
       "END_BEFORE_START",
       "LIMIT_REACHED",
     ].find((c) => String(error).includes(c)) ??

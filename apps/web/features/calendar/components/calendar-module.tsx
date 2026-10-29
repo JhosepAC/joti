@@ -2,18 +2,20 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { DatePicker } from "@/features/lists/components/date-picker";
-import { ListSelect } from "@/features/lists/components/list-select";
 import { ListGlyph } from "@/features/lists/components/list-icon";
 import {
   COLORS,
   daySegment,
   inZone,
   layoutEvents,
+  canonicalTimezone,
+  resolveTimezone,
   type CalendarEvent,
 } from "@/convex/calendar/time";
 import { useCalendar } from "../hooks/use-calendar";
 import { addDays, daysFor, navigate, type CalendarView } from "../lib/dates";
 import { EventDialog } from "./event-dialog";
+import { TimezoneSelect } from "./timezone-select";
 import "./calendar.css";
 export function CalendarModule({
   slug,
@@ -25,10 +27,11 @@ export function CalendarModule({
   const t = useTranslations("calendar"),
     locale = useLocale();
   const timeline = useRef<HTMLDivElement>(null);
-  const [timezone, setTimezone] = useState(
-      initialTimezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+  const [timezonePreference, setTimezonePreference] = useState(
+      canonicalTimezone(initialTimezone) ?? "system",
     ),
     [now, setNow] = useState(() => Date.now());
+  const timezone = resolveTimezone(timezonePreference);
   const today = inZone(now, timezone).date;
   const [selected, setSelected] = useState(today),
     [view, setView] = useState<CalendarView>("month"),
@@ -196,17 +199,9 @@ export function CalendarModule({
             onChange={(e) => setSearch(e.target.value)}
           />
         </label>
-        <ListSelect
-          label={t("timezone")}
-          value={timezone}
-          onChange={setTimezone}
-          options={[
-            ...new Set([
-              timezone,
-              "UTC",
-              ...Intl.supportedValuesOf("timeZone"),
-            ]),
-          ].map((zone) => ({ value: zone, label: zone.replaceAll("_", " ") }))}
+        <TimezoneSelect
+          value={timezonePreference}
+          onChange={setTimezonePreference}
         />
       </div>
       <div className="calendar-filters" role="group" aria-label={t("filter")}>

@@ -17,6 +17,23 @@ export type CalendarEvent = EventInput & {
   startsAt: number;
   endsAt: number;
 };
+/** Profile preferences may contain `system`; event storage must contain a concrete zone. */
+export function canonicalTimezone(value?: string): string | null {
+  if (!value?.trim() || value.trim() === "system") return null;
+  try {
+    return new Intl.DateTimeFormat("en", {
+      timeZone: value.trim(),
+    }).resolvedOptions().timeZone;
+  } catch {
+    return null;
+  }
+}
+export function resolveTimezone(
+  value?: string,
+  deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone,
+): string {
+  return canonicalTimezone(value) ?? canonicalTimezone(deviceTimezone) ?? "UTC";
+}
 export function validDate(key: string) {
   if (
     !/^\d{4}-\d{2}-\d{2}$/.test(key) ||
@@ -34,7 +51,7 @@ export function addDays(key: string, days: number) {
 }
 export function inZone(time: number, timezone: string) {
   const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: timezone,
+    timeZone: resolveTimezone(timezone),
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -50,6 +67,7 @@ export function inZone(time: number, timezone: string) {
 }
 /** Round-trip candidate offsets: rejects DST gaps; repeated hours use the earlier instant. */
 export function wallTime(date: string, time: string, timezone: string) {
+  if (!canonicalTimezone(timezone)) throw new Error("TIMEZONE_ERROR");
   if (!validDate(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time))
     throw new Error("VALIDATION_ERROR");
   const wall = Date.parse(`${date}T${time}:00Z`),
@@ -83,26 +101,61 @@ export function validateEvent(input: EventInput) {
   )
     throw new Error("VALIDATION_ERROR");
   if (input.timezone.length > 80) throw new Error("VALIDATION_ERROR");
-  try {
-    new Intl.DateTimeFormat("en", { timeZone: input.timezone }).format();
-  } catch {
-    throw new Error("TIMEZONE_ERROR");
-  }
+  const timezone = canonicalTimezone(input.timezone);
+  if (!timezone) throw new Error("TIMEZONE_ERROR");
   const startsAt = input.allDay
     ? Date.parse(input.startDate + "T00:00:00Z")
-    : wallTime(input.startDate, input.startTime, input.timezone);
+    : wallTime(input.startDate, input.startTime, timezone);
   const endsAt = input.allDay
     ? Date.parse(addDays(input.endDate, 1) + "T00:00:00Z")
-    : wallTime(input.endDate, input.endTime, input.timezone);
+    : wallTime(input.endDate, input.endTime, timezone);
   if (endsAt <= startsAt) throw new Error("END_BEFORE_START");
   return {
     ...input,
+    timezone,
     title: input.title.trim(),
     startTime: input.allDay ? "" : input.startTime,
     endTime: input.allDay ? "" : input.endTime,
     startsAt,
     endsAt,
   };
+}
+/** Change the event's zone without rescheduling it; all-day dates have no UTC conversion. */
+export function convertEventTimezone(
+  input: EventInput,
+  target: string,
+  deviceTimezone?: string,
+): EventInput {
+  const timezone =
+    target === "system"
+      ? resolveTimezone(target, deviceTimezone)
+      : canonicalTimezone(target);
+  if (!timezone) throw new Error("TIMEZONE_ERROR");
+  if (input.allDay) return { ...input, timezone };
+  const source =
+    input.timezone === "system"
+      ? resolveTimezone(input.timezone, deviceTimezone)
+      : input.timezone;
+  const start = wallTime(input.startDate, input.startTime, source),
+    end = wallTime(input.endDate, input.endTime, source);
+  if (end <= start) throw new Error("END_BEFORE_START");
+  const localStart = inZone(start, timezone),
+    localEnd = inZone(end, timezone);
+  const converted = {
+    ...input,
+    timezone,
+    startDate: localStart.date,
+    startTime: localStart.time,
+    endDate: localEnd.date,
+    endTime: localEnd.time,
+  };
+  // The form's first-occurrence policy cannot represent the second repeated DST hour.
+  if (
+    wallTime(converted.startDate, converted.startTime, timezone) !== start ||
+    wallTime(converted.endDate, converted.endTime, timezone) !== end
+  )
+    throw new Error("TIMEZONE_AMBIGUOUS");
+  return converted;
 }
 export function daySegment(
   event: CalendarEvent,
