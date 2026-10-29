@@ -45,6 +45,27 @@ export function useWorkspaceDashboard(slug: string) {
         : (new URLSearchParams(location.search).get("page") ?? "home"),
     );
   }, [slug]);
+  useEffect(() => {
+    const refreshProfile = () => {
+      void request(slug)
+        .then((fresh) =>
+          setData((previous) =>
+            previous ? { ...previous, profile: fresh.profile } : previous,
+          ),
+        )
+        .catch(() => {});
+    };
+    window.addEventListener("nook-profile-updated", refreshProfile);
+    const channel =
+      typeof BroadcastChannel !== "undefined"
+        ? new BroadcastChannel("nook-account")
+        : null;
+    if (channel) channel.onmessage = refreshProfile;
+    return () => {
+      window.removeEventListener("nook-profile-updated", refreshProfile);
+      channel?.close();
+    };
+  }, [slug]);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);

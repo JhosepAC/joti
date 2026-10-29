@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as account_actions from "../account/actions.js";
+import type * as account_store from "../account/store.js";
 import type * as auth__codeService from "../auth/_codeService.js";
 import type * as auth__oauthShared from "../auth/_oauthShared.js";
 import type * as auth_actions from "../auth/actions.js";
@@ -61,6 +63,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "account/actions": typeof account_actions;
+  "account/store": typeof account_store;
   "auth/_codeService": typeof auth__codeService;
   "auth/_oauthShared": typeof auth__oauthShared;
   "auth/actions": typeof auth_actions;

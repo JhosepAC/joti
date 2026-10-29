@@ -191,6 +191,20 @@ export const operate = internalMutation({
       .query("space_pages")
       .withIndex("by_space_id", (q) => q.eq("space_id", space._id))
       .collect();
+    let avatarUrl: string | null = null;
+    if (profile?.avatar) {
+      if (
+        profile.avatar.startsWith("https://") ||
+        profile.avatar.startsWith("/")
+      )
+        avatarUrl = profile.avatar;
+      else
+        try {
+          avatarUrl = await ctx.storage.getUrl(
+            profile.avatar as import("../_generated/dataModel").Id<"_storage">,
+          );
+        } catch {}
+    }
     return {
       space: {
         slug: space.slug,
@@ -206,6 +220,7 @@ export const operate = internalMutation({
       })),
       profile: {
         displayName: profile?.display_name ?? "",
+        avatarUrl,
         timezone: profile?.timezone ?? "UTC",
         username: profile?.username ?? "",
       },

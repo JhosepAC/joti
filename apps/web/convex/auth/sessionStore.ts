@@ -49,7 +49,11 @@ export const create = internalMutation({
       scope: CLAIM_SCOPE_ACCOUNT,
       token_hash: args.next_claim_hash,
     });
-    return { email: user.email, expiresAt };
+    const profile = await ctx.db
+      .query("auth_user_profiles")
+      .withIndex("by_user_id", (q) => q.eq("user_id", user._id))
+      .first();
+    return { email: user.email, expiresAt, locale: profile?.locale };
   },
 });
 

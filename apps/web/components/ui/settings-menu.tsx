@@ -86,7 +86,13 @@ export const SettingsMenu: React.FC = () => {
   }, [open]);
 
   // Authentication provides its own inline language switcher, outside the form.
-  if (pathname.startsWith("/auth/") || pathname === "/spaces/new" || pathname.startsWith("/w/")) return null;
+  if (
+    pathname.startsWith("/auth/") ||
+    pathname === "/settings" ||
+    pathname === "/spaces/new" ||
+    pathname.startsWith("/w/")
+  )
+    return null;
 
   return (
     <div ref={containerRef} className="fixed bottom-4 left-4 z-50">
