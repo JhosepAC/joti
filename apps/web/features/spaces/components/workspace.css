@@ -1013,3 +1013,64 @@
     --ws-line: #5f6368;
   }
 }
+.workspace-account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px;
+  border-top: 1px solid var(--ws-line);
+  background: var(--ws-ground);
+}
+.workspace-person {
+  flex: 1;
+  min-width: 0;
+  gap: 10px;
+}
+.workspace-person > span {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  flex: 0 0 36px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  position: relative;
+  border-radius: 50%;
+  background: #e4e7eb;
+  color: #3c4043;
+}
+.workspace-person > span img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.workspace-person > div {
+  flex: 1;
+  min-width: 0;
+}
+.workspace-person strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.workspace-person div > span {
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-account-actions {
+  margin: 0;
+  gap: 2px;
+  flex: none;
+}
+.workspace-account-actions button {
+  width: 30px;
+  height: 32px;
+  border-radius: 6px;
+}
+.workspace-account-actions button:hover {
+  background: #e4e7eb;
+}
+.workspace-account-actions button:active {
+  transform: scale(0.96);
+}

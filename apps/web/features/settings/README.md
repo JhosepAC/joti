@@ -1,6 +1,8 @@
 # Account settings
 
-`/settings` is linked from the workspace account footer. The account API uses the existing HttpOnly session and server-side Convex actions. User IDs are derived from the session, never accepted from the browser. Mutations reuse the existing username/display-name validators and transactional uniqueness check.
+Settings opens as a modal from the gear icon in the workspace account footer, preserving its route and mounted modules. The legacy `/settings` URL renders the same dialog. The account API uses the existing HttpOnly session and server-side Convex actions. User IDs are derived from the session, never accepted from the browser. Mutations reuse the existing username/display-name validators and transactional uniqueness check.
+
+The bounded dialog has internal scrolling, sidebar navigation on desktop and horizontal tabs on mobile. Escape, the close button and backdrop clicks protect unsaved changes with confirmation. Closing returns focus to the workspace trigger. The native modal makes background content inert. Motion respects reduced-motion preferences. The account footer keeps a fixed square avatar clipped to a circle, truncated identity text, and labelled settings/sign-out icon buttons.
 
 Implemented: profile details, display name/username editing, registration date, avatar preview/upload/removal, persistent locale, session listing and individual/other-session revocation, the existing password-reset email flow, and sign-out with an unsaved-change warning. Workspace profile details refresh through a local event/BroadcastChannel; the saved locale is restored when establishing a new login session.
 
