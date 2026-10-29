@@ -1,45 +1,26 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAction } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
-import { getAuthErrorCode } from "../utils/get-auth-error-message";
-import { useAuthErrorMessage } from "../utils/get-auth-error-message";
-import { useValidationTranslator } from "@/i18n/translate";
 import {
+  getAuthErrorCode,
+  getAuthErrorMessage,
+  getRetryAfterSeconds,
+  useAuthErrorMessage,
+} from "../utils/get-auth-error-message";
+import { useValidationTranslator } from "@/i18n/translate";
+import { validateForgotPasswordEmail } from "../validations/forgot-password.schema";
+import { validateResetPasswordInput } from "../validations/reset-password.schema";
+import { validateProfileInput } from "../validations/profile.schema";
+import type {
   RegisterFlowData,
   RegisterFlowErrors,
   RegisterStep,
 } from "../types/register-flow.types";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const USERNAME_REGEX = /^[a-z0-9_]+$/;
-const RESERVED = new Set([
-  "admin",
-  "administrator",
-  "root",
-  "api",
-  "auth",
-  "login",
-  "register",
-  "signin",
-  "signup",
-  "settings",
-  "dashboard",
-  "joti",
-  "help",
-  "support",
-  "terms",
-  "privacy",
-  "workspace",
-  "null",
-  "undefined",
-  "system",
-  "profile",
-]);
-
-const initialData: RegisterFlowData = {
+export const emptyProfile: RegisterFlowData = {
   email: "",
   password: "",
   confirmPassword: "",
@@ -52,345 +33,269 @@ const initialData: RegisterFlowData = {
 };
 
 export function useRegisterFlow() {
-  const tValidation = useValidationTranslator();
-  const tErrors = useAuthErrorMessage();
-  const tGeneral = useTranslations("validation.general");
-  const tAvatar = useTranslations("auth.register.step3");
+  const t = useValidationTranslator();
+  const message = useAuthErrorMessage();
+  const ui = useTranslations("auth.ui");
   const locale = useLocale();
   const [step, setStep] = useState<RegisterStep>(1);
-  const [data, setData] = useState<RegisterFlowData>(initialData);
+  const [data, setData] = useState<RegisterFlowData>(emptyProfile);
   const [errors, setErrors] = useState<RegisterFlowErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [code, setCode] = useState("");
+  const [code, setCodeValue] = useState("");
+  const [claim, setClaim] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(false);
   const [codeExpiresAt, setCodeExpiresAt] = useState<number | null>(null);
-  const [resendCooldown, setResendCooldown] = useState(0);
-  // Short-lived proof of address ownership, returned by confirmEmailCode and
-  // required by both the avatar upload and the final profile submit. Held in
-  // memory only -- never persisted or put in a URL.
-  const [claim, setClaim] = useState<string | null>(null);
-
-  const registerPendingAction = useAction(api.auth.actions.registerPending);
-  const requestCodeAction = useAction(api.auth.verification.requestEmailCode);
-  const confirmCodeAction = useAction(api.auth.verification.confirmEmailCode);
-  const completeProfileAction = useAction(api.auth.actions.completeProfile);
-  const generateUploadUrl = useAction(api.auth.storage.generateAvatarUploadUrl);
-
-  // Synchronous in-flight guard (see use-login): button state flips only
-  // after a render, so rapid double submits could otherwise fire twice --
-  // burning a single-use claim on the second call.
+  const [resendAt, setResendAt] = useState(0);
+  const [now, setNow] = useState(0);
+  const resendCooldown = Math.max(0, Math.ceil((resendAt - now) / 1000));
   const inFlight = useRef(false);
-  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pending = useAction(api.auth.actions.registerPending);
+  const confirm = useAction(api.auth.verification.confirmEmailCode);
+  const resend = useAction(api.auth.verification.requestEmailCode);
+  const complete = useAction(api.auth.actions.completeProfile);
+  const generateUpload = useAction(api.auth.storage.generateAvatarUploadUrl);
 
-  // Cooldown ticker owned in one place: every resend path funnels through
-  // here, previous tickers are replaced (never stacked), and unmount clears
-  // the timer so no setState fires on an unmounted hook.
   useEffect(() => {
-    return () => {
-      if (cooldownRef.current) clearInterval(cooldownRef.current);
-    };
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
   }, []);
-
-  const startResendCooldown = (seconds: number) => {
-    setResendCooldown(seconds);
-    if (cooldownRef.current) clearInterval(cooldownRef.current);
-    cooldownRef.current = setInterval(() => {
-      setResendCooldown((prev) => {
-        if (prev <= 1) {
-          if (cooldownRef.current) clearInterval(cooldownRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+  useEffect(() => {
+    const preview = data.avatarPreview;
+    return () => {
+      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+    };
+  }, [data.avatarPreview]);
+  const cooldown = () => {
+    const time = Date.now();
+    setNow(time);
+    setResendAt(time + 60000);
   };
 
-  const updateField = useCallback(
-    <K extends keyof RegisterFlowData>(field: K, value: RegisterFlowData[K]) => {
-      setData((prev) => ({ ...prev, [field]: value }));
-      if (errors[field as keyof RegisterFlowErrors]) {
-        setErrors((prev) => ({ ...prev, [field]: undefined }));
-      }
-    },
-    [errors],
-  );
-
-  const validateStep1 = (): boolean => {
-    const newErrors: RegisterFlowErrors = {};
-    const email = data.email.trim().toLowerCase();
-    if (!email) newErrors.email = tValidation("email.required");
-    else if (email.length > 320) newErrors.email = tValidation("email.tooLong");
-    else if (/\s/.test(email)) newErrors.email = tValidation("email.noSpaces");
-    else if (!EMAIL_REGEX.test(email)) newErrors.email = tValidation("email.invalid");
-
-    if (!data.password) newErrors.password = tValidation("password.required");
-    else if (data.password.length < 12) newErrors.password = tValidation("password.tooShort");
-    // Bytes, not chars: the server caps passwords at 72 UTF-8 bytes (bcrypt limit).
-    else if (new TextEncoder().encode(data.password).length > 72) newErrors.password = tValidation("password.tooLongBytes");
-    else if (email && data.password.toLowerCase().includes(email.split("@")[0] ?? "") && (email.split("@")[0]?.length ?? 0) >= 3) {
-      newErrors.password = tValidation("password.containsEmail");
+  function updateField<K extends keyof RegisterFlowData>(
+    field: K,
+    value: RegisterFlowData[K],
+  ) {
+    if (
+      field === "email" &&
+      String(value).trim().toLowerCase() !== data.email.trim().toLowerCase()
+    ) {
+      setIsVerified(false);
+      setClaim(null);
+      setCodeValue("");
+      setCodeExpiresAt(null);
+      setResendAt(0);
     }
+    setData((previous) => ({ ...previous, [field]: value }));
+    setErrors((previous) => ({
+      ...previous,
+      [field]: undefined,
+      general: undefined,
+    }));
+  }
 
-    if (data.password !== data.confirmPassword) newErrors.confirmPassword = tValidation("password.mismatch");
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateStep2 = (): boolean => {
-    const newErrors: RegisterFlowErrors = {};
-    const username = data.username.trim().toLowerCase();
-    if (!username) newErrors.username = tValidation("username.required");
-    else if (username.length < 3 || username.length > 20) newErrors.username = tValidation("username.length");
-    else if (!USERNAME_REGEX.test(username)) newErrors.username = tValidation("username.charset");
-    else if (RESERVED.has(username)) newErrors.username = tValidation("username.reserved");
-
-    const displayName = data.displayName.trim();
-    if (!displayName) newErrors.displayName = tValidation("displayName.required");
-    else if (displayName.length > 100) newErrors.displayName = tValidation("displayName.tooLong");
-    else if (/[\u0000-\u001F\u007F-\u009F]/.test(displayName)) newErrors.displayName = tValidation("displayName.invalidChars");
-
-    if (data.password.toLowerCase().includes(username) && username.length >= 3) {
-      newErrors.password = tValidation("password.containsUsername");
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateStep4 = (): boolean => {
-    const newErrors: RegisterFlowErrors = {};
-    if (data.bio.trim().length > 500) newErrors.bio = tValidation("bio.tooLong");
-    else if (/[\u0000-\u001F\u007F-\u009F]/.test(data.bio)) newErrors.bio = tValidation("bio.invalidChars");
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleStep1Next = async () => {
-    if (!validateStep1()) return;
+  async function handleStep1Next() {
     if (inFlight.current) return;
+    const emailErrors = validateForgotPasswordEmail(data.email, t).errors;
+    const passwordErrors = validateResetPasswordInput(
+      {
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        email: data.email.trim().toLowerCase(),
+      },
+      t,
+    ).errors;
+    const nextErrors = { ...emailErrors, ...passwordErrors };
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) return;
+    if (isVerified && claim) {
+      setStep(2);
+      return;
+    }
+    if (Date.now() < resendAt) return;
     inFlight.current = true;
     setIsLoading(true);
     try {
-      // Spec: email+password already creates inactive account
-      const res = (await registerPendingAction({
+      const result = await pending({
         email: data.email.trim().toLowerCase(),
         password: data.password,
         locale,
-      })) as { expiresAt: number };
-      setCodeExpiresAt(res.expiresAt);
+      });
+      setCodeExpiresAt(result.expiresAt);
+      setCodeValue("");
+      cooldown();
       setStep(1.1);
-      setErrors({});
-    } catch (err: unknown) {
-      const msg = tErrors(err, tGeneral("accountFailed"));
-      const code = getAuthErrorCode(err);
-      if (code === "RATE_LIMITED") {
-        const m = msg.match(/(\d+)s/);
-        const wait = m?.[1] ? parseInt(m[1], 10) : 60;
-        startResendCooldown(wait);
+    } catch (error) {
+      if (getAuthErrorCode(error) === "RATE_LIMITED") {
+        const time = Date.now();
+        setNow(time);
+        setResendAt(time + getRetryAfterSeconds(error) * 1000);
       }
-      setErrors({ general: msg });
+      setErrors({ general: message(error) });
     } finally {
       inFlight.current = false;
       setIsLoading(false);
     }
-  };
+  }
 
-  const handleVerifyCode = async () => {
-    if (!/^\d{6}$/.test(code.trim())) {
-      setErrors({ code: "Code must be 6 digits" });
+  async function handleVerifyCode() {
+    if (inFlight.current) return;
+    if (!/^\d{6}$/.test(code)) {
+      setErrors({ code: ui("sixDigits") });
       return;
     }
-    if (inFlight.current) return;
     inFlight.current = true;
     setIsLoading(true);
+    setErrors({});
     try {
-      const res = (await confirmCodeAction({
+      const result = (await confirm({
         email: data.email.trim().toLowerCase(),
-        code: code.trim(),
+        code,
       })) as { claim?: string };
-      if (res?.claim) setClaim(res.claim);
+      if (!result.claim) throw new Error("Session expired");
+      setClaim(result.claim);
       setIsVerified(true);
       setStep(2);
-      setErrors({});
-    } catch (err: unknown) {
-      setErrors({ code: tErrors(err, tValidation("code.invalid")) });
+      setCodeValue("");
+    } catch (error) {
+      setErrors({ code: message(error) });
     } finally {
       inFlight.current = false;
       setIsLoading(false);
     }
-  };
+  }
 
-  const handleResendCode = async () => {
-    if (resendCooldown > 0) return;
-    if (inFlight.current) return;
+  async function handleResendCode() {
+    if (inFlight.current || Date.now() < resendAt) return;
     inFlight.current = true;
     setIsLoading(true);
+    setErrors({});
     try {
-      const res = await requestCodeAction({ email: data.email.trim().toLowerCase(), locale });
-      setCodeExpiresAt((res as { expiresAt: number }).expiresAt);
-      startResendCooldown(30);
-      setErrors({});
-    } catch (err: unknown) {
-      const msg = tErrors(err, tGeneral("resendFailed"));
-      const code = getAuthErrorCode(err);
-      if (code === "RATE_LIMITED") {
-        const m = msg.match(/(\d+)s/);
-        const wait = m?.[1] ? parseInt(m[1], 10) : 60;
-        startResendCooldown(wait);
+      const result = await resend({
+        email: data.email.trim().toLowerCase(),
+        locale,
+      });
+      setCodeExpiresAt(result.expiresAt);
+      setCodeValue("");
+      cooldown();
+    } catch (error) {
+      if (getAuthErrorCode(error) === "RATE_LIMITED") {
+        const time = Date.now();
+        setNow(time);
+        setResendAt(time + getRetryAfterSeconds(error) * 1000);
       }
-      setErrors({ general: msg });
+      setErrors({ general: message(error) });
     } finally {
       inFlight.current = false;
       setIsLoading(false);
     }
-  };
+  }
 
-  const handleStep2Next = () => {
-    if (!validateStep2()) return;
-    setStep(3);
-  };
-
-  const handleStep3Next = () => {
-    setStep(4);
-  };
-
-  const handleSkipAvatar = () => {
-    setData((prev) => ({ ...prev, avatarFile: null, avatarPreview: null, avatarUrl: null }));
-    setStep(4);
-  };
-
-  const handleFinalSubmit = async () => {
-    if (!validateStep4()) return;
-    if (!isVerified) {
-      setErrors({ general: tGeneral("verifyEmailFirst") });
-      setStep(1.1);
-      return;
+  async function handleFinalSubmit() {
+    if (inFlight.current) return null;
+    const profileErrors = validateProfileInput(data, t);
+    if (Object.keys(profileErrors).length) {
+      setErrors(profileErrors);
+      return null;
     }
-    if (inFlight.current) return;
+    const passwordErrors = validateResetPasswordInput(
+      { ...data, email: data.email.trim().toLowerCase() },
+      t,
+    ).errors;
+    if (Object.keys(passwordErrors).length) {
+      setErrors(passwordErrors);
+      setStep(1);
+      return null;
+    }
+    if (!claim || !isVerified) {
+      setErrors({ general: ui("verifyAgain") });
+      setStep(1.1);
+      return null;
+    }
     inFlight.current = true;
     setIsLoading(true);
-    // Set when the failure originates in the avatar upload block below, so
-    // the catch routes it to the avatar field. Server messages stay English
-    // (backend contracts), so the substring routing further down keeps
-    // working in every UI locale.
-    let avatarError: string | null = null;
+    setErrors({});
     try {
-      let avatar: string | undefined = data.avatarUrl ?? undefined;
-
+      let avatar = data.avatarUrl ?? undefined;
       if (data.avatarFile) {
-        if (data.avatarFile.size > 5 * 1024 * 1024) {
-          avatarError = tAvatar("avatarErrorSize");
-          setErrors({ avatar: avatarError, general: avatarError });
-          throw new Error("avatar-validation");
-        }
-        if (!data.avatarFile.type.startsWith("image/")) {
-          avatarError = tAvatar("avatarErrorImage");
-          setErrors({ avatar: avatarError, general: avatarError });
-          throw new Error("avatar-validation");
-        }
-        if (!claim) {
-          const msg = tGeneral("sessionExpired");
-          setErrors({ general: msg, avatar: msg });
-          throw new Error(msg);
-        }
-        const uploadUrl = await generateUploadUrl({
+        const url = await generateUpload({
           email: data.email.trim().toLowerCase(),
           claim,
         });
-        const res = await fetch(uploadUrl as string, {
+        const response = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": data.avatarFile.type || "image/png" },
+          headers: { "Content-Type": data.avatarFile.type },
           body: data.avatarFile,
         });
-        if (!res.ok) {
-          avatarError = tAvatar("uploadFailed");
-          setErrors({ avatar: avatarError, general: avatarError });
-          throw new Error("avatar-upload");
+        if (!response.ok) {
+          setErrors({ avatar: ui("uploadFailed") });
+          return null;
         }
-        const json = (await res.json()) as { storageId: string };
-        avatar = json.storageId;
+        const uploaded = (await response.json()) as { storageId: string };
+        avatar = uploaded.storageId;
+        // Reuse a successful upload if profile validation later fails.
+        setData((previous) => ({
+          ...previous,
+          avatarFile: null,
+          avatarUrl: avatar ?? null,
+        }));
       }
-
-      if (!claim) {
-        const msg = tGeneral("sessionExpired");
-        setErrors({ general: msg });
-        throw new Error(msg);
-      }
-
-      const result = await completeProfileAction({
+      const result = await complete({
         email: data.email.trim().toLowerCase(),
         claim,
         username: data.username.trim().toLowerCase(),
         display_name: data.displayName.trim(),
-        // The account row is only created here, once the address has been
-        // proven, so the password collected back in step 1 is committed now.
         password: data.password,
         bio: data.bio.trim() || undefined,
         avatar,
-        locale: "system",
-        timezone: "system",
+        locale,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
-      setErrors({});
+      setData((previous) => ({
+        ...previous,
+        password: "",
+        confirmPassword: "",
+      }));
       return result;
-    } catch (err: unknown) {
-      if (avatarError) {
-        setErrors({ avatar: avatarError, general: avatarError });
-      } else {
-        const msg = tErrors(err, tGeneral("completeProfileFailed"));
-        // Route avatar-specific errors to the avatar field so Step3 can display inline.
-        // Server messages stay English (backend contracts), so this substring
-        // check holds in every UI locale; local avatar failures set
-        // `avatarError` above instead.
-        if (msg.toLowerCase().includes("avatar")) {
-          setErrors({ avatar: msg, general: msg });
-          // Optionally guide user back to avatar step if they used an invalid preset
-          // but keep them on bio step to show context; user can navigate back
-        } else {
-          setErrors({ general: msg });
-        }
-      }
-      throw err;
+    } catch (error) {
+      const raw = getAuthErrorMessage(error);
+      if (/username.*taken/i.test(raw))
+        setErrors({ username: ui("usernameTaken") });
+      else if (/session.*(expired|valid)|grant.*(expired|invalid)/i.test(raw)) {
+        setIsVerified(false);
+        setClaim(null);
+        setStep(1.1);
+        setErrors({ general: ui("verifyAgain") });
+      } else setErrors({ general: message(error) });
+      return null;
     } finally {
       inFlight.current = false;
       setIsLoading(false);
     }
-  };
-
-  const handleBack = () => {
-    if (step === 1.1) setStep(1);
-    else if (step === 2) setStep(1.1);
-    else if (step === 3) setStep(2);
-    else if (step === 4) setStep(3);
-  };
-
-  const canGoBack = step !== 1;
-  const displayStep = step === 1.1 ? 1 : step;
-  const totalSteps = 4;
+  }
 
   return {
     step,
-    displayStep,
-    totalSteps,
     data,
-    code,
-    setCode,
-    isVerified,
-    codeExpiresAt,
-    resendCooldown,
     errors,
     isLoading,
+    code,
+    codeExpiresAt,
+    resendCooldown,
+    isVerified,
     updateField,
     handleStep1Next,
     handleVerifyCode,
     handleResendCode,
-    handleStep2Next,
-    handleStep3Next,
-    handleSkipAvatar,
     handleFinalSubmit,
-    handleBack,
-    canGoBack,
-    validateStep1,
-    validateStep2,
+    setCode: (value: string) => {
+      setCodeValue(value);
+      setErrors({});
+    },
+    handleBack: () => {
+      if (!inFlight.current) {
+        setErrors({});
+        setStep(1);
+      }
+    },
   };
 }

@@ -6,7 +6,13 @@ import { ConvexError } from "convex/values";
 import type { GenericActionCtx } from "convex/server";
 import { internal } from "../_generated/api";
 import type { DataModel, Id } from "../_generated/dataModel";
-import { equalizePasswordTiming, hashPassword, issueClaimGrant, sha256Hex, verifyPassword } from "./crypto";
+import {
+  equalizePasswordTiming,
+  hashPassword,
+  issueClaimGrant,
+  sha256Hex,
+  verifyPassword,
+} from "./crypto";
 import { issueVerificationCode } from "./_codeService";
 import {
   validateAvatar,
@@ -22,7 +28,6 @@ import {
   CLAIM_SCOPE_ACCOUNT,
   CLAIM_SCOPE_SPACE,
   LOGIN_MAX_ATTEMPTS_PER_HOUR,
-  VERIFICATION_RECENT_MS,
 } from "./constants";
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -57,32 +62,6 @@ type UserRow = {
   deleted_at?: number;
 } | null;
 
-/**
- * Requires a recent successful email verification, which is what proves the
- * caller controls the address. Returns nothing.
- */
-async function assertRecentlyVerified(
-  ctx: GenericActionCtx<DataModel>,
-  email: string,
-): Promise<void> {
-  const record = (await ctx.runQuery(internal.auth.verificationInternal.getByEmail, {
-    email,
-  })) as { verified_at?: number; expires_at: number } | null;
-
-  if (!record?.verified_at) {
-    throw new ConvexError({
-      code: "EMAIL_NOT_VERIFIED",
-      message: "Email not verified. Please enter the code we emailed you.",
-    });
-  }
-  if (Date.now() - record.verified_at > VERIFICATION_RECENT_MS) {
-    throw new ConvexError({
-      code: "EMAIL_NOT_VERIFIED",
-      message: "Verification expired. Please request a new code.",
-    });
-  }
-}
-
 // ---------------------------------------------------------------------------
 // register -- single action: verify address -> hash -> create user + profile
 // ---------------------------------------------------------------------------
@@ -90,6 +69,7 @@ async function assertRecentlyVerified(
 export const register: ReturnType<typeof action> = action({
   args: {
     email: v.string(),
+    claim: v.string(),
     password: v.string(),
     username: v.string(),
     display_name: v.string(),
@@ -108,7 +88,12 @@ export const register: ReturnType<typeof action> = action({
     const cleanTimezone = validateTimezone(args.timezone);
 
     validatePassword(args.password, cleanEmail, cleanUsername);
-    await assertRecentlyVerified(ctx, cleanEmail);
+    const proof = await ctx.runQuery(internal.auth.claimGrants.peek, {
+      token_hash: sha256Hex(args.claim),
+      scope: CLAIM_SCOPE_ACCOUNT,
+    });
+    if (proof.email !== cleanEmail)
+      throw new ConvexError("This session is no longer valid.");
 
     const emailAvailable = (await ctx.runQuery(
       internal.auth.queries.isEmailAvailable,
@@ -117,7 +102,9 @@ export const register: ReturnType<typeof action> = action({
     // One generic message for both uniqueness failures: distinct messages
     // would let anyone probe which emails and usernames are taken.
     if (!emailAvailable) {
-      throw new ConvexError("Could not create an account with the provided details.");
+      throw new ConvexError(
+        "Could not create an account with the provided details.",
+      );
     }
 
     const usernameAvailable = (await ctx.runQuery(
@@ -125,7 +112,9 @@ export const register: ReturnType<typeof action> = action({
       { username: cleanUsername },
     )) as boolean;
     if (!usernameAvailable) {
-      throw new ConvexError("Could not create an account with the provided details.");
+      throw new ConvexError(
+        "Could not create an account with the provided details.",
+      );
     }
 
     // Rate limit before the expensive bcrypt call.
@@ -139,6 +128,7 @@ export const register: ReturnType<typeof action> = action({
 
     return await ctx.runMutation(internal.auth.mutations.createUserInternal, {
       email: cleanEmail,
+      claim_hash: sha256Hex(args.claim),
       password_hash: passwordHash,
       username: cleanUsername,
       display_name: cleanDisplayName,
@@ -161,7 +151,11 @@ export const register: ReturnType<typeof action> = action({
 // ---------------------------------------------------------------------------
 
 export const registerPending = action({
-  args: { email: v.string(), password: v.optional(v.string()), locale: v.optional(v.string()) },
+  args: {
+    email: v.string(),
+    password: v.optional(v.string()),
+    locale: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const cleanEmail = validateEmail(args.email);
     if (args.password !== undefined) {
@@ -173,7 +167,11 @@ export const registerPending = action({
     // and delivery, so there is exactly one send path (and one place where
     // secrets stay out of the logs). It enforces the per-address cooldown and
     // hourly cap before doing any work, and no password is ever persisted here.
-    const { expiresAt } = await issueVerificationCode(ctx, cleanEmail, args.locale);
+    const { expiresAt } = await issueVerificationCode(
+      ctx,
+      cleanEmail,
+      args.locale,
+    );
 
     // Uniform response shape. Deliberately no `alreadyRegistered` flag: that
     // would be a free account-existence oracle for unauthenticated callers.
@@ -182,7 +180,7 @@ export const registerPending = action({
 });
 
 // ---------------------------------------------------------------------------
-// completeProfile -- wizard step 4, and the post-login profile gate.
+// completeProfile -- final registration step and the post-login profile gate.
 //
 // Handles both cases:
 //   * no account yet  -> require `password` and create user + profile atomically
@@ -210,18 +208,15 @@ export const completeProfile: ReturnType<typeof action> = action({
     const cleanLocale = validateLocale(args.locale);
     const cleanTimezone = validateTimezone(args.timezone);
 
-    const existing = (await ctx.runQuery(internal.auth.queries.getSafeUserByEmail, {
-      email: cleanEmail,
-    })) as UserRow;
+    const existing = (await ctx.runQuery(
+      internal.auth.queries.getSafeUserByEmail,
+      {
+        email: cleanEmail,
+      },
+    )) as UserRow;
 
-    // Peek first, consume last. The grant is single-use, so burning it before
-    // the retryable checks (username taken, profile already completed) would
-    // strand the user on a fixable form error with a dead token. Every check
-    // below runs against the peeked grant; the burn happens only after the
-    // write succeeds. (Residual race: if the grant expires or is consumed
-    // concurrently between peek and burn, the final consume throws after the
-    // write -- the caller re-signs in and the entry gate routes them onward
-    // from the already-created profile, so nothing is lost.)
+    // Cheap proof check before bcrypt; the write rechecks and consumes the
+    // grant atomically, so a failed profile validation remains retryable.
     const grant = (await ctx.runQuery(internal.auth.claimGrants.peek, {
       token_hash: sha256Hex(args.claim),
       scope: CLAIM_SCOPE_ACCOUNT,
@@ -263,6 +258,7 @@ export const completeProfile: ReturnType<typeof action> = action({
         internal.auth.mutations.createUserInternal,
         {
           email: cleanEmail,
+          claim_hash: sha256Hex(args.claim),
           password_hash: passwordHash,
           username: cleanUsername,
           display_name: cleanDisplayName,
@@ -272,14 +268,6 @@ export const completeProfile: ReturnType<typeof action> = action({
           timezone: cleanTimezone,
         },
       )) as { userId: Id<"auth_users"> };
-
-      // The account exists only now, so burn the presented grant only after
-      // the write succeeded (see the peek-first note above).
-      await ctx.runMutation(internal.auth.claimGrants.consume, {
-        email: cleanEmail,
-        scope: CLAIM_SCOPE_ACCOUNT,
-        token_hash: sha256Hex(args.claim),
-      });
 
       // The onboarding continues with the first space, so hand the caller a
       // grant for that step rather than making them sign in again.
@@ -298,22 +286,19 @@ export const completeProfile: ReturnType<typeof action> = action({
       });
     }
 
-    const result = (await ctx.runMutation(internal.auth.mutations.completeProfile, {
-      userId: existing._id,
-      username: cleanUsername,
-      display_name: cleanDisplayName,
-      bio: cleanBio,
-      avatar: cleanAvatar,
-      locale: cleanLocale,
-      timezone: cleanTimezone,
-    })) as { profileId: Id<"auth_user_profiles"> };
-
-    // Burn only after the write succeeded (see the peek-first note above).
-    await ctx.runMutation(internal.auth.claimGrants.consume, {
-      email: cleanEmail,
-      scope: CLAIM_SCOPE_ACCOUNT,
-      token_hash: sha256Hex(args.claim),
-    });
+    const result = (await ctx.runMutation(
+      internal.auth.mutations.completeProfile,
+      {
+        userId: existing._id,
+        claim_hash: sha256Hex(args.claim),
+        username: cleanUsername,
+        display_name: cleanDisplayName,
+        bio: cleanBio,
+        avatar: cleanAvatar,
+        locale: cleanLocale,
+        timezone: cleanTimezone,
+      },
+    )) as { profileId: Id<"auth_user_profiles"> };
 
     return {
       ...result,
@@ -366,10 +351,7 @@ export const login: ReturnType<typeof action> = action({
       // branch: the reply below is identical to it, so neither timing nor
       // text reveals whether the address exists or how it signs in.
       //
-      // Google-only users are not stranded: requesting a password reset for
-      // the address emails them a notice pointing back to Google sign-in
-      // (see sendOAuthOnlyAccountNotice), which is the safe place for that
-      // hint instead of the login response.
+      // Legacy accounts can set a password through the email recovery flow.
       await equalizePasswordTiming(args.password);
       throw invalidCredentials;
     }
@@ -401,7 +383,8 @@ export const login: ReturnType<typeof action> = action({
     if (!user.email_verified_at) {
       throw new ConvexError({
         code: "EMAIL_NOT_VERIFIED",
-        message: "Please verify your email before signing in. Check your inbox for the code.",
+        message:
+          "Please verify your email before signing in. Check your inbox for the code.",
       });
     }
 
@@ -414,9 +397,12 @@ export const login: ReturnType<typeof action> = action({
     // single-use and scoped to finishing onboarding.
     const claim = await issueAccountGrant(ctx, user.email, user._id);
 
-    const profile = await ctx.runQuery(internal.auth.queries.getProfileByUserId, {
-      userId: user._id,
-    });
+    const profile = await ctx.runQuery(
+      internal.auth.queries.getProfileByUserId,
+      {
+        userId: user._id,
+      },
+    );
 
     return {
       user: { _id: user._id, email: user.email },

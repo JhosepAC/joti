@@ -5,8 +5,7 @@
  *
  * Strategy: backend contracts (codes) stay in English; presentation maps
  * codes -- and a closed list of known server messages for throws that carry
- * no code -- to i18n keys. Anything unrecognized falls back to the sanitized
- * raw message (English) rather than breaking the UI.
+ * no code -- to i18n keys. Unknown failures use a localized fallback.
  */
 
 import { useCallback } from "react";
@@ -26,6 +25,22 @@ const CODE_MESSAGE_MAP: Record<string, string> = {
 
 /** Known server messages from throws that carry no code. */
 const SERVER_MESSAGE_MAP: Array<{ match: RegExp; key: string }> = [
+  { match: /username.*(?:taken|already.*use)/i, key: "usernameTaken" },
+  {
+    match: /password must be different|password.*different from.*current/i,
+    key: "passwordReused",
+  },
+  { match: /password must not.*(?:email)/i, key: "passwordEmail" },
+  { match: /password must not.*username/i, key: "passwordUsername" },
+  {
+    match: /profile.*(?:already|exists)|already.*profile/i,
+    key: "accountExists",
+  },
+  {
+    match:
+      /(?:invalid|expired|already.*used).*reset|reset.*(?:expired|already.*used)/i,
+    key: "resetInvalid",
+  },
   { match: /invalid email or password/i, key: "invalidCredentials" },
   { match: /invalid or expired code/i, key: "codeInvalid" },
   { match: /session expired/i, key: "sessionExpired" },
@@ -47,16 +62,21 @@ function sanitizeRawMessage(raw: string): string {
   msg = msg.trim();
   // If still contains ConvexError: prefix somewhere, extract after
   const convexIdx = msg.indexOf("ConvexError:");
-  if (convexIdx !== -1) msg = msg.slice(convexIdx + "ConvexError:".length).trim();
+  if (convexIdx !== -1)
+    msg = msg.slice(convexIdx + "ConvexError:".length).trim();
   // Collapse whitespace
   msg = msg.replace(/\s+/g, " ").trim();
   return msg || "Something went wrong. Please try again.";
 }
 
-export function getAuthErrorMessage(err: unknown, fallback = "Something went wrong. Please try again."): string {
+export function getAuthErrorMessage(
+  err: unknown,
+  fallback = "Something went wrong. Please try again.",
+): string {
   if (!err) return fallback;
   if (err instanceof Error) {
-    const data = (err as Error & { data?: { code?: string; message?: string } }).data;
+    const data = (err as Error & { data?: { code?: string; message?: string } })
+      .data;
     if (data?.message) return sanitizeRawMessage(data.message);
     return sanitizeRawMessage(err.message);
   }
@@ -66,7 +86,7 @@ export function getAuthErrorMessage(err: unknown, fallback = "Something went wro
 
 /**
  * Translated version for UI: maps codes and known server messages to the
- * `errors` namespace, sanitized raw text only as a last resort.
+ * `errors` namespace. Never display unknown server messages or stack traces.
  */
 export function useAuthErrorMessage() {
   const t = useTranslations("errors");
@@ -76,21 +96,25 @@ export function useAuthErrorMessage() {
       const fallbackText = fallback ?? t("fallback");
       if (!err) return fallbackText;
       if (err instanceof Error) {
-        const data = (err as Error & { data?: { code?: string; message?: string } }).data;
+        const data = (
+          err as Error & { data?: { code?: string; message?: string } }
+        ).data;
+        const known = SERVER_MESSAGE_MAP.find((entry) =>
+          entry.match.test(getAuthErrorMessage(err)),
+        );
+        if (known) return t(known.key as Parameters<typeof t>[0]);
         if (data?.code && CODE_MESSAGE_MAP[data.code]) {
           return t(CODE_MESSAGE_MAP[data.code] as Parameters<typeof t>[0]);
         }
-        const raw = data?.message ?? err.message;
-        const clean = sanitizeRawMessage(raw);
-        const known = SERVER_MESSAGE_MAP.find((entry) => entry.match.test(clean));
-        if (known) return t(known.key as Parameters<typeof t>[0]);
-        return clean || fallbackText;
+        return fallbackText;
       }
       if (typeof err === "string") {
         const clean = sanitizeRawMessage(err);
-        const known = SERVER_MESSAGE_MAP.find((entry) => entry.match.test(clean));
+        const known = SERVER_MESSAGE_MAP.find((entry) =>
+          entry.match.test(clean),
+        );
         if (known) return t(known.key as Parameters<typeof t>[0]);
-        return clean || fallbackText;
+        return fallbackText;
       }
       return fallbackText;
     },
@@ -104,4 +128,12 @@ export function getAuthErrorCode(err: unknown): string | undefined {
     return data?.code;
   }
   return undefined;
+}
+
+/** Parse the backend contract before translation, which may change the unit. */
+export function getRetryAfterSeconds(err: unknown, fallback = 60): number {
+  const seconds = getAuthErrorMessage(err).match(
+    /(?:wait\s+|after\s+)?(\d+)s\b/i,
+  )?.[1];
+  return seconds ? Math.max(1, Number(seconds)) : fallback;
 }

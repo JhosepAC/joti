@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAction, useQuery } from "convex/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { defaultSpaceName } from "../catalog";
 import { storeSpaceGrant } from "@/features/auth/utils/claim-store";
@@ -10,6 +10,8 @@ import { useAuthErrorMessage } from "@/features/auth/utils/get-auth-error-messag
 import {
   FIRST_SPACE_TOTAL_STEPS,
   SPACE_ICON_DEFAULT,
+  SPACE_ICON_CHOICES,
+  SPACE_PURPOSE_KEYS,
   type FirstSpaceStep,
   type SpaceDraft,
   type SpaceIconChoice,
@@ -22,13 +24,6 @@ import {
   validateSpaceNameInput,
 } from "../validations/space.schema";
 
-/** Message keys narrated while the space is created, one every `STEP_MESSAGE_MS`. */
-const CREATION_MESSAGE_KEYS = ["step1", "step2", "step3"] as const;
-
-const STEP_MESSAGE_MS = 500;
-/** The spec asks for a short, deliberate pause so the transition reads as progress. */
-const MIN_LOADING_MS = 1500;
-
 export function useFirstSpaceFlow(options: {
   email: string;
   claim: string;
@@ -36,20 +31,49 @@ export function useFirstSpaceFlow(options: {
   onReady: (slug: string) => void;
 }) {
   const { email, claim, displayName, onReady } = options;
+  const locale = useLocale();
+  const submitting = useRef(false);
 
   const [step, setStep] = useState<FirstSpaceStep>(1);
-  const [draft, setDraft] = useState<SpaceDraft>(() => ({
-    name: defaultSpaceName(displayName, SPACE_NAME_MAX_LENGTH),
-    icon: SPACE_ICON_DEFAULT,
-    // Single choice with one option preselected.
-    purpose: "personal",
-  }));
+  const draftKey = `nook:first-space:${email}`;
+  const [draft, setDraft] = useState<SpaceDraft>(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(draftKey) ?? "null");
+      if (
+        saved &&
+        typeof saved.name === "string" &&
+        SPACE_ICON_CHOICES.includes(saved.icon) &&
+        SPACE_PURPOSE_KEYS.includes(saved.purpose)
+      ) {
+        return {
+          name: sanitizeSpaceNameInput(saved.name).slice(
+            0,
+            SPACE_NAME_MAX_LENGTH,
+          ),
+          icon: saved.icon,
+          purpose: saved.purpose,
+        };
+      }
+    } catch {
+      /* Storage can be unavailable; setup still works in memory. */
+    }
+    return {
+      name: defaultSpaceName(displayName, SPACE_NAME_MAX_LENGTH, locale),
+      icon: SPACE_ICON_DEFAULT,
+      purpose: "personal",
+    };
+  });
   const [isCreating, setIsCreating] = useState(false);
-  const [showCreating, setShowCreating] = useState(false);
-  const [messageIndex, setMessageIndex] = useState(0);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
-  const tCreating = useTranslations("spaces.creating");
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify(draft));
+    } catch {
+      /* Optional draft recovery. */
+    }
+  }, [draft, draftKey]);
+
   const tErrors = useAuthErrorMessage();
   const tGeneral = useTranslations("errors");
 
@@ -57,17 +81,23 @@ export function useFirstSpaceFlow(options: {
 
   // The summary must show what will actually be created, so the tool list is
   // resolved by the server rather than hardcoded here.
-  const purposePreview = useQuery(api.spaces.queries.getPurposePreview, { purpose: draft.purpose });
+  const purposePreview = useQuery(api.spaces.queries.getPurposePreview, {
+    purpose: draft.purpose,
+  });
 
   useEffect(() => {
     // Only prefills while the field is untouched, so it can never overwrite
     // something the user typed.
     setDraft((prev) => {
-      const untouched = prev.name === defaultSpaceName(null, SPACE_NAME_MAX_LENGTH);
+      const untouched =
+        prev.name === defaultSpaceName(null, SPACE_NAME_MAX_LENGTH, locale);
       if (!untouched && prev.name.trim().length > 0) return prev;
-      return { ...prev, name: defaultSpaceName(displayName, SPACE_NAME_MAX_LENGTH) };
+      return {
+        ...prev,
+        name: defaultSpaceName(displayName, SPACE_NAME_MAX_LENGTH, locale),
+      };
     });
-  }, [displayName]);
+  }, [displayName, locale]);
 
   const tNameError = useTranslations("spaces.identity.nameError");
 
@@ -81,7 +111,8 @@ export function useFirstSpaceFlow(options: {
 
   // Live feedback: nothing is shown for an empty field (the requirement hint is
   // enough), but an out-of-range value is reported as it is typed.
-  const nameError = draft.name.length > 0 ? (nameProblem ?? undefined) : undefined;
+  const nameError =
+    draft.name.length > 0 ? (nameProblem ?? undefined) : undefined;
 
   // "Next" is only reachable once the current step is actually valid, so an
   // incomplete step cannot be submitted or skipped past.
@@ -105,6 +136,7 @@ export function useFirstSpaceFlow(options: {
   }, []);
 
   const goNext = useCallback(() => {
+    if (submitting.current) return;
     if (step === 1) {
       if (nameProblem !== null) return;
       setStep(2);
@@ -116,27 +148,29 @@ export function useFirstSpaceFlow(options: {
   }, [nameProblem, step]);
 
   const goBack = useCallback(() => {
+    if (submitting.current) return;
     if (step > 1) setStep((prev) => (prev - 1) as FirstSpaceStep);
   }, [step]);
 
+  const goToStep = useCallback(
+    (target: number) => {
+      if (submitting.current || target < 1 || target > 3) return;
+      if (target > 1 && nameProblem !== null) return;
+      setStep(target as FirstSpaceStep);
+    },
+    [nameProblem],
+  );
+
   const submit = useCallback(async () => {
+    if (submitting.current) return;
     // Re-checked here because step 1 can have been edited after advancing.
     if (nameProblem !== null) {
       setStep(1);
       return;
     }
     setIsCreating(true);
+    submitting.current = true;
     setGeneralError(null);
-    setMessageIndex(0);
-    setShowCreating(true);
-
-    const startedAt = Date.now();
-    // Started before the request so the narration advances while the write is in
-    // flight. A fast backend would otherwise show all three lines at once, which
-    // reads as a glitch rather than as progress.
-    const interval = setInterval(() => {
-      setMessageIndex((prev) => Math.min(prev + 1, CREATION_MESSAGE_KEYS.length - 1));
-    }, STEP_MESSAGE_MS);
 
     try {
       const result = await createFirstSpace({
@@ -148,22 +182,29 @@ export function useFirstSpaceFlow(options: {
       });
 
       storeSpaceGrant(result.slug, result.spaceGrant);
+      try {
+        sessionStorage.removeItem(draftKey);
+      } catch {
+        /* Do not delay successful creation. */
+      }
 
-      const remaining = Math.max(0, MIN_LOADING_MS - (Date.now() - startedAt));
-      await new Promise((resolve) => setTimeout(resolve, remaining));
-
-      setMessageIndex(CREATION_MESSAGE_KEYS.length - 1);
       onReady(result.slug);
     } catch (err: unknown) {
-      setShowCreating(false);
-      setGeneralError(
-        tErrors(err, tGeneral("createSpaceFailed")),
-      );
-    } finally {
-      clearInterval(interval);
+      submitting.current = false;
       setIsCreating(false);
+      setGeneralError(tErrors(err, tGeneral("createSpaceFailed")));
     }
-  }, [claim, createFirstSpace, draft.icon, draft.name, draft.purpose, email, nameProblem, onReady]);
+  }, [
+    claim,
+    createFirstSpace,
+    draft.icon,
+    draft.name,
+    draft.purpose,
+    draftKey,
+    email,
+    nameProblem,
+    onReady,
+  ]);
 
   const tools: SpaceTool[] = purposePreview ? purposePreview.tools : [];
 
@@ -176,8 +217,6 @@ export function useFirstSpaceFlow(options: {
     nameError,
     generalError,
     isCreating,
-    showCreating,
-    message: tCreating(CREATION_MESSAGE_KEYS[messageIndex] ?? "step1"),
     tools,
     isLoadingTools: purposePreview === undefined,
     setName,
@@ -185,6 +224,7 @@ export function useFirstSpaceFlow(options: {
     setPurpose,
     goNext,
     goBack,
+    goToStep,
     submit,
   };
 }

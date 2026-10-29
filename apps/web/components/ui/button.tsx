@@ -8,7 +8,12 @@ export interface ButtonProps
   isLoading?: boolean;
   /** Accessible/translated loading text. Rendered only when provided. */
   loadingText?: string;
+  /** Opt out of the press-scale feedback where the motion would distract. */
+  static?: boolean;
 }
+
+/** Press feedback: 0.96 over 150ms, excluded while disabled (better-ui). */
+const tapScale = "enabled:active:scale-[0.96]";
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -19,13 +24,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size = "default",
       isLoading = false,
       loadingText,
+      static: isStatic = false,
       disabled,
       ...props
     },
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-full cursor-pointer transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.99]";
+      "inline-flex items-center justify-center font-medium rounded-full cursor-pointer transition-[background-color,border-color,color,scale] duration-150 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
 
     const variantStyles = {
       primary:
@@ -49,6 +55,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || isLoading}
         className={cn(
           baseStyles,
+          !isStatic && tapScale,
           variantStyles[variant],
           sizeStyles[size],
           className

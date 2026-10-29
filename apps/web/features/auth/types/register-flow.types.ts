@@ -1,4 +1,4 @@
-export type RegisterStep = 1 | 1.1 | 2 | 3 | 4;
+export type RegisterStep = 1 | 1.1 | 2;
 
 export interface RegisterFlowData {
   email: string;
@@ -24,7 +24,7 @@ export interface RegisterFlowErrors {
   general?: string;
 }
 
-export const TOTAL_STEPS = 4;
+export const TOTAL_STEPS = 3;
 
 export const RECOMMENDED_AVATARS = [
   "/avatars/profile_1.jpg",

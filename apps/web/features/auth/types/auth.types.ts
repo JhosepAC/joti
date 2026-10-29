@@ -26,8 +26,6 @@ export interface ValidationErrors {
 
 export type AuthStatus = "idle" | "loading" | "success" | "error";
 
-export type OAuthProvider = "google";
-
 export interface UserProfile {
   id: string;
   email: string;

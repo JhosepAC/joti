@@ -1,5 +1,52 @@
 import { internalMutation, internalQuery } from "../_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+
+// Recheck and consume the link in the same transaction that updates credentials.
+// Two concurrent actions may both finish bcrypt; only one may commit.
+export const commitPasswordReset = internalMutation({
+  args: { token_hash: v.string(), password_hash: v.string() },
+  handler: async (ctx, args) => {
+    const record = await ctx.db
+      .query("auth_password_resets")
+      .withIndex("by_token_hash", (q) => q.eq("token_hash", args.token_hash))
+      .first();
+    if (
+      !record ||
+      record.used_at !== undefined ||
+      record.expires_at <= Date.now()
+    ) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Invalid or expired reset link.",
+      });
+    }
+    const user = await ctx.db.get(record.user_id);
+    if (!user || user.deleted_at || user.email !== record.email) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Invalid or expired reset link.",
+      });
+    }
+    await ctx.db.patch(user._id, {
+      password_hash: args.password_hash,
+      failed_login_attempts: 0,
+      locked_until: undefined,
+    });
+    await ctx.db.patch(record._id, { used_at: Date.now() });
+    // A password change invalidates all currently held authorizations.
+    const grants = await ctx.db
+      .query("auth_claim_grants")
+      .withIndex("by_email", (q) => q.eq("email", user.email))
+      .collect();
+    for (const grant of grants) await ctx.db.delete(grant._id);
+    const sessions = await ctx.db
+      .query("auth_sessions")
+      .withIndex("by_user_id", (q) => q.eq("user_id", user._id))
+      .collect();
+    for (const session of sessions) await ctx.db.delete(session._id);
+    return { success: true };
+  },
+});
 
 export const createResetToken = internalMutation({
   args: {

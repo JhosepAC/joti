@@ -1,11 +1,12 @@
 {
   "common": {
-    "appName": "Joti",
+    "appName": "Nook",
     "settings": {
       "button": "Ajustes",
       "menu": "Menú de ajustes",
       "language": "Idioma"
-    },    "actions": {
+    },
+    "actions": {
       "save": "Guardar",
       "cancel": "Cancelar",
       "delete": "Eliminar",
@@ -31,60 +32,61 @@
   },
   "metadata": {
     "app": {
-      "title": "Joti",
+      "title": "Nook",
       "description": "Tus espacios personales para notas, tareas y más"
     },
     "login": {
-      "title": "Iniciar sesión - Joti",
-      "description": "Inicia sesión para acceder a tu panel de Joti"
+      "title": "Iniciar sesión - Nook",
+      "description": "Inicia sesión para acceder a tu panel de Nook"
     },
     "register": {
-      "title": "Crear cuenta - Joti",
-      "description": "Crea tu cuenta de Joti"
+      "title": "Crear cuenta - Nook",
+      "description": "Crea tu cuenta de Nook"
     },
     "forgotPassword": {
-      "title": "Recuperar contraseña - Joti",
-      "description": "Recupera el acceso a tu cuenta de Joti"
+      "title": "Recuperar contraseña - Nook",
+      "description": "Recupera el acceso a tu cuenta de Nook"
     },
     "resetPassword": {
-      "title": "Restablecer contraseña - Joti",
+      "title": "Restablecer contraseña - Nook",
       "description": "Elige una nueva contraseña para tu cuenta"
     },
     "completeProfile": {
-      "title": "Completa tu perfil - Joti",
-      "description": "Completa tu perfil para empezar a usar Joti"
+      "title": "Completa tu perfil - Nook",
+      "description": "Completa tu perfil para empezar a usar Nook"
     },
     "spacesNew": {
-      "title": "Tu primer espacio - Joti",
-      "description": "Crea el primer espacio de tu cuenta en Joti"
+      "title": "Tu primer espacio - Nook",
+      "description": "Crea el primer espacio de tu cuenta en Nook"
     },
     "workspace": {
-      "title": "Espacio - Joti",
-      "description": "Tu espacio de trabajo en Joti"
+      "title": "Espacio - Nook",
+      "description": "Tu espacio de trabajo en Nook"
     }
   },
   "auth": {
     "login": {
       "title": "Iniciar sesión",
-      "subtitle": "Continúa para acceder a tu panel",
+      "subtitle": "Vuelve a tus ideas, planes y espacios.",
       "email": "Correo electrónico",
       "password": "Contraseña",
       "forgotPassword": "¿Olvidaste tu contraseña?",
       "submit": "Iniciar sesión",
       "noAccount": "¿No tienes una cuenta?",
       "createAccount": "Crear cuenta",
-      "activationTitle": "Tu cuenta no está activada. Ingresa el código que enviamos a {email}.",
+      "activationTitle": "Confirma el correo {email} para activar tu cuenta.",
       "activationResend": "Reenviar código",
       "activationResendIn": "Reenviar en {seconds}s",
-      "activationVerify": "Verificar y activar"
+      "activationVerify": "Verificar y activar",
+      "activationSend": "Enviar un código nuevo"
     },
     "register": {
       "step1": {
         "title": "Crear cuenta",
-        "subtitle": "Ingresa tu correo y contraseña para empezar",
+        "subtitle": "Tu próximo espacio empieza aquí.",
         "email": "Correo electrónico",
         "password": "Contraseña",
-        "passwordHint": "12+ caracteres, máx. 72 bytes, sin tu correo o usuario",
+        "passwordHint": "Usa entre 12 y 72 caracteres (menos con emojis o acentos). Evita tu correo y usuario.",
         "confirmPassword": "Confirmar contraseña",
         "submit": "Continuar",
         "footer": "¿Ya tienes una cuenta?",
@@ -105,10 +107,10 @@
       },
       "step2": {
         "title": "Crea tu perfil",
-        "subtitle": "Elige cómo aparecerás en Joti",
+        "subtitle": "Solo necesitamos tu nombre y un usuario.",
         "username": "Nombre de usuario",
         "displayName": "Nombre visible",
-        "displayNamePlaceholder": "Usuario Joti",
+        "displayNamePlaceholder": "Usuario Nook",
         "displayNameHint": "1-100 caracteres, emoji permitido, sin caracteres de control",
         "restrictionsTitle": "Restricciones:",
         "restrictionLength": "3-20 caracteres, solo minúsculas",
@@ -145,7 +147,7 @@
       "back": "← Atrás"
     },
     "forgotPassword": {
-      "title": "¿Olvidaste tu contraseña?",
+      "title": "Recupera tu acceso",
       "subtitle": "Ingresa tu correo y te enviaremos un enlace",
       "email": "Correo electrónico",
       "submit": "Enviar enlace",
@@ -162,19 +164,19 @@
     },
     "resetPassword": {
       "title": "Restablecer contraseña",
-      "subtitle": "Elige una nueva contraseña. Al menos 12 caracteres, máx. 72 bytes, sin tu correo o usuario.",
+      "subtitle": "Elige una contraseña nueva para tu cuenta.",
       "newPassword": "Nueva contraseña",
-      "newPasswordHint": "12+ caracteres, máx. 72 bytes. Espacios permitidos. Sin tu correo o usuario.",
+      "newPasswordHint": "Usa entre 12 y 72 caracteres (menos con emojis o acentos). Evita tu correo y usuario.",
       "confirmPassword": "Confirmar nueva contraseña",
       "submit": "Actualizar contraseña",
       "verifying": "Verificando enlace...",
-      "missingToken": "Falta el token. Usa el enlace de tu correo.",
+      "missingToken": "Abre el enlace que recibiste por correo o pide uno nuevo.",
       "requestNew": "Pedir nuevo enlace",
       "expiredTitle": "Enlace vencido",
       "expiredDescription": "Este enlace es inválido, ya fue usado o venció (60 minutos).",
       "backToSignIn": "Volver a iniciar sesión",
       "successTitle": "Contraseña actualizada",
-      "successDescription": "Tu contraseña cambió correctamente. Te enviamos un correo de confirmación.",
+      "successDescription": "Ya puedes iniciar sesión con tu nueva contraseña.",
       "signIn": "Iniciar sesión"
     },
     "completeProfile": {
@@ -185,7 +187,7 @@
       "usernameRule": "El usuario solo puede contener a-z, 0-9 y _",
       "usernameLength": "El usuario debe tener 3-20 caracteres",
       "displayName": "Nombre visible",
-      "displayNamePlaceholder": "Usuario Joti",
+      "displayNamePlaceholder": "Usuario Nook",
       "avatar": "Avatar",
       "skipAvatar": "Omitir usa la primera letra",
       "previewAlt": "vista previa",
@@ -201,12 +203,97 @@
       "avatarSizeError": "El avatar debe pesar menos de 5MB",
       "avatarUploadError": "No se pudo subir el avatar"
     },
-    "oauth": {
-      "continueWithGoogle": "Continuar con Google",
-      "recommended": "Recomendado"
-    },
     "activation": {
       "codeMustBeDigits": "El código debe tener 6 dígitos"
+    },
+    "ui": {
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña",
+      "working": "Un momento…",
+      "activateTitle": "Verifica tu cuenta",
+      "backToLogin": "Volver a iniciar sesión",
+      "changeEmail": "Usar otro correo",
+      "connectionTitle": "No pudimos conectar",
+      "connectionDescription": "No se pudo comprobar el enlace. Revisa tu conexión e inténtalo de nuevo.",
+      "retry": "Reintentar",
+      "pleaseWait": "Comprobando tu acceso…",
+      "personalize": "Personalizar perfil (opcional)",
+      "usernameHint": "Entre 3 y 20 caracteres: letras minúsculas, números o guion bajo.",
+      "avatar": "Foto de perfil",
+      "remove": "Quitar",
+      "uploadHint": "JPG, PNG, WebP o GIF. Hasta 5 MB.",
+      "avatarChoice": "Elegir avatar {number}",
+      "imageTypes": "Elige una imagen JPG, PNG, WebP o GIF.",
+      "uploadFailed": "No pudimos subir la imagen. Inténtalo de nuevo o quítala para continuar.",
+      "usernameTaken": "Este nombre de usuario ya está en uso. Prueba otro.",
+      "verifyAgain": "Tu verificación venció. Pide un código nuevo para continuar; tus datos siguen aquí.",
+      "sixDigits": "Ingresa los 6 dígitos del código.",
+      "codeExpiry": "El código es válido durante 10 minutos desde el envío. Si ya venció, pide uno nuevo.",
+      "finishAccount": "Crear mi cuenta",
+      "editAccount": "Editar correo o contraseña",
+      "sessionTitle": "Vuelve a iniciar sesión",
+      "sessionDescription": "Necesitamos comprobar tu acceso antes de completar el perfil.",
+      "profileDescription": "Elige cómo aparecerás en tus espacios. La foto y la biografía son opcionales.",
+      "anotherAccount": "Entrar con otra cuenta",
+      "emailPlaceholder": "nombre@ejemplo.com",
+      "activationSent": "Código enviado. Es válido durante 10 minutos desde el envío."
+    },
+    "shell": {
+      "about": "Acerca de Nook",
+      "title": "Tu vida, en su lugar.",
+      "description": "Un espacio para cada parte de ti. Reúne tus ideas, planes y pendientes a tu manera.",
+      "spaces": "Ejemplos de espacios",
+      "example": "Un ejemplo de lo que puedes organizar en Nook.",
+      "footer": "Menos ruido. Más espacio para lo tuyo.",
+      "account": "Acceso a tu cuenta",
+      "developedBy": "Desarrollado por:",
+      "personal": {
+        "name": "Personal",
+        "description": "Un poco de orden para el día a día.",
+        "task0": "Hacer espacio para lo importante",
+        "task1": "Planear la semana",
+        "task2": "Guardar esa idea"
+      },
+      "study": {
+        "name": "Universidad",
+        "description": "Todo lo de este semestre, junto.",
+        "task0": "Organizar las asignaturas",
+        "task1": "Preparar la próxima entrega",
+        "task2": "Reunir los apuntes"
+      },
+      "project": {
+        "name": "Proyecto",
+        "description": "De la primera idea al siguiente paso.",
+        "task0": "Definir por dónde empezar",
+        "task1": "Anotar las próximas tareas",
+        "task2": "Guardar referencias"
+      }
+    },
+    "visual": {
+      "title": "Tus espacios, a tu manera.",
+      "description": "Organiza cada parte de tu vida en un espacio diferente.",
+      "yourSpaces": "Mis espacios",
+      "demo": "Ejemplo interactivo",
+      "tools": "Herramientas del espacio de ejemplo",
+      "tasks": "Tareas",
+      "notes": "Notas",
+      "calendar": "Calendario",
+      "tryTask": "Prueba a completar una tarea",
+      "noteTitle": "Una idea para después",
+      "noteDefault": "¿Y si empiezo por lo que más me ilusiona?\n\nAquí hay espacio para esa idea.",
+      "localOnly": "Esta nota de ejemplo solo vive en esta pantalla.",
+      "week": "Una semana a tu manera",
+      "day0": "Lun",
+      "day1": "Mar",
+      "day2": "Mié",
+      "day3": "Jue",
+      "day4": "Vie",
+      "day5": "Sáb",
+      "day6": "Dom",
+      "selectedDay": "{day} · Un momento para lo tuyo",
+      "smallIdea": "Las buenas ideas se quedan.",
+      "keepIt": "Un rincón para cada una.",
+      "invite": "Prueba las herramientas del ejemplo."
     }
   },
   "validation": {
@@ -219,7 +306,7 @@
     "password": {
       "required": "La contraseña es obligatoria",
       "tooShort": "La contraseña debe tener al menos 12 caracteres",
-      "tooLongBytes": "La contraseña no debe exceder 72 bytes",
+      "tooLongBytes": "La contraseña es demasiado larga. Usa menos caracteres, sobre todo emojis o acentos.",
       "containsEmail": "La contraseña no debe contener tu correo",
       "sameAsEmail": "La contraseña no debe ser igual a tu correo",
       "containsUsername": "La contraseña no debe contener tu usuario",
@@ -275,7 +362,13 @@
     "tooManyAttempts": "Demasiados intentos. Pide un código nuevo.",
     "profileRequired": "Completa tu perfil antes de continuar.",
     "spaceExists": "Ya tienes un espacio.",
-    "storageLimit": "Las subidas no están disponibles. Inténtalo más tarde."
+    "storageLimit": "Las subidas no están disponibles. Inténtalo más tarde.",
+    "usernameTaken": "Este nombre de usuario ya está en uso. Prueba otro.",
+    "passwordReused": "Elige una contraseña distinta de la actual.",
+    "accountExists": "Esta cuenta ya tiene un perfil. Inicia sesión para continuar.",
+    "passwordEmail": "La contraseña no debe incluir tu correo.",
+    "passwordUsername": "La contraseña no debe incluir tu usuario.",
+    "resetInvalid": "El enlace venció o ya fue usado. Pide uno nuevo."
   },
   "spaces": {
     "tools": {
@@ -287,23 +380,64 @@
       "assignments": "Entregables",
       "calendar": "Calendario"
     },
-    "new": {
-      "title": "Crea tu primer espacio",
-      "subtitle": "Todo en Joti vive dentro de un espacio. Empecemos por el primero.",
-      "sectionLabel": "Paso {step} de {total}"
-    },
     "steps": {
-      "identity": "Identidad",
-      "purpose": "Propósito",
-      "review": "Resumen",
+      "identity": "Tu espacio",
+      "purpose": "Uso",
+      "review": "Revisión",
       "progress": "Paso {current} de {total}",
       "navLabel": "Progreso de la creación del espacio"
     },
+    "preview": {
+      "label": "Así se verá tu espacio",
+      "nameFallback": "Tu espacio",
+      "privateBadge": "Privado",
+      "toolsLabel": "Herramientas",
+      "live": "Se actualiza contigo",
+      "example": "Ejemplo interactivo",
+      "hint": "Esta vista es un ejemplo. Su contenido no se guardará en tu espacio.",
+      "loading": "Cargando herramientas…",
+      "editExample": "Editar la nota de ejemplo",
+      "calendarExample": "Semana de ejemplo",
+      "selectDay": "Seleccionar día {day} del ejemplo",
+      "selectedDay": "Día {day}",
+      "toDo": "Por hacer",
+      "inProgress": "En curso",
+      "samples": {
+        "personal": {
+          "title": "Un poco de orden",
+          "note": "Un lugar para las ideas que llegan sin avisar.\n\n¿Qué quiero hacer esta semana?\n¿Qué idea quiero guardar?",
+          "task0": "Planear la semana",
+          "task1": "Retomar esa idea",
+          "task2": "Hacer tiempo para mí"
+        },
+        "work": {
+          "title": "El próximo proyecto",
+          "note": "Una buena reunión empieza con una idea clara.\n\nObjetivo de hoy:\nDecidir el siguiente paso del proyecto.",
+          "task0": "Definir el objetivo",
+          "task1": "Preparar la primera propuesta",
+          "task2": "Compartir los avances"
+        },
+        "study": {
+          "title": "Un semestre a la vez",
+          "note": "Ideas de la clase de hoy.\n\nLo que quiero recordar:\nConectar lo aprendido con un ejemplo propio.",
+          "task0": "Revisar los apuntes",
+          "task1": "Preparar la próxima entrega",
+          "task2": "Repasar para el examen"
+        },
+        "blank": {
+          "title": "Tu próxima idea",
+          "note": "Escribe aquí y prueba cómo se siente.\n\nTu espacio real empezará con una página en blanco.",
+          "task0": "",
+          "task1": "",
+          "task2": ""
+        }
+      }
+    },
     "identity": {
-      "title": "Identidad del espacio",
-      "subtitle": "Dale un nombre y un ícono para reconocerlo fácilmente.",
+      "title": "Tu primer espacio",
+      "subtitle": "Un lugar para esa parte de tu vida que quieres organizar.",
       "name": "Nombre del espacio",
-      "namePlaceholder": "Espacio de Ana",
+      "namePlaceholder": "Mi próximo proyecto",
       "nameHint": "Entre {min} y {max} caracteres.",
       "nameCount": "{count}/{max}",
       "nameError": {
@@ -312,49 +446,71 @@
         "maxLength": "El nombre no puede superar {max} caracteres",
         "invalidChars": "El nombre contiene caracteres no permitidos"
       },
-      "icon": "Ícono del espacio",
-      "iconHint": "Elige el que mejor lo represente. Podrás cambiarlo más adelante.",
+      "icon": "Símbolo del espacio",
+      "iconHint": "Un detalle para reconocerlo de un vistazo.",
       "iconGroup": "Íconos disponibles",
-      "iconUse": "Usar el ícono {icon}"
+      "iconUse": "Usar el ícono {icon}",
+      "privateTitle": "Espacio privado",
+      "privateHint": "Este espacio empezará siendo privado. Podrás invitar colaboradores más adelante.",
+      "symbols": {
+        "0": "Cohete",
+        "1": "Casa",
+        "2": "Maletín",
+        "3": "Estudios",
+        "4": "Ideas",
+        "5": "Energía",
+        "6": "Marcador",
+        "7": "Arte",
+        "8": "Corazón"
+      }
     },
     "purpose": {
-      "title": "Propósito del espacio",
-      "subtitle": "Elige para qué lo vas a usar. Esto define la plantilla inicial y las herramientas habilitadas.",
+      "title": "¿Qué quieres organizar?",
+      "subtitle": "Elige un punto de partida. Verás las herramientas que incluye.",
+      "enabledTools": "Herramientas incluidas",
       "options": {
         "personal": {
-          "title": "Personal",
-          "description": "Diseñado para proyectos propios, notas rápidas y organización diaria."
+          "title": "Mi día a día",
+          "description": "Ideas, pendientes y un diario personal."
         },
         "work": {
-          "title": "Trabajo / Negocios",
-          "description": "Diseñado para gestión de tareas, actas de reuniones y proyectos."
+          "title": "Trabajo y proyectos",
+          "description": "Tareas, proyectos y notas de reuniones."
         },
         "study": {
-          "title": "Estudios / Universidad",
-          "description": "Diseñado para apuntes de clases, entregables y fechas de exámenes."
+          "title": "Mis estudios",
+          "description": "Apuntes, entregables y calendario."
         },
         "blank": {
-          "title": "En blanco / Minimalista",
-          "description": "Espacio totalmente limpio sin plantillas ni datos de ejemplo."
+          "title": "Empezar en blanco",
+          "description": "Solo notas. Sin plantilla ni ejemplos guardados."
         }
       }
     },
     "summary": {
-      "title": "Resumen del espacio",
-      "subtitle": "Revisa antes de crear. Podrás cambiarlo todo más adelante.",
+      "title": "Así empieza tu espacio",
+      "subtitle": "Todo en su lugar. Revisa los detalles y empieza cuando quieras.",
       "tools": "Herramientas habilitadas",
-      "submit": "Crear mi espacio"
+      "submit": "Crear mi espacio",
+      "name": "Nombre y símbolo",
+      "purpose": "Punto de partida",
+      "edit": "Editar",
+      "editName": "Editar nombre y símbolo",
+      "editPurpose": "Editar punto de partida",
+      "privacy": "Solo tú tienes acceso a este espacio."
     },
     "creating": {
-      "title": "Creando tu espacio",
-      "step1": "Creando espacio en Convex...",
-      "step2": "Inyectando plantilla inicial y notas de bienvenida...",
-      "step3": "¡Todo listo! Entrando a joti..."
+      "title": "Creando tu espacio…"
     },
     "onboarding": {
       "checking": "Comprobando tu cuenta",
+      "retry": "Reintentar",
       "unavailableTitle": "No pudimos abrir esta sección",
-      "signIn": "Ir a iniciar sesión"
+      "signIn": "Ir a iniciar sesión",
+      "back": "Atrás",
+      "next": "Continuar",
+      "footer": "Un espacio para cada parte de ti.",
+      "developedBy": "Desarrollado por:"
     },
     "workspace": {
       "loading": "Cargando espacio",
@@ -412,6 +568,68 @@
           }
         }
       }
+    },
+    "dashboard": {
+      "loading": "Abriendo tu espacio…",
+      "unavailable": "No pudimos abrir el espacio",
+      "retry": "Reintentar",
+      "signIn": "Iniciar sesión",
+      "spaces": "Mis espacios",
+      "modules": "Módulos del espacio",
+      "home": "Inicio",
+      "pages": "Páginas",
+      "yourPages": "Tus páginas",
+      "newPage": "Nueva página",
+      "search": "Buscar una página",
+      "noResults": "No hay páginas con ese nombre.",
+      "noPages": "Todavía no hay páginas.",
+      "unsaved": "Cambios sin guardar",
+      "saved": "Guardado",
+      "saving": "Guardando…",
+      "save": "Guardar",
+      "focus": "Concentrarme",
+      "exitFocus": "Mostrar navegación",
+      "privateSpace": "Solo tú",
+      "personalAccount": "Cuenta personal",
+      "language": "Idioma",
+      "signOut": "Cerrar sesión",
+      "navigation": "Espacios y módulos",
+      "openNavigation": "Abrir espacios y módulos",
+      "closeNavigation": "Cerrar navegación",
+      "untitled": "Sin título",
+      "homeDescription": "Este lugar es tuyo, {name}. Dale forma con tus ideas, planes y lo que quieras tener cerca.",
+      "startWriting": "Tus páginas",
+      "emptyPage": "Una página en blanco, lista para tu próxima idea.",
+      "makeItYours": "Empieza con algo tuyo",
+      "guideDescription": "Tu primera página ya está preparada. Ábrela, cambia lo que quieras y guarda tu primera idea.",
+      "openFirstPage": "Abrir mi primera página",
+      "spaceType": "Un espacio para",
+      "draftHint": "Tus borradores se conservan en esta pestaña. Usa Guardar para conservar los cambios en tu cuenta.",
+      "developedBy": "Desarrollado por:",
+      "starterPage": "Página de inicio",
+      "page": "Página",
+      "edited": "Editada el {date}",
+      "pageTitle": "Título de la página",
+      "pageBody": "Contenido de la página",
+      "bodyPlaceholder": "Escribe una idea. Aquí empieza tu página.",
+      "wordCount": "{count, plural, =0 {Sin palabras aún} one {# palabra} other {# palabras}}",
+      "saveHint": "Los cambios se guardan al pulsar Guardar.",
+      "titleRequired": "Dale un título a la página antes de guardarla.",
+      "pagesDescription": "Tus notas e ideas, en un mismo lugar.",
+      "purposes": {
+        "personal": "Tu día a día",
+        "work": "Trabajo y proyectos",
+        "study": "Tus estudios",
+        "blank": "Lo que tú elijas"
+      },
+      "errors": {
+        "UNAUTHORIZED": "Tu sesión terminó. Inicia sesión para volver a tu espacio.",
+        "NOT_FOUND": "Este espacio o página no está disponible para tu cuenta.",
+        "CONFLICT": "Otra pestaña guardó cambios. Recarga antes de volver a guardar. Tu borrador se conserva.",
+        "VALIDATION_ERROR": "Revisa el título y el contenido de la página.",
+        "PAGE_LIMIT": "Este espacio llegó al límite de 200 páginas.",
+        "UNAVAILABLE": "No pudimos conectar. Tus cambios siguen aquí; inténtalo de nuevo."
+      }
     }
   },
   "providers": {
@@ -433,5 +651,280 @@
     "examples": "Ejemplos",
     "globeAlt": "Ícono de globo",
     "goToDocs": "Ir a turborepo.dev →"
+  },
+  "lists": {
+    "moduleName": "Listas",
+    "allLists": "Todas las listas",
+    "yourLists": "Tus listas",
+    "switchList": "Cambiar de lista",
+    "newList": "Nueva lista",
+    "createList": "Crear lista",
+    "listName": "Nombre de la lista",
+    "renameList": "Cambiar nombre de la lista",
+    "description": "Descripción de la lista",
+    "descriptionPlaceholder": "Añade una descripción",
+    "welcome": "Organiza información en tablas con tus propias propiedades y vistas.",
+    "startingPoint": "Elige un punto de partida",
+    "saved": "Guardado",
+    "savingCount": "Guardando {count, plural, one {# cambio} other {# cambios}}…",
+    "offline": "Sin conexión",
+    "offlinePending": "Sin conexión. Cambios pendientes",
+    "needsAttention": "Hay cambios por revisar",
+    "automaticSaveHint": "Los cambios se guardan automáticamente.",
+    "keyboardHint": "Tab para avanzar. Alt + flechas para moverte entre celdas.",
+    "newRow": "Nuevo registro",
+    "emptyTable": "Tu tabla está lista. Añade el primer registro.",
+    "addFirstRow": "Añadir primer registro",
+    "emptyTrash": "No hay registros archivados.",
+    "noMatchingRows": "No hay registros que coincidan con esta vista.",
+    "emptyValue": "Vacío",
+    "untitledRow": "Sin título",
+    "views": "Vistas de la lista",
+    "addView": "Añadir vista",
+    "editView": "Configurar vista",
+    "viewName": "Nombre de la vista",
+    "defaultView": "Vista {n}",
+    "deleteView": "Eliminar vista",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "properties": "Propiedades",
+    "filterAll": "Cumplir todos los filtros",
+    "addFilter": "Añadir filtro",
+    "removeFilter": "Eliminar filtro",
+    "filterValue": "Valor del filtro",
+    "operator": "Condición",
+    "property": "Propiedad",
+    "addSort": "Añadir orden",
+    "removeSort": "Eliminar orden",
+    "moveSortUp": "Dar mayor prioridad a este orden",
+    "direction": "Dirección",
+    "ascending": "Ascendente",
+    "descending": "Descendente",
+    "groupBy": "Agrupar por",
+    "noGrouping": "Sin agrupar",
+    "wrapCells": "Ajustar el texto de las celdas",
+    "listSettings": "Opciones de la lista",
+    "addProperty": "Añadir propiedad",
+    "editProperty": "Editar propiedad",
+    "editNamedProperty": "Editar {name}",
+    "propertyName": "Nombre de la propiedad",
+    "propertyType": "Tipo de propiedad",
+    "optional": "Opcional",
+    "customIcon": "Icono o emoji personalizado",
+    "iconPlaceholder": "Un símbolo que la represente",
+    "useIcon": "Usar este icono",
+    "changeIcon": "Cambiar icono de la lista",
+    "changeRowIcon": "Cambiar icono del registro",
+    "width": "Ancho: {value} px",
+    "options": "Opciones",
+    "optionName": "Nombre de la opción",
+    "optionColor": "Color de la opción",
+    "removeOption": "Eliminar opción {name}",
+    "addOption": "Añadir opción",
+    "defaultOption": "Opción {n}",
+    "typeChangeHint": "Los tipos solo se cambian si los valores actuales pueden convertirse sin perder información.",
+    "archiveProperty": "Archivar propiedad",
+    "archivedProperties": "Propiedades archivadas",
+    "restore": "Restaurar",
+    "archiveList": "Archivar lista",
+    "restoreList": "Restaurar lista",
+    "archivedList": "Esta lista está archivada. Restaúrala para editarla.",
+    "showArchivedLists": "Mostrar listas archivadas",
+    "archived": "Archivada",
+    "archiveRow": "Archivar registro",
+    "archiveSelected": "Archivar seleccionados",
+    "archivedItem": "Este registro está archivado.",
+    "trashCount": "Archivados ({count})",
+    "rowDetail": "Detalle del registro",
+    "rowNotes": "Notas del registro",
+    "notesPlaceholder": "Añade contexto, enlaces o cualquier detalle importante…",
+    "openRow": "Abrir registro",
+    "rowActions": "Acciones del registro",
+    "selectRow": "Seleccionar {name}",
+    "selectPage": "Seleccionar los registros de esta página",
+    "selectedCount": "{count, plural, one {# registro seleccionado} other {# registros seleccionados}}",
+    "clearSelection": "Quitar selección",
+    "dragColumn": "Arrastra para mover. Alt + flechas para mover con teclado.",
+    "dragNamedColumn": "Mover columna {name}",
+    "dragRow": "Arrastra para mover el registro",
+    "manualOrderHint": "Quita la ordenación y la agrupación para mover filas.",
+    "resizeColumn": "Cambiar ancho de {name}",
+    "moveLeft": "Mover {name} a la izquierda",
+    "moveRight": "Mover {name} a la derecha",
+    "moveUp": "Mover registro hacia arriba",
+    "moveDown": "Mover registro hacia abajo",
+    "searchRows": "Buscar en la lista",
+    "findOption": "Buscar o crear opción",
+    "clearValue": "Vaciar celda",
+    "createOption": "Crear «{name}»",
+    "clearFilters": "Quitar filtros",
+    "emptyGroup": "Sin valor",
+    "rowCount": "{count, plural, one {# registro} other {# registros}}",
+    "checkedCount": "{count} marcados",
+    "pagination": "Páginas de la tabla",
+    "range": "{from}–{to} de {total}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "duplicate": "Duplicar",
+    "copyName": "{name} (copia)",
+    "importCsv": "Importar CSV",
+    "exportCsv": "Exportar vista como CSV",
+    "importPreview": "{rows} registros y {columns} propiedades",
+    "importHint": "Se creará una nueva lista. Las columnas se importan como texto y podrás cambiar su tipo después.",
+    "invalidNumber": "Introduce un número válido.",
+    "invalidUrl": "Usa un enlace http:// o https://.",
+    "changeSaved": "Registros actualizados",
+    "undo": "Deshacer",
+    "retry": "Reintentar",
+    "retryMine": "Aplicar mis cambios sobre la última versión",
+    "discardPending": "Descartar los cambios pendientes",
+    "signIn": "Iniciar sesión",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "apply": "Aplicar cambios",
+    "templates": {
+      "tasks": {
+        "name": "Pendientes",
+        "description": "Nombre, estado, prioridad, fecha y notas."
+      },
+      "shopping": {
+        "name": "La compra",
+        "description": "Producto, cantidad, lugar, categoría y comprado."
+      },
+      "packing": {
+        "name": "Equipaje",
+        "description": "Artículo, cantidad, categoría y prioridad."
+      },
+      "blank": {
+        "name": "Lista en blanco",
+        "description": "Nombre y notas. El resto lo decides tú."
+      }
+    },
+    "types": {
+      "title": "Nombre principal",
+      "text": "Texto",
+      "number": "Número",
+      "checkbox": "Casilla",
+      "select": "Selección",
+      "multiSelect": "Selección múltiple",
+      "status": "Estado",
+      "date": "Fecha",
+      "url": "Enlace",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "currency": "Importe",
+      "percent": "Porcentaje",
+      "rating": "Valoración"
+    },
+    "colors": {
+      "gray": "Gris",
+      "blue": "Azul",
+      "green": "Verde",
+      "yellow": "Amarillo",
+      "orange": "Naranja",
+      "red": "Rojo",
+      "pink": "Rosa",
+      "purple": "Morado"
+    },
+    "icons": {
+      "table": "Tabla",
+      "check": "Casilla",
+      "basket": "Cesta",
+      "plane": "Avión",
+      "book": "Libro",
+      "briefcase": "Maletín",
+      "heart": "Corazón",
+      "bolt": "Rayo",
+      "pin": "Marcador",
+      "tag": "Etiqueta"
+    },
+    "operators": {
+      "contains": "Contiene",
+      "equals": "Es",
+      "notEquals": "No es",
+      "empty": "Está vacío",
+      "notEmpty": "No está vacío",
+      "gt": "Es mayor que",
+      "lt": "Es menor que"
+    },
+    "errors": {
+      "UNAUTHORIZED": "Tu sesión terminó. Inicia sesión para sincronizar tus listas.",
+      "UNAVAILABLE": "No pudimos guardar los cambios. Se conservan en esta pestaña para reintentarlo.",
+      "CONFLICT": "Otra pestaña cambió estos datos. Puedes aplicar tu cambio sobre la última versión o descartar los cambios pendientes.",
+      "TYPE_CONVERSION": "Algunos valores no se pueden convertir al tipo elegido. Los datos guardados se mantienen intactos.",
+      "LIMIT_REACHED": "Se alcanzó un límite: 100 listas, 1000 registros por lista, 40 propiedades activas o 12 vistas. Una celda admite 2000 caracteres.",
+      "DUPLICATE_NAME": "Usa nombres distintos y no vacíos para las propiedades u opciones.",
+      "TITLE_REQUIRED": "La lista necesita una propiedad de nombre principal, siempre visible y activa.",
+      "IMPORT_ERROR": "No pudimos importar el CSV. Revisa las cabeceras, las comillas y el número de columnas en cada fila.",
+      "VALIDATION_ERROR": "Revisa los valores: deben corresponder al tipo y las opciones de cada propiedad.",
+      "NOT_FOUND": "El registro o la lista ya no está disponible en este espacio.",
+      "ARCHIVED": "Restaura la lista antes de editarla.",
+      "PASTE_BOUNDS": "Pega un máximo de 500 celdas dentro de las filas y columnas existentes. Añade filas si las necesitas.",
+      "PASTE_INVALID": "Los datos pegados no corresponden a los tipos u opciones de las columnas."
+    },
+    "chooseValue": "Seleccionar",
+    "searchOptions": "Buscar opciones",
+    "noOptionsFound": "No hay opciones que coincidan",
+    "editOptions": "Editar opciones",
+    "done": "Listo",
+    "chooseDate": "Elegir fecha",
+    "dateValue": "Fecha (AAAA-MM-DD)",
+    "datePlaceholder": "AAAA-MM-DD",
+    "invalidDate": "Introduce una fecha válida en formato AAAA-MM-DD.",
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "month": "Mes",
+    "year": "Año",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "currencyUnit": "Moneda",
+    "filterMode": "Coincidencia de filtros",
+    "filterAny": "Cumplir cualquiera de los filtros",
+    "invalidPercent": "Usa un valor entre 0 y 100.",
+    "invalidEmail": "Introduce un correo válido.",
+    "invalidPhone": "Introduce un número de teléfono válido.",
+    "ratingValue": "{value} de 5",
+    "sendEmail": "Escribir correo",
+    "callNumber": "Llamar",
+    "openLink": "Abrir enlace",
+    "itemOptions": "Opciones de {name}",
+    "addFavorite": "Añadir a favoritos",
+    "removeFavorite": "Quitar de favoritos",
+    "favorites": "Favoritos",
+    "duplicateList": "Duplicar lista",
+    "rename": "Cambiar nombre",
+    "openNewTab": "Abrir en una pestaña nueva",
+    "saveName": "Guardar nombre",
+    "duplicating": "Duplicando lista…",
+    "bulkEdit": "Editar selección",
+    "bulkProperty": "Propiedad a actualizar",
+    "bulkValue": "Nuevo valor",
+    "applyToSelected": "Aplicar a {count} registros",
+    "bulkHint": "Se actualizará solo esta propiedad en los registros seleccionados.",
+    "clearSelectedCells": "Vaciar propiedad",
+    "calculate": "Calcular {name}",
+    "calculation": "Cálculo",
+    "recordCreated": "Creado",
+    "recordUpdated": "Última edición",
+    "duplicateSelected": "Duplicar seleccionados",
+    "selectAllMatches": "Seleccionar los {count} resultados",
+    "calculationKinds": {
+      "none": "Sin cálculo",
+      "count": "Contar valores",
+      "sum": "Suma",
+      "average": "Promedio",
+      "min": "Mínimo",
+      "max": "Máximo",
+      "checked": "Casillas marcadas"
+    },
+    "itemName": "Nombre",
+    "archivedOptions": "Opciones archivadas",
+    "archivedOptionsHint": "Los registros conservan sus valores. Restaura una opción para volver a utilizarla.",
+    "optionLimit": "Esta propiedad admite hasta 100 opciones, incluidas las archivadas.",
+    "deleteList": "Eliminar lista",
+    "deleteRow": "Eliminar registro",
+    "deletePermanently": "Eliminar definitivamente",
+    "deleteListWarning": "Se eliminará «{name}» junto con todos sus registros, incluidos los archivados. Esta acción no se puede deshacer.",
+    "deleteRowWarning": "Se eliminará definitivamente «{name}». Esta acción no se puede deshacer."
   }
 }

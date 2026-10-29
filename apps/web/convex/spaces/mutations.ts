@@ -89,6 +89,7 @@ export const createFirstSpace = internalMutation({
     const existing = await ctx.db
       .query("spaces")
       .withIndex("by_owner_id", (q) => q.eq("owner_id", ownerId))
+      .filter((q) => q.eq(q.field("deleted_at"), undefined))
       .first();
     if (existing && !existing.deleted_at) {
       throw new ConvexError({

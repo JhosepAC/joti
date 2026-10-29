@@ -74,6 +74,22 @@
   --error: #DC2626;
 
   --focus-ring: rgba(100, 116, 139, 0.25);
+
+  /* Elevation rings (see SKILLS/better-ui/surfaces.md). Borders are for
+     structure, shadows for depth; pair each ring with a transparent border in
+     the markup so forced-colors mode still draws an edge. */
+  --shadow-border:
+    0px 0px 0px 1px oklch(0 0 0 / 0.06),
+    0px 1px 2px -1px oklch(0 0 0 / 0.06),
+    0px 2px 4px 0px oklch(0 0 0 / 0.04);
+  --shadow-border-hover:
+    0px 0px 0px 1px oklch(0 0 0 / 0.08),
+    0px 1px 2px -1px oklch(0 0 0 / 0.08),
+    0px 2px 4px 0px oklch(0 0 0 / 0.06);
+  --shadow-border-strong:
+    0px 0px 0px 1px oklch(0 0 0 / 0.1),
+    0px 1px 2px -1px oklch(0 0 0 / 0.1),
+    0px 4px 8px -2px oklch(0 0 0 / 0.08);
 }
 
 /* ==========================================================================
@@ -112,25 +128,44 @@
   }
 }
 
-/* Rocket idle float (first-space CTA icon) */
-@keyframes rocket-hover {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-2px) rotate(-8deg);
+/* Staged entrances for the space onboarding (see
+   SKILLS/better-ui/enter-exit.md). The hidden state lives in the `from`
+   keyframe, so an item whose animation never runs stays visible. Reduced motion
+   keeps only the opacity fade; movement, scale and blur are gated. */
+@keyframes nook-enter-fade {
+  from {
+    opacity: 0;
   }
 }
 
-.animate-rocket {
-  animation: rocket-hover 2.4s ease-in-out infinite;
+@keyframes nook-enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .animate-rocket {
-    animation: none;
+.nook-enter {
+  animation: nook-enter-fade 300ms ease-out both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nook-enter {
+    animation-name: nook-enter-up;
   }
+}
+
+.nook-enter-1 {
+  animation-delay: 0ms;
+}
+
+.nook-enter-2 {
+  animation-delay: 100ms;
+}
+
+.nook-enter-3 {
+  animation-delay: 200ms;
 }
 
 /* Base Headings Default to Varela Round */

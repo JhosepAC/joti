@@ -39,3 +39,6 @@ yarn-error.log*
 
 # IDE
 .idea
+
+# Local visual review artifacts
+.taste-skill/

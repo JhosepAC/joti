@@ -1,148 +1,116 @@
 "use client";
 
-import * as React from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useResetPassword } from "../hooks/use-reset-password";
+import { AuthAlert, AuthField, AuthHeader, AuthSubmit } from "./auth-controls";
 
-export const ResetPasswordFlow: React.FC = () => {
+export function ResetPasswordFlow() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  // Keep the initial token after removing it from browser history.
+  const [token] = useState(() => searchParams.get("token"));
   const t = useTranslations("auth.resetPassword");
+  const ui = useTranslations("auth.ui");
+  const flow = useResetPassword(token);
+  useEffect(() => {
+    if (!token || !(flow.tokenValid === false || flow.isSuccess)) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("token");
+    window.history.replaceState(
+      window.history.state,
+      "",
+      url.pathname + url.search + url.hash,
+    );
+  }, [token, flow.tokenValid, flow.isSuccess]);
 
-  const {
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
-    errors,
-    isLoading,
-    isSuccess,
-    tokenValid,
-    handleSubmit,
-  } = useResetPassword(token);
-
-  // The token arrives by email link, which puts it in history as a side
-  // effect. Once it is consumed (success) or known-dead (invalid/expired),
-  // strip it from the URL so it does not linger in history, Referer headers
-  // or logs. State already holds what the UI needs, so no reload occurs.
-  React.useEffect(() => {
-    if (typeof window === "undefined" || !token) return;
-    if (tokenValid === false || isSuccess) {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("token");
-      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
-    }
-  }, [token, tokenValid, isSuccess]);
-
-  if (!token) {
+  if (flow.isSuccess)
     return (
-      <div className="w-full max-w-[460px] mx-auto py-8 space-y-6">
-        <div className="p-4 bg-red-50 border border-error/20 rounded-2xl text-xs text-error">
-          {t("missingToken")}
-        </div>
-        <Link href="/auth/forgot-password" className="block">
-          <Button variant="primary" className="w-full h-11 rounded-full">{t("requestNew")}</Button>
+      <div className="auth-form auth-enter">
+        <AuthHeader title={t("successTitle")}>
+          {t("successDescription")}
+        </AuthHeader>
+        <Link href="/auth/login" className="auth-submit">
+          {t("signIn")}
         </Link>
       </div>
     );
-  }
-
-  if (tokenValid === false) {
+  if (!token || flow.tokenValid === false)
     return (
-      <div className="w-full max-w-[460px] mx-auto py-8 space-y-6">
-        <header>
-          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-text-primary font-heading">{t("expiredTitle")}</h1>
-          <p className="text-sm font-light text-text-secondary mt-2">{t("expiredDescription")}</p>
-        </header>
-        {errors.general && <div className="p-3.5 bg-red-50 border border-error/20 rounded-2xl text-xs text-error">{errors.general}</div>}
-        <Link href="/auth/forgot-password" className="block">
-          <Button variant="primary" className="w-full h-11 rounded-full">{t("requestNew")}</Button>
+      <div className="auth-form auth-enter">
+        <AuthHeader title={t("expiredTitle")}>
+          {!token ? t("missingToken") : t("expiredDescription")}
+        </AuthHeader>
+        <Link href="/auth/forgot-password" className="auth-submit">
+          {t("requestNew")}
         </Link>
-        <Link href="/auth/login" className="block text-center text-xs text-text-secondary hover:text-text-primary hover:underline">
+        <p className="auth-footer">
+          <Link href="/auth/login">{t("backToSignIn")}</Link>
+        </p>
+      </div>
+    );
+  if (flow.verificationError)
+    return (
+      <div className="auth-form">
+        <AuthHeader title={ui("connectionTitle")}>
+          {ui("connectionDescription")}
+        </AuthHeader>
+        <AuthSubmit type="button" onClick={flow.retryVerification}>
+          {ui("retry")}
+        </AuthSubmit>
+        <Link href="/auth/login" className="auth-text-link">
           {t("backToSignIn")}
         </Link>
       </div>
     );
-  }
-
-  if (isSuccess) {
+  if (flow.tokenValid === null)
     return (
-      <div className="w-full max-w-[460px] mx-auto py-8 space-y-6">
-        <header>
-          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-text-primary font-heading">{t("successTitle")}</h1>
-          <p className="text-sm font-light text-text-secondary mt-2">
-            {t("successDescription")}
-          </p>
-        </header>
-        <Link href="/auth/login" className="block">
-          <Button variant="primary" className="w-full h-12 rounded-full">{t("signIn")}</Button>
-        </Link>
+      <div className="auth-form" role="status">
+        <AuthHeader title={t("verifying")} />{" "}
+        <p className="auth-hint">{ui("pleaseWait")}</p>
       </div>
     );
-  }
-
-  if (tokenValid === null) {
-    return (
-      <div className="w-full max-w-[460px] mx-auto py-8">
-        <p className="text-sm text-text-secondary animate-pulse">{t("verifying")}</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full max-w-[460px] mx-auto py-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-[-0.03em] text-text-primary font-heading leading-tight">{t("title")}</h1>
-        <p className="text-sm font-light text-text-secondary mt-2">{t("subtitle")}</p>
-      </header>
-
-      {errors.general && (
-        <div className="mb-6 p-3.5 bg-red-50 border border-error/20 rounded-2xl text-xs text-error">{errors.general}</div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-        <div className="space-y-2.5">
-          <Label htmlFor="password">{t("newPassword")}</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            hasError={Boolean(errors.password)}
-            autoComplete="new-password"
-            required
-          />
-          {errors.password && <p className="text-xs text-error pl-3">{errors.password}</p>}
-          <p className="text-[11px] text-text-muted pl-1">{t("newPasswordHint")}</p>
-        </div>
-
-        <div className="space-y-2.5">
-          <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="••••••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            hasError={Boolean(errors.confirmPassword)}
-            autoComplete="new-password"
-            required
-          />
-          {errors.confirmPassword && <p className="text-xs text-error pl-3">{errors.confirmPassword}</p>}
-        </div>
-
-        <div className="pt-2">
-          <Button type="submit" variant="primary" isLoading={isLoading} className="w-full h-12 text-sm font-medium rounded-full">
-            {t("submit")}
-          </Button>
-        </div>
-      </form>
-    </div>
+    <form
+      className="auth-form auth-enter"
+      onSubmit={flow.handleSubmit}
+      noValidate
+      aria-busy={flow.isLoading}
+    >
+      <AuthHeader title={t("title")}>{t("subtitle")}</AuthHeader>
+      <AuthAlert>{flow.errors.general}</AuthAlert>
+      <div className="auth-fields">
+        <AuthField
+          id="new-password"
+          name="password"
+          type="password"
+          label={t("newPassword")}
+          value={flow.password}
+          onChange={(e) => flow.setPassword(e.target.value)}
+          error={flow.errors.password}
+          hint={t("newPasswordHint")}
+          autoComplete="new-password"
+          disabled={flow.isLoading}
+          required
+        />
+        <AuthField
+          id="confirm-password"
+          name="confirmPassword"
+          type="password"
+          label={t("confirmPassword")}
+          value={flow.confirmPassword}
+          onChange={(e) => flow.setConfirmPassword(e.target.value)}
+          error={flow.errors.confirmPassword}
+          autoComplete="new-password"
+          disabled={flow.isLoading}
+          required
+        />
+      </div>
+      <AuthSubmit busy={flow.isLoading}>{t("submit")}</AuthSubmit>
+      <p className="auth-footer">
+        <Link href="/auth/login">{t("backToSignIn")}</Link>
+      </p>
+    </form>
   );
-};
+}

@@ -1,168 +1,115 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Divider } from "@/components/ui/divider";
-import { SocialLoginButton } from "./social-login-button";
 import { useLogin } from "../hooks/use-login";
+import {
+  AuthAlert,
+  AuthField,
+  AuthHeader,
+  AuthSubmit,
+  VerificationInput,
+} from "./auth-controls";
 
-export const LoginForm: React.FC = () => {
+export function LoginForm() {
   const t = useTranslations("auth.login");
-  const tCommon = useTranslations("common.actions");
-  const {
-    credentials,
-    errors,
-    isLoading,
-    isOAuthLoading,
-    isEntering,
-    requiresActivation,
-    activationCode,
-    setActivationCode,
-    pendingEmail,
-    resendCooldown,
-    handleActivationVerify,
-    handleResendActivation,
-    handleFieldChange,
-    handleCredentialsSubmit,
-    handleGoogleLogin,
-  } = useLogin();
+  const ui = useTranslations("auth.ui");
+  const flow = useLogin();
+  const busy = flow.isLoading || flow.isEntering;
+  if (flow.requiresActivation && flow.pendingEmail)
+    return (
+      <form
+        className="auth-form auth-enter"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          void flow.handleActivationVerify();
+        }}
+        aria-busy={busy}
+      >
+        <AuthHeader title={ui("activateTitle")}>
+          {t("activationTitle", { email: flow.pendingEmail })}
+        </AuthHeader>
+        <AuthAlert>{flow.errors.general}</AuthAlert>
+        {flow.activationSent && (
+          <AuthAlert success>{ui("activationSent")}</AuthAlert>
+        )}
+        <VerificationInput
+          value={flow.activationCode}
+          onChange={flow.setActivationCode}
+          disabled={busy}
+        />
+        <AuthSubmit busy={busy} disabled={flow.activationCode.length !== 6}>
+          {t("activationVerify")}
+        </AuthSubmit>
+        <button
+          className="auth-text-button"
+          type="button"
+          disabled={busy || flow.resendCooldown > 0}
+          onClick={() => void flow.handleResendActivation()}
+        >
+          {flow.resendCooldown
+            ? t("activationResendIn", { seconds: flow.resendCooldown })
+            : flow.activationSent
+              ? t("activationResend")
+              : t("activationSend")}
+        </button>
+        <button
+          className="auth-back"
+          type="button"
+          onClick={flow.cancelActivation}
+          disabled={busy}
+        >
+          {ui("backToLogin")}
+        </button>
+      </form>
+    );
 
   return (
-    <div className="w-full max-w-[460px] mx-auto py-8">
-      {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-3xl md:text-[2.25rem] font-semibold tracking-[-0.03em] text-text-primary font-heading leading-tight">
-          {t("title")}
-        </h1>
-        <p className="text-[0.95rem] font-light text-text-secondary mt-2">
-          {t("subtitle")}
-        </p>
-      </header>
-
-      {/* General Form Error Alert */}
-      {errors.general && (
-        <div className="mb-6 p-3.5 bg-red-50 border border-error/20 rounded-2xl text-xs text-error">
-          {errors.general}
-        </div>
-      )}
-
-      {/* Activation Required (inactive account) */}
-      {requiresActivation && pendingEmail && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
-          <p className="text-xs font-medium text-amber-900">{t("activationTitle", { email: pendingEmail })}</p>
-          <Input
-            placeholder="123456"
-            value={activationCode}
-            onChange={(e) => setActivationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            inputMode="numeric"
-            className="tracking-[0.3em] text-center"
-          />
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="flex-1 h-9 rounded-full text-xs"
-              onClick={handleResendActivation}
-              disabled={isLoading || resendCooldown > 0}
-            >
-              {resendCooldown > 0 ? t("activationResendIn", { seconds: resendCooldown }) : t("activationResend")}
-            </Button>
-            <Button variant="primary" className="flex-1 h-9 rounded-full text-xs" onClick={handleActivationVerify} isLoading={isLoading}>
-              {t("activationVerify")}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Traditional Form */}
-      <form onSubmit={handleCredentialsSubmit} className="space-y-5" noValidate aria-busy={isEntering}>
-        {/* Email Field */}
-        <div className="space-y-2.5">
-          <Label htmlFor="email" className="inline-block mb-1">
-            {t("email")}
-          </Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="name@example.com"
-            value={credentials.email}
-            onChange={(e) => handleFieldChange("email", e.target.value)}
-            hasError={Boolean(errors.email)}
-            autoComplete="email"
-            required
-          />
-          {errors.email && (
-            <p className="text-xs text-error pl-3">{errors.email}</p>
-          )}
-        </div>
-
-        {/* Password Field */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between mb-1">
-            <Label htmlFor="password">{t("password")}</Label>
-            <Link
-              href="/auth/forgot-password"
-              className="text-xs font-normal text-text-secondary hover:text-text-primary hover:underline transition-colors"
-            >
-              {t("forgotPassword")}
-            </Link>
-          </div>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            value={credentials.password}
-            onChange={(e) => handleFieldChange("password", e.target.value)}
-            hasError={Boolean(errors.password)}
-            autoComplete="current-password"
-            required
-          />
-          {errors.password && (
-            <p className="text-xs text-error pl-3">{errors.password}</p>
-          )}
-        </div>
-
-        {/* Submit Button */}
-        <div className="pt-2">
-          <Button
-            type="submit"
-            variant="primary"
-            isLoading={isLoading || isEntering}
-            disabled={isOAuthLoading}
-            className="w-full h-12 text-sm font-medium rounded-full"
-          >
-            {t("submit")}
-          </Button>
-        </div>
-      </form>
-
-      {/* Divider */}
-      <Divider>{tCommon("or")}</Divider>
-
-      {/* Google OAuth Login */}
-      <SocialLoginButton
-        provider="google"
-        isRecommended={true}
-        isLoading={isOAuthLoading}
-        disabled={isLoading}
-        onClick={handleGoogleLogin}
-      />
-
-      {/* Footer */}
-      <footer className="text-center mt-10 text-[0.825rem] font-light text-text-secondary">
-        {t("noAccount")}{" "}
-        <Link
-          href="/auth/register"
-          className="text-text-primary font-medium hover:underline transition-all"
-        >
-          {t("createAccount")}
-        </Link>
-      </footer>
-    </div>
+    <form
+      className="auth-form"
+      onSubmit={flow.handleCredentialsSubmit}
+      noValidate
+      aria-busy={busy}
+    >
+      <AuthHeader title={t("title")}>{t("subtitle")}</AuthHeader>
+      <AuthAlert>{flow.errors.general}</AuthAlert>
+      <div className="auth-fields">
+        <AuthField
+          id="email"
+          name="email"
+          type="email"
+          label={t("email")}
+          placeholder={ui("emailPlaceholder")}
+          value={flow.credentials.email}
+          onChange={(e) => flow.handleFieldChange("email", e.target.value)}
+          error={flow.errors.email}
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          disabled={busy}
+          required
+        />
+        <AuthField
+          id="password"
+          name="password"
+          type="password"
+          label={t("password")}
+          value={flow.credentials.password}
+          onChange={(e) => flow.handleFieldChange("password", e.target.value)}
+          error={flow.errors.password}
+          autoComplete="current-password"
+          disabled={busy}
+          required
+          action={
+            <Link href="/auth/forgot-password">{t("forgotPassword")}</Link>
+          }
+        />
+      </div>
+      <AuthSubmit busy={busy}>{t("submit")}</AuthSubmit>
+      <p className="auth-footer">
+        {t("noAccount")} <Link href="/auth/register">{t("createAccount")}</Link>
+      </p>
+    </form>
   );
-};
+}

@@ -9,6 +9,7 @@ import {
   validateUsername,
 } from "./validators";
 import { LOCKOUT_DURATION_MS, MAX_FAILED_ATTEMPTS } from "./constants";
+import { findGrantByHash, requireUsableGrant } from "./grantStore";
 
 // ──────────────────────────────────────────────────────────
 // Internal — atomic user + profile creation (called by public action)
@@ -17,6 +18,7 @@ import { LOCKOUT_DURATION_MS, MAX_FAILED_ATTEMPTS } from "./constants";
 export const createUserInternal = internalMutation({
   args: {
     email: v.string(),
+    claim_hash: v.string(),
     password_hash: v.string(),
     username: v.string(),
     display_name: v.string(),
@@ -27,6 +29,8 @@ export const createUserInternal = internalMutation({
   },
   handler: async (ctx, args) => {
     const cleanEmail = validateEmail(args.email);
+    const proof = await findGrantByHash(ctx, args.claim_hash);
+    requireUsableGrant(proof, { email: cleanEmail, scope: "account" });
     const cleanUsername = validateUsername(args.username);
     const cleanDisplayName = validateDisplayName(args.display_name);
     const cleanBio = validateBio(args.bio);
@@ -40,7 +44,9 @@ export const createUserInternal = internalMutation({
     if (existingEmail && !existingEmail.deleted_at) {
       // Generic on purpose: this mutation is reachable from the public
       // `register` action, so a distinct message would be an existence oracle.
-      throw new ConvexError("Could not create an account with the provided details.");
+      throw new ConvexError(
+        "Could not create an account with the provided details.",
+      );
     }
 
     const existingUsername = await ctx.db
@@ -49,7 +55,9 @@ export const createUserInternal = internalMutation({
       .first();
     if (existingUsername) {
       // Same generic message as above (see the email branch).
-      throw new ConvexError("Could not create an account with the provided details.");
+      throw new ConvexError(
+        "Could not create an account with the provided details.",
+      );
     }
 
     const userId = await ctx.db.insert("auth_users", {
@@ -76,6 +84,7 @@ export const createUserInternal = internalMutation({
       .first();
     if (verification) await ctx.db.delete(verification._id);
 
+    await ctx.db.delete(proof._id);
     return { userId };
   },
 });
@@ -113,6 +122,7 @@ export const activateUser = internalMutation({
 export const completeProfile = internalMutation({
   args: {
     userId: v.id("auth_users"),
+    claim_hash: v.string(),
     username: v.string(),
     display_name: v.string(),
     bio: v.optional(v.string()),
@@ -128,7 +138,10 @@ export const completeProfile = internalMutation({
 
     const user = await ctx.db.get(args.userId);
     if (!user || user.deleted_at) throw new ConvexError("Account not found.");
-    if (!user.email_verified_at) throw new ConvexError("Email not verified. Please verify first.");
+    const proof = await findGrantByHash(ctx, args.claim_hash);
+    requireUsableGrant(proof, { email: user.email, scope: "account" });
+    if (!user.email_verified_at)
+      throw new ConvexError("Email not verified. Please verify first.");
 
     const existingProfile = await ctx.db
       .query("auth_user_profiles")
@@ -159,6 +172,7 @@ export const completeProfile = internalMutation({
       .first();
     if (verification) await ctx.db.delete(verification._id);
 
+    await ctx.db.delete(proof._id);
     return { profileId };
   },
 });
@@ -187,7 +201,10 @@ export const handleFailedLogin = internalMutation({
     if (!user) return;
     // Capped: the counter is only a tripwire for arming the lockout, and an
     // unbounded value would keep growing under a sustained attack.
-    const newAttempts = Math.min(user.failed_login_attempts + 1, MAX_FAILED_ATTEMPTS);
+    const newAttempts = Math.min(
+      user.failed_login_attempts + 1,
+      MAX_FAILED_ATTEMPTS,
+    );
     let lockedUntil = user.locked_until;
     const alreadyLocked = lockedUntil !== undefined && lockedUntil > Date.now();
     // Arm the lockout only on the transition into it. Re-arming on every
@@ -232,15 +249,19 @@ export const upsertOAuthAccount = internalMutation({
     const existing = await ctx.db
       .query("auth_oauth_accounts")
       .withIndex("by_provider_and_account", (q) =>
-        q.eq("provider", args.provider).eq("provider_account_id", args.provider_account_id),
+        q
+          .eq("provider", args.provider)
+          .eq("provider_account_id", args.provider_account_id),
       )
       .first();
 
     if (existing) {
       await ctx.db.patch(existing._id, {
         provider_email: args.provider_email ?? existing.provider_email,
-        access_token_encrypted: args.access_token_encrypted ?? existing.access_token_encrypted,
-        refresh_token_encrypted: args.refresh_token_encrypted ?? existing.refresh_token_encrypted,
+        access_token_encrypted:
+          args.access_token_encrypted ?? existing.access_token_encrypted,
+        refresh_token_encrypted:
+          args.refresh_token_encrypted ?? existing.refresh_token_encrypted,
         token_expires_at: args.token_expires_at ?? existing.token_expires_at,
       });
       return { oauthAccountId: existing._id, created: false };

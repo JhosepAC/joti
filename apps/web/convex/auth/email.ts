@@ -10,14 +10,13 @@
  */
 
 import {
-  oauthOnlyNoticeCopy,
   passwordChangedCopy,
   passwordResetCopy,
   verificationCopy,
   type EmailLocale,
 } from "./emailCopy";
 
-const RESEND_FROM = process.env.RESEND_FROM ?? "Joti <onboarding@resend.dev>";
+const RESEND_FROM = process.env.RESEND_FROM ?? "Nook <onboarding@resend.dev>";
 const REPLY_TO = process.env.RESEND_REPLY_TO ?? "jhosepjamil@gmail.com";
 
 export type EmailResult = { delivered: boolean; reason?: string };
@@ -36,7 +35,9 @@ async function sendEmail(
   if (!key) {
     // Fail closed: without a provider we must not pretend the mail went out,
     // and we must not fall back to logging the secret payload.
-    console.error("[email] RESEND_API_KEY is not configured; message not sent.");
+    console.error(
+      "[email] RESEND_API_KEY is not configured; message not sent.",
+    );
     return { delivered: false, reason: "not_configured" };
   }
   try {
@@ -62,7 +63,10 @@ async function sendEmail(
     }
     return { delivered: true };
   } catch (e) {
-    console.error("[email] transport error", e instanceof Error ? e.message : "unknown");
+    console.error(
+      "[email] transport error",
+      e instanceof Error ? e.message : "unknown",
+    );
     return { delivered: false, reason: "transport_error" };
   }
 }
@@ -82,7 +86,12 @@ export async function sendPasswordResetEmail(
   locale: EmailLocale = "es",
 ): Promise<EmailResult> {
   const copy = passwordResetCopy(locale);
-  return sendEmail(to, copy.subject, copy.htmlBody(to, resetLink), copy.textBody(to, resetLink));
+  return sendEmail(
+    to,
+    copy.subject,
+    copy.htmlBody(to, resetLink),
+    copy.textBody(to, resetLink),
+  );
 }
 
 export async function sendPasswordChangedEmail(
@@ -90,13 +99,5 @@ export async function sendPasswordChangedEmail(
   locale: EmailLocale = "es",
 ): Promise<EmailResult> {
   const copy = passwordChangedCopy(locale);
-  return sendEmail(to, copy.subject, copy.htmlBody(to), copy.textBody(to));
-}
-
-export async function sendOAuthOnlyAccountNotice(
-  to: string,
-  locale: EmailLocale = "es",
-): Promise<EmailResult> {
-  const copy = oauthOnlyNoticeCopy(locale);
   return sendEmail(to, copy.subject, copy.htmlBody(to), copy.textBody(to));
 }

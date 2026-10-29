@@ -6,7 +6,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { ValidationErrors } from "../types/auth.types";
 import { validateForgotPasswordEmail } from "../validations/forgot-password.schema";
-import { getAuthErrorCode, useAuthErrorMessage } from "../utils/get-auth-error-message";
+import {
+  getAuthErrorCode,
+  getRetryAfterSeconds,
+  useAuthErrorMessage,
+} from "../utils/get-auth-error-message";
 import { useValidationTranslator } from "@/i18n/translate";
 
 export function useForgotPassword() {
@@ -16,7 +20,9 @@ export function useForgotPassword() {
   const locale = useLocale();
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   const [isSuccess, setIsSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -48,6 +54,10 @@ export function useForgotPassword() {
   };
 
   const handleChange = (value: string) => {
+    if (value.trim().toLowerCase() !== email.trim().toLowerCase()) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setCooldown(0);
+    }
     setEmail(value);
     if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
     if (errors.general) setErrors((p) => ({ ...p, general: undefined }));
@@ -56,7 +66,10 @@ export function useForgotPassword() {
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (cooldown > 0) return;
-    const { isValid, errors: vErrors } = validateForgotPasswordEmail(email, tValidation);
+    const { isValid, errors: vErrors } = validateForgotPasswordEmail(
+      email,
+      tValidation,
+    );
     if (!isValid) {
       setErrors(vErrors);
       return;
@@ -77,9 +90,7 @@ export function useForgotPassword() {
         const msg = tErrors(err);
         setErrors({ general: msg });
         // Parse wait seconds from message e.g. "Please wait 42s"
-        const match = msg.match(/(\d+)s/);
-        const wait = match?.[1] ? parseInt(match[1], 10) : 60;
-        startCooldown(wait);
+        startCooldown(getRetryAfterSeconds(err));
       } else {
         setErrors({ general: tErrors(err, tGeneral("resetLinkFailed")) });
       }
@@ -92,7 +103,6 @@ export function useForgotPassword() {
   const handleResend = async () => {
     if (cooldown > 0 || status === "loading") return;
     // Reuse same submit logic but without re-validating success state
-    setIsSuccess(false);
     await handleSubmit();
   };
 
@@ -105,5 +115,9 @@ export function useForgotPassword() {
     cooldown,
     handleResend,
     handleSubmit,
+    changeEmail: () => {
+      setIsSuccess(false);
+      setErrors({});
+    },
   };
 }

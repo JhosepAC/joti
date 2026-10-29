@@ -16,7 +16,7 @@ const RESERVED = new Set([
   "signup",
   "settings",
   "dashboard",
-  "joti",
+  "nook",
   "help",
   "support",
   "terms",
@@ -51,24 +51,37 @@ export function validateRegisterPayload(
   if (!password) errors.password = t("password.required");
   else if (password.length < 12) errors.password = t("password.tooShort");
   // Bytes, not chars: the server caps passwords at 72 UTF-8 bytes (bcrypt limit).
-  else if (new TextEncoder().encode(password).length > 72) errors.password = t("password.tooLongBytes");
-  else if (password.toLowerCase().includes(email.split("@")[0] ?? "" ) && (email.split("@")[0]?.length ?? 0) >= 3) {
+  else if (new TextEncoder().encode(password).length > 72)
+    errors.password = t("password.tooLongBytes");
+  else if (
+    password.toLowerCase().includes(email.split("@")[0] ?? "") &&
+    (email.split("@")[0]?.length ?? 0) >= 3
+  ) {
     errors.password = t("password.containsEmail");
-  } else if (username && password.toLowerCase().includes(username) && username.length >= 3) {
+  } else if (
+    username &&
+    password.toLowerCase().includes(username) &&
+    username.length >= 3
+  ) {
     errors.password = t("password.containsUsername");
   }
 
   if (!username) errors.username = t("username.required");
-  else if (username.length < 3 || username.length > 20) errors.username = t("username.length");
-  else if (!USERNAME_REGEX.test(username)) errors.username = t("username.charset");
+  else if (username.length < 3 || username.length > 20)
+    errors.username = t("username.length");
+  else if (!USERNAME_REGEX.test(username))
+    errors.username = t("username.charset");
   else if (RESERVED.has(username)) errors.username = t("username.reserved");
 
   if (!displayName) errors.displayName = t("displayName.required");
-  else if (displayName.length > 100) errors.displayName = t("displayName.tooLong");
-  else if (/[\u0000-\u001F\u007F-\u009F]/.test(displayName)) errors.displayName = t("displayName.invalidChars");
+  else if (displayName.length > 100)
+    errors.displayName = t("displayName.tooLong");
+  else if (/[\u0000-\u001F\u007F-\u009F]/.test(displayName))
+    errors.displayName = t("displayName.invalidChars");
 
   if (bio && bio.length > 500) errors.bio = t("bio.tooLong");
-  else if (bio && /[\u0000-\u001F\u007F-\u009F]/.test(bio)) errors.bio = t("bio.invalidChars");
+  else if (bio && /[\u0000-\u001F\u007F-\u009F]/.test(bio))
+    errors.bio = t("bio.invalidChars");
 
   return { isValid: Object.keys(errors).length === 0, errors };
 }

@@ -2,7 +2,6 @@
 // bodies, unknown locales fall back to Spanish, and no template leaks secrets.
 import { describe, expect, test } from "vitest";
 import {
-  oauthOnlyNoticeCopy,
   passwordChangedCopy,
   passwordResetCopy,
   resolveEmailLocale,
@@ -24,7 +23,9 @@ describe("email copy", () => {
       expect(copy.htmlBody("123456")).toContain("123456");
       expect(copy.textBody("123456")).toContain("123456");
     }
-    expect(verificationCopy("es").subject).not.toBe(verificationCopy("en").subject);
+    expect(verificationCopy("es").subject).not.toBe(
+      verificationCopy("en").subject,
+    );
   });
 
   test("reset templates embed an escaped link in both locales", () => {
@@ -41,7 +42,6 @@ describe("email copy", () => {
   test("notice templates exist in both locales", () => {
     for (const locale of ["es", "en"] as const) {
       expect(passwordChangedCopy(locale).subject.length).toBeGreaterThan(0);
-      expect(oauthOnlyNoticeCopy(locale).subject.length).toBeGreaterThan(0);
     }
   });
 });

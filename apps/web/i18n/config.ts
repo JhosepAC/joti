@@ -2,7 +2,7 @@
  * Central locale configuration.
  *
  * Strategy (no localized URL segments, to avoid restructuring every route):
- * the active locale lives in the `joti-locale` cookie (read server-side for
+ * the active locale lives in the `nook-locale` cookie (read server-side for
  * SSR/metadata) mirrored to `localStorage` (read client-side). First visit
  * with no stored preference resolves from the system (`Accept-Language`
  * header on the server, `navigator.language` on the client).
@@ -12,8 +12,8 @@ export const LOCALES = ["es", "en"] as const;
 export type AppLocale = (typeof LOCALES)[number];
 
 export const FALLBACK_LOCALE: AppLocale = "es";
-export const LOCALE_COOKIE = "joti-locale";
-export const LOCALE_STORAGE_KEY = "joti-locale";
+export const LOCALE_COOKIE = "nook-locale";
+export const LOCALE_STORAGE_KEY = "nook-locale";
 
 export const LOCALE_LABELS: Record<AppLocale, string> = {
   es: "Español",

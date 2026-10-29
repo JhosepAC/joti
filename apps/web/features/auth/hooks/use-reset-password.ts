@@ -6,7 +6,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { ValidationErrors } from "../types/auth.types";
 import { validateResetPasswordInput } from "../validations/reset-password.schema";
-import { useAuthErrorMessage } from "../utils/get-auth-error-message";
+import {
+  getAuthErrorMessage,
+  useAuthErrorMessage,
+} from "../utils/get-auth-error-message";
 import { useValidationTranslator } from "@/i18n/translate";
 
 export function useResetPassword(token: string | null) {
@@ -17,9 +20,13 @@ export function useResetPassword(token: string | null) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [verificationError, setVerificationError] = useState(false);
+  const [verificationAttempt, setVerificationAttempt] = useState(0);
 
   const verifyAction = useAction(api.auth.passwordReset.verifyResetToken);
   const resetAction = useAction(api.auth.passwordReset.resetPassword);
@@ -28,6 +35,9 @@ export function useResetPassword(token: string | null) {
   const inFlight = useRef(false);
 
   useEffect(() => {
+    setIsSuccess(false);
+    setTokenValid(null);
+    setVerificationError(false);
     if (!token) {
       setTokenValid(false);
       return;
@@ -42,26 +52,28 @@ export function useResetPassword(token: string | null) {
         // by `resetPassword`, which resolves the address itself.
         const r = res as { valid: boolean };
         setTokenValid(r.valid);
-        if (!r.valid) setErrors({ general: tErrors(undefined, tGeneral("resetFailed")) });
       })
       .catch(() => {
-        if (!cancelled) setTokenValid(false);
+        if (!cancelled) setVerificationError(true);
       });
     return () => {
       cancelled = true;
     };
-  }, [token, verifyAction]);
+  }, [token, verifyAction, verificationAttempt]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!token) {
+    if (!token || tokenValid !== true) {
       setErrors({ general: tGeneral("resetFailed") });
       return;
     }
-    const { isValid, errors: vErrors } = validateResetPasswordInput({
-      password,
-      confirmPassword,
-    }, tValidation);
+    const { isValid, errors: vErrors } = validateResetPasswordInput(
+      {
+        password,
+        confirmPassword,
+      },
+      tValidation,
+    );
     if (!isValid) {
       setErrors(vErrors);
       return;
@@ -73,8 +85,16 @@ export function useResetPassword(token: string | null) {
     try {
       await resetAction({ token, password, confirmPassword, locale });
       setIsSuccess(true);
+      setPassword("");
+      setConfirmPassword("");
       setStatus("success");
     } catch (err: unknown) {
+      if (
+        /(?:invalid|expired|already.*used).*reset|reset.*(?:expired|already.*used)/i.test(
+          getAuthErrorMessage(err),
+        )
+      )
+        setTokenValid(false);
       setStatus("error");
       setErrors({ general: tErrors(err, tGeneral("resetFailed")) });
     } finally {
@@ -92,12 +112,19 @@ export function useResetPassword(token: string | null) {
     confirmPassword,
     setConfirmPassword: (v: string) => {
       setConfirmPassword(v);
-      if (errors.confirmPassword) setErrors((p) => ({ ...p, confirmPassword: undefined }));
+      if (errors.confirmPassword)
+        setErrors((p) => ({ ...p, confirmPassword: undefined }));
     },
     errors,
     isLoading: status === "loading",
     isSuccess,
     tokenValid,
+    verificationError,
+    retryVerification: () => {
+      setVerificationError(false);
+      setTokenValid(null);
+      setVerificationAttempt((attempt) => attempt + 1);
+    },
     handleSubmit,
   };
 }

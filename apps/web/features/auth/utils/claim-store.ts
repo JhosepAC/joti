@@ -3,7 +3,8 @@
 /**
  * Carries a claim grant between the steps that rotate it.
  *
- * The app has no session, so there is nothing else to hand the token over with.
+ * Durable sessions live in an HttpOnly cookie. These narrow, short-lived
+ * grants carry authorization between existing Convex operations.
  * `sessionStorage` is used rather than a query parameter on purpose: a URL ends
  * up in browser history, `Referer` headers and server logs, and this token
  * authorises writing to an account.
@@ -20,11 +21,11 @@
  * account grant and vice versa: with a single slot, storing the space grant
  * logged the onboarding out mid-flow, and re-signing in killed the open
  * workspace. Grants are short-lived (15 min) and single-use, so the exposure
- * window is small. Once sessions exist this whole file should go away.
+ * window is small. The durable session can mint fresh account proof on sign-in.
  */
 
-const ACCOUNT_KEY = "joti:claim:account";
-const SPACE_KEY = "joti:claim:space";
+const ACCOUNT_KEY = "nook:claim:account";
+const SPACE_KEY = "nook:claim:space";
 
 export interface AccountGrant {
   email: string;
@@ -87,7 +88,11 @@ export function storeSpaceGrant(slug: string, token: string): void {
 /** Reads the `account` grant without consuming it, so a reload can resume. */
 export function readAccountGrant(): AccountGrant | null {
   const parsed = readJson(ACCOUNT_KEY) as Partial<StoredAccountGrant> | null;
-  if (!parsed || typeof parsed.email !== "string" || typeof parsed.token !== "string") {
+  if (
+    !parsed ||
+    typeof parsed.email !== "string" ||
+    typeof parsed.token !== "string"
+  ) {
     return null;
   }
   if (parsed.token.length === 0) return null;
@@ -105,7 +110,8 @@ export function takeAccountGrant(): AccountGrant | null {
 /** Reads the `space` grant issued for `slug`, without consuming it. */
 export function readSpaceGrant(slug: string): string | null {
   const parsed = readJson(SPACE_KEY) as Partial<StoredSpaceGrant> | null;
-  if (!parsed || typeof parsed.token !== "string" || parsed.slug !== slug) return null;
+  if (!parsed || typeof parsed.token !== "string" || parsed.slug !== slug)
+    return null;
   return parsed.token;
 }
 

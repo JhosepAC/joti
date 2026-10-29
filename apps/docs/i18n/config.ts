@@ -2,8 +2,8 @@ export const LOCALES = ["es", "en"] as const;
 export type AppLocale = (typeof LOCALES)[number];
 
 export const FALLBACK_LOCALE: AppLocale = "es";
-export const LOCALE_COOKIE = "joti-locale";
-export const LOCALE_STORAGE_KEY = "joti-locale";
+export const LOCALE_COOKIE = "nook-locale";
+export const LOCALE_STORAGE_KEY = "nook-locale";
 
 export const LOCALE_LABELS: Record<AppLocale, string> = {
   es: "Español",

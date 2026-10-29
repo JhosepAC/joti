@@ -1,4 +1,4 @@
-import { LoginCredentials, OAuthProvider, RegisterPayload } from "../types/auth.types";
+import { LoginCredentials, RegisterPayload } from "../types/auth.types";
 
 /**
  * Abstraction over Convex auth actions.
@@ -6,9 +6,13 @@ import { LoginCredentials, OAuthProvider, RegisterPayload } from "../types/auth.
  * Uses dynamic import to avoid hard dependency at build time if Convex not configured.
  */
 export interface IAuthService {
-  loginWithCredentials(credentials: LoginCredentials): Promise<{ user: { _id: string; email: string }; profile: unknown }>;
-  registerWithCredentials(payload: RegisterPayload): Promise<{ userId: string }>;
-  loginWithOAuth(provider: OAuthProvider): Promise<void>;
+  loginWithCredentials(
+    credentials: LoginCredentials,
+  ): Promise<{ user: { _id: string; email: string }; profile: unknown }>;
+  registerWithCredentials(
+    payload: RegisterPayload,
+    claim: string,
+  ): Promise<{ userId: string }>;
 }
 
 type ConvexClient = {
@@ -40,8 +44,12 @@ export class AuthService implements IAuthService {
     // so this service is kept for non-hook contexts and as fallback.
     if (convexClient) {
       const api = await getConvexApi();
-      const ref = (api as unknown as { auth: { actions: { login: unknown } } }).auth.actions.login;
-      return (await convexClient.action(ref, payload)) as { user: { _id: string; email: string }; profile: unknown };
+      const ref = (api as unknown as { auth: { actions: { login: unknown } } })
+        .auth.actions.login;
+      return (await convexClient.action(ref, payload)) as {
+        user: { _id: string; email: string };
+        profile: unknown;
+      };
     }
 
     // Fallback: instruct caller to use useAction hook
@@ -50,8 +58,9 @@ export class AuthService implements IAuthService {
     );
   }
 
-  async registerWithCredentials(payload: RegisterPayload) {
+  async registerWithCredentials(payload: RegisterPayload, claim: string) {
     const normalized = {
+      claim,
       email: payload.email.trim().toLowerCase(),
       password: payload.password,
       username: payload.username.trim().toLowerCase(),
@@ -64,26 +73,15 @@ export class AuthService implements IAuthService {
 
     if (convexClient) {
       const api = await getConvexApi();
-      const ref = (api as unknown as { auth: { actions: { register: unknown } } }).auth.actions.register;
+      const ref = (
+        api as unknown as { auth: { actions: { register: unknown } } }
+      ).auth.actions.register;
       return (await convexClient.action(ref, normalized)) as { userId: string };
     }
 
     throw new Error(
       "Convex client not initialized. Use useAction(api.auth.actions.register) in components or call setConvexClient().",
     );
-  }
-
-  async loginWithOAuth(provider: OAuthProvider): Promise<void> {
-    // OAuth redirect will be handled by a Convex httpAction / Next route
-    // For now, redirect to Convex site URL oauth endpoint (to be implemented)
-    if (typeof window !== "undefined") {
-      const siteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL;
-      if (siteUrl) {
-        window.location.href = `${siteUrl}/oauth/${provider}/authorize`;
-        return;
-      }
-    }
-    console.log(`[AuthService] Initiating OAuth flow for: ${provider}`);
   }
 }
 
