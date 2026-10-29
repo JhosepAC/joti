@@ -8,30 +8,19 @@ import {
   daySegment,
   inZone,
   layoutEvents,
-  canonicalTimezone,
   resolveTimezone,
   type CalendarEvent,
 } from "@/convex/calendar/time";
 import { useCalendar } from "../hooks/use-calendar";
 import { addDays, daysFor, navigate, type CalendarView } from "../lib/dates";
 import { EventDialog } from "./event-dialog";
-import { TimezoneSelect } from "./timezone-select";
 import "./calendar.css";
-export function CalendarModule({
-  slug,
-  timezone: initialTimezone,
-}: {
-  slug: string;
-  timezone?: string;
-}) {
+export function CalendarModule({ slug }: { slug: string; timezone?: string }) {
   const t = useTranslations("calendar"),
     locale = useLocale();
   const timeline = useRef<HTMLDivElement>(null);
-  const [timezonePreference, setTimezonePreference] = useState(
-      canonicalTimezone(initialTimezone) ?? "system",
-    ),
-    [now, setNow] = useState(() => Date.now());
-  const timezone = resolveTimezone(timezonePreference);
+  const [now, setNow] = useState(() => Date.now());
+  const timezone = resolveTimezone("system");
   const today = inZone(now, timezone).date;
   const [selected, setSelected] = useState(today),
     [view, setView] = useState<CalendarView>("month"),
@@ -199,10 +188,6 @@ export function CalendarModule({
             onChange={(e) => setSearch(e.target.value)}
           />
         </label>
-        <TimezoneSelect
-          value={timezonePreference}
-          onChange={setTimezonePreference}
-        />
       </div>
       <div className="calendar-filters" role="group" aria-label={t("filter")}>
         {COLORS.map((color) => (

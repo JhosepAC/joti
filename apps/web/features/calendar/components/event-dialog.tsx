@@ -13,7 +13,6 @@ import {
 } from "@/convex/calendar/time";
 import { errorCode, type EventOperation } from "../hooks/use-calendar";
 import { addDays } from "../lib/dates";
-import { TimezoneSelect } from "./timezone-select";
 export function EventDialog({
   event,
   day,
@@ -35,9 +34,16 @@ export function EventDialog({
     [deleting, setDeleting] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const inDeviceZone = (input: EventInput) => {
+    try {
+      return convertEventTimezone(input, "system");
+    } catch {
+      return input;
+    }
+  };
   const [draft, setDraft] = useState<EventInput>(() =>
     event
-      ? {
+      ? inDeviceZone({
           title: event.title,
           description: event.description,
           location: event.location,
@@ -48,7 +54,7 @@ export function EventDialog({
           allDay: event.allDay,
           timezone: event.timezone,
           color: event.color,
-        }
+        })
       : {
           title: "",
           description: "",
@@ -62,11 +68,14 @@ export function EventDialog({
           color: "blue",
         },
   );
+  const [revision, setRevision] = useState(event?.revision);
+  const [saved, setSaved] = useState(false);
   const key = useRef(event?.key ?? crypto.randomUUID()),
     pending = useRef<{ signature: string; op: EventOperation } | null>(null);
   const edit = (part: Partial<EventInput>) => {
     setDraft((d) => ({ ...d, ...part }));
     setError("");
+    setSaved(false);
   };
   const perform = async (remove = false) => {
     if (busy) return;
@@ -84,7 +93,7 @@ export function EventDialog({
         : event
           ? ("update" as const)
           : ("create" as const),
-      ...(event ? { revision: event.revision } : {}),
+      ...(event ? { revision } : {}),
       ...(!remove ? { event: draft } : {}),
     };
     const signature = JSON.stringify(operation);
@@ -97,7 +106,12 @@ export function EventDialog({
     setError("");
     try {
       await onSave(pending.current!.op);
-      onClose();
+      if (remove || !event) onClose();
+      else {
+        setRevision((value) => (value ?? event.revision) + 1);
+        pending.current = null;
+        setSaved(true);
+      }
     } catch (e) {
       setError(errorCode(e));
     } finally {
@@ -251,23 +265,7 @@ export function EventDialog({
             </div>
             {!draft.allDay && (
               <>
-                <label>
-                  {t("timezone")}
-                  <TimezoneSelect
-                    value={draft.timezone}
-                    onChange={(value) => {
-                      try {
-                        const converted = convertEventTimezone(draft, value);
-                        setDraft(converted);
-                        setError("");
-                      } catch (cause) {
-                        setError(errorCode(cause));
-                      }
-                    }}
-                  />
-                </label>
                 <p className="calendar-help">{t("dstHint")}</p>
-                <p className="calendar-help">{t("conversionHint")}</p>
               </>
             )}
             <label>
@@ -302,6 +300,7 @@ export function EventDialog({
             </label>
           </fieldset>
         )}
+        {saved && <p role="status">{t("saved")}</p>}
         {error && (
           <p className="calendar-error" role="alert">
             {t(`errors.${error}`)}
