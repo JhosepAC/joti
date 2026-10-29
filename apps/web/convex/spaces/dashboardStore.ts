@@ -206,6 +206,7 @@ export const operate = internalMutation({
       })),
       profile: {
         displayName: profile?.display_name ?? "",
+        timezone: profile?.timezone ?? "UTC",
         username: profile?.username ?? "",
       },
       pages: pages.map((page) => ({

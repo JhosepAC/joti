@@ -28,6 +28,8 @@ import {
   PageDeleteDialog,
   PageConflictDialog,
 } from "@/features/pages/components/page-editor";
+import { CalendarModule } from "@/features/calendar/components/calendar-module";
+import { ListGlyph } from "@/features/lists/components/list-icon";
 import "./workspace.css";
 import "./workspace-tree-controls.css";
 
@@ -108,12 +110,13 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
     model.select(next);
     setDrawer(false);
     const url = new URL(location.href);
-    if (next === "lists") url.searchParams.set("module", "lists");
+    if (["lists", "calendar"].includes(next))
+      url.searchParams.set("module", next);
     else {
       url.searchParams.delete("module");
       url.searchParams.delete("list");
     }
-    if (!["home", "pages", "lists"].includes(next))
+    if (!["home", "pages", "lists", "calendar"].includes(next))
       url.searchParams.set("page", next);
     else url.searchParams.delete("page");
     history.replaceState(null, "", url);
@@ -177,6 +180,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
   )[0]?.toUpperCase();
   const home = view === "home";
   const isLists = view === "lists";
+  const isCalendar = view === "calendar";
   const pageRow = (item: SpacePage) => (
     <button
       className="workspace-page-row"
@@ -270,17 +274,127 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 {tLists("moduleName")}
               </button>
               <button
-                aria-current={!home && !isLists ? "page" : undefined}
+                aria-current={
+                  !home && !isLists && !isCalendar ? "page" : undefined
+                }
                 onClick={() => select("pages")}
               >
                 <LayersIcon />
                 {t("pages")}
               </button>
-            </nav>
-            <div className="workspace-pages-heading">
-              <span>{isLists ? tLists("yourLists") : t("yourPages")}</span>
               <button
-                aria-label={isLists ? tLists("newList") : t("newPage")}
+                aria-current={isCalendar ? "page" : undefined}
+                onClick={() => select("calendar")}
+              >
+                <ListGlyph name="calendar" />
+                {t("calendar")}
+              </button>
+            </nav>
+            <div hidden={isCalendar}>
+              <div className="workspace-pages-heading">
+                <span>{isLists ? tLists("yourLists") : t("yourPages")}</span>
+                <button
+                  aria-label={isLists ? tLists("newList") : t("newPage")}
+                  disabled={busy}
+                  onClick={() => {
+                    if (isLists) setNewListSignal((value) => value + 1);
+                    else void model.createPage();
+                  }}
+                >
+                  <PlusIcon />
+                </button>
+              </div>
+              <label className="workspace-search">
+                <SearchIcon />
+                <input
+                  type="search"
+                  placeholder={isLists ? tLists("switchList") : t("search")}
+                  aria-label={isLists ? tLists("switchList") : t("search")}
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </label>
+              <nav className="workspace-page-tree" aria-label={t("yourPages")}>
+                {isLists
+                  ? listCatalog
+                      .filter(
+                        (item) =>
+                          !item.archived &&
+                          item.name
+                            .toLocaleLowerCase(locale)
+                            .includes(query.toLocaleLowerCase(locale)),
+                      )
+                      .sort((a, b) => Number(b.favorite) - Number(a.favorite))
+                      .map((item) => (
+                        <WorkspaceTreeItem
+                          canDelete
+                          key={item.key}
+                          name={item.name}
+                          icon={<ListIcon name={item.icon} />}
+                          selected={listKey === item.key}
+                          favorite={item.favorite}
+                          href={`/w/${slug}?module=lists&list=${encodeURIComponent(item.key)}`}
+                          onSelect={() => selectList(item.key)}
+                          onAction={(action) =>
+                            setListAction((previous) => ({
+                              sequence: (previous?.sequence ?? 0) + 1,
+                              key: item.key,
+                              action,
+                            }))
+                          }
+                        />
+                      ))
+                  : [...filtered]
+                      .sort(
+                        (a, b) =>
+                          Number(b.favorite ?? false) -
+                          Number(a.favorite ?? false),
+                      )
+                      .map((item) => (
+                        <WorkspaceTreeItem
+                          key={item.id}
+                          name={drafts[item.id]?.title || item.title}
+                          icon={
+                            item.icon ? (
+                              <ListIcon name={item.icon} />
+                            ) : (
+                              <BlankIcon />
+                            )
+                          }
+                          canDelete
+                          deleteLabel={t("deletePage")}
+                          selected={view === item.id}
+                          favorite={item.favorite}
+                          href={`/w/${slug}?page=${encodeURIComponent(item.id)}`}
+                          onSelect={() => select(item.id)}
+                          disabled={busy}
+                          onAction={(action) => {
+                            if (action === "rename") setRenamePage(item);
+                            else if (action === "delete") setDeletePage(item);
+                            else
+                              void model.itemAction(
+                                item.id,
+                                action,
+                                action === "favorite"
+                                  ? { favorite: !item.favorite }
+                                  : {},
+                              );
+                          }}
+                          dirty={
+                            !!(
+                              drafts[item.id] &&
+                              (drafts[item.id]?.title !== item.title ||
+                                drafts[item.id]?.body !== item.body)
+                            )
+                          }
+                        />
+                      ))}
+                {!isLists && !filtered.length && (
+                  <p>{t(query ? "noResults" : "noPages")}</p>
+                )}
+              </nav>
+              <button
+                className="workspace-add-page"
                 disabled={busy}
                 onClick={() => {
                   if (isLists) setNewListSignal((value) => value + 1);
@@ -288,108 +402,9 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 }}
               >
                 <PlusIcon />
+                {isLists ? tLists("newList") : t("newPage")}
               </button>
             </div>
-            <label className="workspace-search">
-              <SearchIcon />
-              <input
-                type="search"
-                placeholder={isLists ? tLists("switchList") : t("search")}
-                aria-label={isLists ? tLists("switchList") : t("search")}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
-            <nav className="workspace-page-tree" aria-label={t("yourPages")}>
-              {isLists
-                ? listCatalog
-                    .filter(
-                      (item) =>
-                        !item.archived &&
-                        item.name
-                          .toLocaleLowerCase(locale)
-                          .includes(query.toLocaleLowerCase(locale)),
-                    )
-                    .sort((a, b) => Number(b.favorite) - Number(a.favorite))
-                    .map((item) => (
-                      <WorkspaceTreeItem
-                        canDelete
-                        key={item.key}
-                        name={item.name}
-                        icon={<ListIcon name={item.icon} />}
-                        selected={listKey === item.key}
-                        favorite={item.favorite}
-                        href={`/w/${slug}?module=lists&list=${encodeURIComponent(item.key)}`}
-                        onSelect={() => selectList(item.key)}
-                        onAction={(action) =>
-                          setListAction((previous) => ({
-                            sequence: (previous?.sequence ?? 0) + 1,
-                            key: item.key,
-                            action,
-                          }))
-                        }
-                      />
-                    ))
-                : [...filtered]
-                    .sort(
-                      (a, b) =>
-                        Number(b.favorite ?? false) -
-                        Number(a.favorite ?? false),
-                    )
-                    .map((item) => (
-                      <WorkspaceTreeItem
-                        key={item.id}
-                        name={drafts[item.id]?.title || item.title}
-                        icon={
-                          item.icon ? (
-                            <ListIcon name={item.icon} />
-                          ) : (
-                            <BlankIcon />
-                          )
-                        }
-                        canDelete
-                        deleteLabel={t("deletePage")}
-                        selected={view === item.id}
-                        favorite={item.favorite}
-                        href={`/w/${slug}?page=${encodeURIComponent(item.id)}`}
-                        onSelect={() => select(item.id)}
-                        disabled={busy}
-                        onAction={(action) => {
-                          if (action === "rename") setRenamePage(item);
-                          else if (action === "delete") setDeletePage(item);
-                          else
-                            void model.itemAction(
-                              item.id,
-                              action,
-                              action === "favorite"
-                                ? { favorite: !item.favorite }
-                                : {},
-                            );
-                        }}
-                        dirty={
-                          !!(
-                            drafts[item.id] &&
-                            (drafts[item.id]?.title !== item.title ||
-                              drafts[item.id]?.body !== item.body)
-                          )
-                        }
-                      />
-                    ))}
-              {!isLists && !filtered.length && (
-                <p>{t(query ? "noResults" : "noPages")}</p>
-              )}
-            </nav>
-            <button
-              className="workspace-add-page"
-              disabled={busy}
-              onClick={() => {
-                if (isLists) setNewListSignal((value) => value + 1);
-                else void model.createPage();
-              }}
-            >
-              <PlusIcon />
-              {isLists ? tLists("newList") : t("newPage")}
-            </button>
           </div>
           <footer className="workspace-account">
             <div className="workspace-person">
@@ -448,11 +463,13 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             <strong>
               {home
                 ? t("home")
-                : isLists
-                  ? tLists("moduleName")
-                  : page
-                    ? draft?.title || t("untitled")
-                    : t("pages")}
+                : isCalendar
+                  ? t("calendar")
+                  : isLists
+                    ? tLists("moduleName")
+                    : page
+                      ? draft?.title || t("untitled")
+                      : t("pages")}
             </strong>
           </div>
           <div className="workspace-toolbar-actions">
@@ -519,7 +536,13 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 />
               )}
             </div>
-            {isLists ? null : home ? (
+            {isCalendar ? (
+              <CalendarModule
+                key={slug}
+                slug={slug}
+                timezone={data.profile.timezone}
+              />
+            ) : isLists ? null : home ? (
               <div className="workspace-home">
                 <div className="workspace-home-title">
                   <SpaceSymbol value={data.space.icon} />
