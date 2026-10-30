@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { eventFields } from "./calendar/model";
+import { noteFields, contentFields, metadataFields } from "./notes/model";
 import {
   column as listColumn,
   view as listView,
@@ -8,6 +9,47 @@ import {
 } from "./lists/model";
 
 export default defineSchema({
+  space_notes: defineTable({
+    ...noteFields,
+    space_id: v.id("spaces"),
+    key: v.string(),
+    revision: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    pageId: v.optional(v.id("space_pages")),
+  }).index("by_space_key", ["space_id", "key"]),
+  note_catalog: defineTable({
+    ...metadataFields,
+    space_id: v.id("spaces"),
+    note_id: v.id("space_notes"),
+    key: v.string(),
+    preview: v.string(),
+    pinned: v.boolean(),
+    archived: v.boolean(),
+    trashed: v.boolean(),
+    revision: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    pageId: v.optional(v.id("space_pages")),
+  })
+    .index("by_space", ["space_id"])
+    .index("by_note", ["note_id"]),
+  note_versions: defineTable({
+    ...contentFields,
+    note_id: v.id("space_notes"),
+    revision: v.number(),
+    createdAt: v.number(),
+  }).index("by_note", ["note_id"]),
+  note_operations: defineTable({
+    space_id: v.id("spaces"),
+    op_id: v.string(),
+    hash: v.string(),
+    resultKey: v.string(),
+    pageId: v.optional(v.id("space_pages")),
+    createdAt: v.number(),
+  })
+    .index("by_space_op", ["space_id", "op_id"])
+    .index("by_created", ["createdAt"]),
   calendar_events: defineTable({
     ...eventFields,
     space_id: v.id("spaces"),

@@ -112,6 +112,7 @@ export function PageEditor({
   onChange,
   onIcon,
   onSave,
+  readOnly = false,
 }: {
   body: string;
   title: string;
@@ -119,6 +120,7 @@ export function PageEditor({
   onChange: (value: string) => void;
   onIcon: (value: string) => void;
   onSave: () => void;
+  readOnly?: boolean;
 }) {
   const t = useTranslations("pages");
   const [source, setSource] = useState(false);
@@ -134,6 +136,7 @@ export function PageEditor({
   const change = useRef(onChange);
   change.current = onChange;
   const editor = useEditor({
+    editable: !readOnly,
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
@@ -161,6 +164,9 @@ export function PageEditor({
       change.current(markdown);
     },
   });
+  useEffect(() => {
+    editor?.setEditable(!readOnly, false);
+  }, [editor, readOnly]);
   const state = useEditorState({
     editor,
     selector: ({ editor }) =>

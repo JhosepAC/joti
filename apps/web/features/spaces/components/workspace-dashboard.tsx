@@ -29,6 +29,7 @@ import {
   PageDeleteDialog,
   PageConflictDialog,
 } from "@/features/pages/components/page-editor";
+import { NotesModule } from "@/features/notes/components/notes-module";
 import { CalendarModule } from "@/features/calendar/components/calendar-module";
 import { ListGlyph } from "@/features/lists/components/list-icon";
 import "./workspace.css";
@@ -112,13 +113,13 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
     model.select(next);
     setDrawer(false);
     const url = new URL(location.href);
-    if (["lists", "calendar"].includes(next))
+    if (["lists", "calendar", "notes"].includes(next))
       url.searchParams.set("module", next);
     else {
       url.searchParams.delete("module");
       url.searchParams.delete("list");
     }
-    if (!["home", "pages", "lists", "calendar"].includes(next))
+    if (!["home", "pages", "lists", "calendar", "notes"].includes(next))
       url.searchParams.set("page", next);
     else url.searchParams.delete("page");
     history.replaceState(null, "", url);
@@ -183,6 +184,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
   const home = view === "home";
   const isLists = view === "lists";
   const isCalendar = view === "calendar";
+  const isNotes = view === "notes";
   const pageRow = (item: SpacePage) => (
     <button
       className="workspace-page-row"
@@ -277,7 +279,9 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
               </button>
               <button
                 aria-current={
-                  !home && !isLists && !isCalendar ? "page" : undefined
+                  !home && !isLists && !isCalendar && !isNotes
+                    ? "page"
+                    : undefined
                 }
                 onClick={() => select("pages")}
               >
@@ -291,8 +295,15 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 <ListGlyph name="calendar" />
                 {t("calendar")}
               </button>
+              <button
+                aria-current={isNotes ? "page" : undefined}
+                onClick={() => select("notes")}
+              >
+                <ListIcon name="book" />
+                {t("notes")}
+              </button>
             </nav>
-            <div hidden={isCalendar}>
+            <div hidden={isCalendar || isNotes}>
               <div className="workspace-pages-heading">
                 <span>{isLists ? tLists("yourLists") : t("yourPages")}</span>
                 <button
@@ -480,13 +491,15 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             <strong>
               {home
                 ? t("home")
-                : isCalendar
-                  ? t("calendar")
-                  : isLists
-                    ? tLists("moduleName")
-                    : page
-                      ? draft?.title || t("untitled")
-                      : t("pages")}
+                : isNotes
+                  ? t("notes")
+                  : isCalendar
+                    ? t("calendar")
+                    : isLists
+                      ? tLists("moduleName")
+                      : page
+                        ? draft?.title || t("untitled")
+                        : t("pages")}
             </strong>
           </div>
           <div className="workspace-toolbar-actions">
@@ -553,7 +566,16 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 />
               )}
             </div>
-            {isCalendar ? (
+            {isNotes ? (
+              <NotesModule
+                key={slug}
+                slug={slug}
+                onPage={(id) => {
+                  void model.load();
+                  select(id);
+                }}
+              />
+            ) : isCalendar ? (
               <CalendarModule
                 key={slug}
                 slug={slug}

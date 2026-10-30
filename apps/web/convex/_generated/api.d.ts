@@ -45,6 +45,8 @@ import type * as lists_model from "../lists/model.js";
 import type * as lists_session from "../lists/session.js";
 import type * as lists_templates from "../lists/templates.js";
 import type * as lists_validation from "../lists/validation.js";
+import type * as notes_data from "../notes/data.js";
+import type * as notes_model from "../notes/model.js";
 import type * as oauth_google_authorize from "../oauth/google/authorize.js";
 import type * as oauth_google_callback from "../oauth/google/callback.js";
 import type * as spaces_actions from "../spaces/actions.js";
@@ -100,6 +102,8 @@ declare const fullApi: ApiFromModules<{
   "lists/session": typeof lists_session;
   "lists/templates": typeof lists_templates;
   "lists/validation": typeof lists_validation;
+  "notes/data": typeof notes_data;
+  "notes/model": typeof notes_model;
   "oauth/google/authorize": typeof oauth_google_authorize;
   "oauth/google/callback": typeof oauth_google_callback;
   "spaces/actions": typeof spaces_actions;

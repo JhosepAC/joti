@@ -14,6 +14,12 @@ import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 crons.daily(
+  "notes-receipts",
+  { hourUTC: 4, minuteUTC: 9 },
+  internal.notes.data.sweep,
+  {},
+);
+crons.daily(
   "calendar-receipts",
   { hourUTC: 4, minuteUTC: 8 },
   internal.calendar.events.sweep,
