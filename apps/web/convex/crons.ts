@@ -13,6 +13,12 @@ import { internal } from "./_generated/api";
  */
 
 const crons = cronJobs();
+crons.interval(
+  "gallery-interrupted-uploads",
+  { minutes: 15 },
+  internal.gallery.store.sweep,
+  {},
+);
 crons.daily(
   "notes-receipts",
   { hourUTC: 4, minuteUTC: 9 },
