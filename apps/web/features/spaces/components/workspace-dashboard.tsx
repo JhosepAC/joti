@@ -30,9 +30,14 @@ import {
   PageConflictDialog,
 } from "@/features/pages/components/page-editor";
 import { NotesModule } from "@/features/notes/components/notes-module";
+import { GalleryModule } from "@/features/gallery/components/gallery-module";
+import { GalleryIcon } from "@/features/gallery/components/gallery-icon";
 import { CalendarModule } from "@/features/calendar/components/calendar-module";
 import { ListGlyph } from "@/features/lists/components/list-icon";
+import { CreateSpaceDialog } from "./create-space-dialog";
+import { RailSpaceLink } from "./rail-space-link";
 import "./workspace.css";
+import "./workspace-navigation.css";
 import "./workspace-tree-controls.css";
 
 export function WorkspaceDashboard({ slug }: { slug: string }) {
@@ -44,6 +49,28 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
   const model = useWorkspaceDashboard(slug);
   const { data, view, drafts, error, loading, busy, page, draft, dirty } =
     model;
+  const [createSpace, setCreateSpace] = useState(false);
+  const [railCollapsed, setRailCollapsed] = useState(false),
+    [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("nook:navigation") ?? "{}");
+      setRailCollapsed(saved.rail === true);
+      setSidebarCollapsed(saved.sidebar === true);
+    } catch {}
+  }, []);
+  const collapse = (rail: boolean) => {
+    const r = rail ? !railCollapsed : railCollapsed,
+      s = rail ? sidebarCollapsed : !sidebarCollapsed;
+    setRailCollapsed(r);
+    setSidebarCollapsed(s);
+    try {
+      localStorage.setItem(
+        "nook:navigation",
+        JSON.stringify({ rail: r, sidebar: s }),
+      );
+    } catch {}
+  };
   const [query, setQuery] = useState("");
   const [resolveConflict, setResolveConflict] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -71,7 +98,9 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
   const { signOut, signingOut, logoutError } = useLogout();
   useEffect(() => {
     const media = matchMedia(
-      view === "lists" ? "(max-width: 1100px)" : "(max-width: 760px)",
+      ["lists", "gallery"].includes(view)
+        ? "(max-width: 1100px)"
+        : "(max-width: 760px)",
     );
     const update = () => setMobile(media.matches);
     update();
@@ -113,13 +142,15 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
     model.select(next);
     setDrawer(false);
     const url = new URL(location.href);
-    if (["lists", "calendar", "notes"].includes(next))
+    if (["lists", "calendar", "notes", "gallery"].includes(next))
       url.searchParams.set("module", next);
     else {
       url.searchParams.delete("module");
       url.searchParams.delete("list");
     }
-    if (!["home", "pages", "lists", "calendar", "notes"].includes(next))
+    if (
+      !["home", "pages", "lists", "calendar", "notes", "gallery"].includes(next)
+    )
       url.searchParams.set("page", next);
     else url.searchParams.delete("page");
     history.replaceState(null, "", url);
@@ -185,6 +216,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
   const isLists = view === "lists";
   const isCalendar = view === "calendar";
   const isNotes = view === "notes";
+  const isGallery = view === "gallery";
   const pageRow = (item: SpacePage) => (
     <button
       className="workspace-page-row"
@@ -207,7 +239,10 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
     <div
       className="nook-workspace"
       data-focus={focusMode}
-      data-module={view === "lists" ? "lists" : undefined}
+      data-navigation-desktop={!mobile}
+      data-rail-collapsed={!mobile && railCollapsed}
+      data-sidebar-collapsed={!mobile && sidebarCollapsed}
+      data-module={["lists", "gallery"].includes(view) ? view : undefined}
     >
       {drawer && mobile && (
         <button
@@ -226,28 +261,61 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
         inert={mobile && !drawer ? true : undefined}
       >
         <nav className="workspace-space-rail" aria-label={t("spaces")}>
-          <Link href="/" className="workspace-wordmark" aria-label="Nook">
+          <Link
+            href="/"
+            className="workspace-wordmark"
+            aria-label="Nook"
+            tabIndex={!mobile && railCollapsed ? -1 : undefined}
+          >
             nook
           </Link>
-          <div className="workspace-space-list">
+          <div
+            className="workspace-space-list"
+            inert={!mobile && railCollapsed ? true : undefined}
+          >
             {data.spaces.map((space) => (
-              <Link
-                href={`/w/${space.slug}`}
+              <RailSpaceLink
                 key={space.slug}
-                aria-current={space.slug === slug ? "page" : undefined}
-                aria-label={space.name}
-                title={space.name}
-              >
-                <SpaceSymbol value={space.icon} />
-                <span>{space.name}</span>
-              </Link>
+                space={space}
+                active={space.slug === slug}
+              />
             ))}
+            <button
+              className="workspace-add-space"
+              aria-label={t("newSpace")}
+              title={t("newSpace")}
+              onClick={() => setCreateSpace(true)}
+            >
+              <PlusIcon />
+            </button>
           </div>
-          <span className="workspace-rail-bottom" title={t("privateSpace")}>
-            <LockIcon />
-          </span>
         </nav>
-        <aside className="workspace-module-sidebar">
+        {!mobile && (
+          <>
+            <button
+              className="workspace-rail-toggle"
+              aria-label={t(railCollapsed ? "expandSpaces" : "collapseSpaces")}
+              aria-expanded={!railCollapsed}
+              onClick={() => collapse(true)}
+            >
+              <ListGlyph name="right" />
+            </button>
+            <button
+              className="workspace-sidebar-toggle"
+              aria-label={t(
+                sidebarCollapsed ? "expandModules" : "collapseModules",
+              )}
+              aria-expanded={!sidebarCollapsed}
+              onClick={() => collapse(false)}
+            >
+              <ListGlyph name="right" />
+            </button>
+          </>
+        )}
+        <aside
+          className="workspace-module-sidebar"
+          inert={!mobile && sidebarCollapsed ? true : undefined}
+        >
           <header>
             <SpaceSymbol value={data.space.icon} />
             <strong title={data.space.name}>{data.space.name}</strong>
@@ -279,7 +347,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
               </button>
               <button
                 aria-current={
-                  !home && !isLists && !isCalendar && !isNotes
+                  !home && !isLists && !isCalendar && !isNotes && !isGallery
                     ? "page"
                     : undefined
                 }
@@ -302,8 +370,15 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 <ListIcon name="book" />
                 {t("notes")}
               </button>
+              <button
+                aria-current={isGallery ? "page" : undefined}
+                onClick={() => select("gallery")}
+              >
+                <GalleryIcon />
+                {t("gallery")}
+              </button>
             </nav>
-            <div hidden={isCalendar || isNotes}>
+            <div hidden={isCalendar || isNotes || isGallery}>
               <div className="workspace-pages-heading">
                 <span>{isLists ? tLists("yourLists") : t("yourPages")}</span>
                 <button
@@ -491,15 +566,17 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             <strong>
               {home
                 ? t("home")
-                : isNotes
-                  ? t("notes")
-                  : isCalendar
-                    ? t("calendar")
-                    : isLists
-                      ? tLists("moduleName")
-                      : page
-                        ? draft?.title || t("untitled")
-                        : t("pages")}
+                : isGallery
+                  ? t("gallery")
+                  : isNotes
+                    ? t("notes")
+                    : isCalendar
+                      ? t("calendar")
+                      : isLists
+                        ? tLists("moduleName")
+                        : page
+                          ? draft?.title || t("untitled")
+                          : t("pages")}
             </strong>
           </div>
           <div className="workspace-toolbar-actions">
@@ -566,7 +643,9 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 />
               )}
             </div>
-            {isNotes ? (
+            {isGallery ? (
+              <GalleryModule key={slug} slug={slug} />
+            ) : isNotes ? (
               <NotesModule
                 key={slug}
                 slug={slug}
@@ -719,6 +798,9 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
           </main>
         )}
       </div>
+      {createSpace && (
+        <CreateSpaceDialog onClose={() => setCreateSpace(false)} />
+      )}
       {deletePage && (
         <PageDeleteDialog
           name={deletePage.title}

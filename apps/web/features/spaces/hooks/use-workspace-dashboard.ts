@@ -38,7 +38,7 @@ export function useWorkspaceDashboard(slug: string) {
   const [view, setView] = useState("home");
   useEffect(() => {
     setView(
-      ["lists", "calendar", "notes"].includes(
+      ["lists", "calendar", "notes", "gallery"].includes(
         new URLSearchParams(location.search).get("module") ?? "",
       )
         ? new URLSearchParams(location.search).get("module")!

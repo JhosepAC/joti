@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { eventFields } from "./calendar/model";
 import { noteFields, contentFields, metadataFields } from "./notes/model";
+import { imageVariants, preferenceFields } from "./gallery/model";
 import {
   column as listColumn,
   view as listView,
@@ -9,6 +10,60 @@ import {
 } from "./lists/model";
 
 export default defineSchema({
+  gallery_images: defineTable({
+    space_id: v.id("spaces"),
+    user_id: v.id("auth_users"),
+    key: v.string(),
+    hash: v.string(),
+    filename: v.string(),
+    title: v.string(),
+    description: v.string(),
+    tags: v.array(v.string()),
+    albumIds: v.array(v.id("gallery_albums")),
+    mime: v.string(),
+    originalBytes: v.number(),
+    storedBytes: v.number(),
+    width: v.number(),
+    height: v.number(),
+    uploadedAt: v.number(),
+    capturedAt: v.number(),
+    hasCaptureDate: v.boolean(),
+    captureEdited: v.optional(v.boolean()),
+    position: v.number(),
+    revision: v.number(),
+    status: v.string(),
+    error: v.optional(v.string()),
+    attempt: v.string(),
+    touchedAt: v.number(),
+    ...imageVariants,
+    highWidth: v.optional(v.number()),
+    mediumWidth: v.optional(v.number()),
+    thumbWidth: v.optional(v.number()),
+  })
+    .index("by_space_uploaded", ["space_id", "uploadedAt"])
+    .index("by_space_captured", ["space_id", "capturedAt"])
+    .index("by_space_name", ["space_id", "title"])
+    .index("by_space_position", ["space_id", "position"])
+    .index("by_space_hash", ["space_id", "hash"])
+    .index("by_space_key", ["space_id", "key"])
+    .index("by_status_touched", ["status", "touchedAt"]),
+  gallery_albums: defineTable({
+    space_id: v.id("spaces"),
+    name: v.string(),
+    description: v.string(),
+    color: v.string(),
+    createdAt: v.number(),
+  }).index("by_space", ["space_id"]),
+  gallery_preferences: defineTable({
+    space_id: v.id("spaces"),
+    user_id: v.id("auth_users"),
+    ...preferenceFields,
+  }).index("by_space_user", ["space_id", "user_id"]),
+  gallery_usage: defineTable({
+    space_id: v.id("spaces"),
+    count: v.number(),
+    bytes: v.number(),
+  }).index("by_space", ["space_id"]),
   space_notes: defineTable({
     ...noteFields,
     space_id: v.id("spaces"),
@@ -282,6 +337,7 @@ export default defineSchema({
   }).index("by_space_id", ["space_id"]),
 
   spaces: defineTable({
+    creation_key: v.optional(v.string()),
     owner_id: v.id("auth_users"), // NOT NULL: a space cannot be orphaned
     name: v.string(), // 3-50 chars, trimmed, no control/zero-width characters
     slug: v.string(), // globally unique, /^[a-z0-9]+(?:-[a-z0-9]+)*$/

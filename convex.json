@@ -1,3 +1,4 @@
 {
-  "functions": "apps/web/convex/"
+  "functions": "apps/web/convex/",
+  "node": { "externalPackages": ["sharp"] }
 }
