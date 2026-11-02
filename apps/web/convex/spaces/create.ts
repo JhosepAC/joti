@@ -1,6 +1,6 @@
 import { internalMutation } from "../_generated/server";
 import { v, ConvexError } from "convex/values";
-import { toSlugBase, validateSpaceName } from "./validators";
+import { toSlugBase, validateSpaceName, validateSpaceIcon } from "./validators";
 export const create = internalMutation({
   args: {
     hash: v.string(),
@@ -8,6 +8,7 @@ export const create = internalMutation({
     template: v.string(),
     key: v.string(),
     locale: v.string(),
+    icon: v.optional(v.string()),
   },
   handler: async (ctx, a) => {
     function fail(code: string): never {
@@ -51,7 +52,7 @@ export const create = internalMutation({
     }
     const type = a.template,
       es = a.locale !== "en";
-    const icon =
+    const defaultIcon =
       type === "university"
         ? "🎓"
         : type === "work"
@@ -65,7 +66,23 @@ export const create = internalMutation({
       owner_id: user._id,
       name,
       slug,
-      icon,
+      icon: a.icon
+        ? a.icon.startsWith("symbol:") &&
+          [
+            "table",
+            "check",
+            "basket",
+            "plane",
+            "book",
+            "briefcase",
+            "heart",
+            "bolt",
+            "pin",
+            "tag",
+          ].includes(a.icon.slice(7))
+          ? a.icon
+          : validateSpaceIcon(a.icon)
+        : defaultIcon,
       purpose:
         type === "university"
           ? "study"

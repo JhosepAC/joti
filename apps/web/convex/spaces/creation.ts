@@ -10,6 +10,7 @@ export const create = action({
     template: v.string(),
     key: v.string(),
     locale: v.string(),
+    icon: v.optional(v.string()),
   },
   handler: async (ctx, { token, ...args }): Promise<{ slug: string }> =>
     ctx.runMutation(internal.spaces.create.create, {

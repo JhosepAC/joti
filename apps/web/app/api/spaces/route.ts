@@ -37,6 +37,7 @@ export async function POST(r: NextRequest) {
           token,
           name: d.name,
           template: d.template,
+          ...(typeof d.icon === "string" ? { icon: d.icon } : {}),
           key: d.key,
           locale: r.cookies.get("nook-locale")?.value === "en" ? "en" : "es",
         },
