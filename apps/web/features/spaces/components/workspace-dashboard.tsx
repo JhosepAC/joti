@@ -38,6 +38,8 @@ import { CreateSpaceDialog } from "./create-space-dialog";
 import { RailSpaceLink } from "./rail-space-link";
 import "./workspace.css";
 import "./workspace-navigation.css";
+import "./workspace-pages-refinement.css";
+import { PageIconPicker } from "@/features/pages/components/page-icon-picker";
 import "./workspace-tree-controls.css";
 
 export function WorkspaceDashboard({ slug }: { slug: string }) {
@@ -746,22 +748,31 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 <label className="sr-only" htmlFor="page-title">
                   {t("pageTitle")}
                 </label>
-                <input
-                  id="page-title"
-                  className="workspace-document-title"
-                  value={draft.title}
-                  maxLength={120}
-                  onChange={(event) =>
-                    model.edit({ ...draft, title: event.target.value })
-                  }
-                  placeholder={t("untitled")}
-                />
+                <div className="workspace-title-row">
+                  <PageIconPicker
+                    icon={page.icon}
+                    onChange={(icon) =>
+                      void model.itemAction(page.id, "icon", { icon })
+                    }
+                  />
+                  <input
+                    id="page-title"
+                    className="workspace-document-title"
+                    value={draft.title}
+                    maxLength={120}
+                    onChange={(event) =>
+                      model.edit({ ...draft, title: event.target.value })
+                    }
+                    placeholder={t("untitled")}
+                  />
+                </div>
                 {!draft.title.trim() && (
                   <p className="workspace-field-error" role="alert">
                     {t("titleRequired")}
                   </p>
                 )}
                 <PageEditor
+                  iconOnly
                   key={page.id}
                   body={draft.body}
                   title={draft.title}

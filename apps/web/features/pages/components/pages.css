@@ -302,3 +302,48 @@
     padding: 0;
   }
 }
+
+.page-icon-only .page-tools > button:first-child {
+  display: none;
+}
+.page-tools {
+  gap: 4px;
+  padding: 10px 0;
+  margin-bottom: 24px;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.page-tools button {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+}
+.page-insert-menu button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+.page-insert-menu svg {
+  width: 19px;
+  height: 19px;
+  color: #5f6368;
+  flex-shrink: 0;
+}
+.page-prose {
+  font-size: 16px;
+  line-height: 1.85;
+  max-width: 76ch;
+}
+.page-prose img {
+  border-radius: 8px;
+  max-width: 100%;
+}

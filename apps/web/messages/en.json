@@ -676,7 +676,14 @@
           "name": "Blank",
           "description": "An empty page to make your own."
         }
-      }
+      },
+      "icon": "Space icon",
+      "iconHint": "Choose an icon or a lightweight image.",
+      "uploadIcon": "Upload image",
+      "removeIcon": "Remove image",
+      "chooseIcon": "Choose icon {icon}",
+      "iconError": "Use JPEG, PNG or WebP up to 2 MiB and 16 megapixels. Saved as 256 px WebP (max. 128 KiB).",
+      "chooseMedia": "Gallery or link"
     }
   },
   "providers": {
@@ -1425,5 +1432,24 @@
     "moveEarlier": "Earlier",
     "moveLater": "Later",
     "signIn": "Sign in"
+  },
+  "media": {
+    "title": "Insert image",
+    "source": "Image source",
+    "gallery": "Gallery",
+    "upload": "Upload file",
+    "link": "Link",
+    "search": "Search gallery",
+    "loading": "Loading images…",
+    "empty": "No images available. Upload a file or use a link.",
+    "more": "Load more",
+    "close": "Close",
+    "uploadHint": "JPEG, PNG, WebP or AVIF, up to 8 MiB. Saved to this space’s gallery.",
+    "error": "Could not prepare the image. Check the format and size or retry in Gallery.",
+    "invalidUrl": "Enter a valid http or https link.",
+    "url": "Image URL",
+    "alt": "Image description",
+    "insert": "Insert image",
+    "saving": "Saving to Gallery and preparing image…"
   }
 }

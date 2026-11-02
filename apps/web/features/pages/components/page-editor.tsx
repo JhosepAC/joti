@@ -12,6 +12,9 @@ import { useTranslations } from "next-intl";
 import { Modal, Popover } from "@/features/lists/components/overlays";
 import { LIST_ICONS, ListIcon } from "@/features/lists/components/list-icon";
 import "./pages.css";
+import { useParams } from "next/navigation";
+import { MediaPicker } from "@/features/gallery/components/media-picker";
+import { EditorGlyph } from "./editor-glyph";
 
 export function PageConflictDialog({
   busy,
@@ -113,6 +116,7 @@ export function PageEditor({
   onIcon,
   onSave,
   readOnly = false,
+  iconOnly = false,
 }: {
   body: string;
   title: string;
@@ -121,7 +125,10 @@ export function PageEditor({
   onIcon: (value: string) => void;
   onSave: () => void;
   readOnly?: boolean;
+  iconOnly?: boolean;
 }) {
+  const params = useParams(),
+    slug = String(params.slug ?? "");
   const t = useTranslations("pages");
   const [source, setSource] = useState(false);
   const [menu, setMenu] = useState<"insert" | "icon" | null>(null);
@@ -235,7 +242,7 @@ export function PageEditor({
   };
   return (
     <div
-      className="page-editor"
+      className={`page-editor ${iconOnly ? "page-icon-only" : ""}`}
       onKeyDown={(e) => {
         if ((e.metaKey || e.ctrlKey) && e.key === "s") {
           e.preventDefault();
@@ -263,12 +270,14 @@ export function PageEditor({
           <ListIcon name={icon ?? "book"} />
         </button>
         <button
+          title={t("insert")}
+          aria-label={t("insert")}
           ref={anchor}
           disabled={source}
           aria-expanded={menu === "insert"}
           onClick={() => setMenu(menu === "insert" ? null : "insert")}
         >
-          {t("insert")}
+          <EditorGlyph name="insert" />
         </button>
         {(
           [
@@ -298,28 +307,59 @@ export function PageEditor({
           </button>
         ))}
         <button
+          title={t("undo")}
+          aria-label={t("undo")}
           disabled={!state?.undo || source}
           onClick={() => editor?.chain().focus().undo().run()}
         >
-          {t("undo")}
+          <EditorGlyph name="undo" />
         </button>
         <button
+          title={t("redo")}
+          aria-label={t("redo")}
           disabled={!state?.redo || source}
           onClick={() => editor?.chain().focus().redo().run()}
         >
-          {t("redo")}
+          <EditorGlyph name="redo" />
         </button>
-        <button aria-pressed={source} onClick={() => setSource(!source)}>
-          Markdown
+        <button
+          title="Markdown"
+          aria-label="Markdown"
+          aria-pressed={source}
+          onClick={() => setSource(!source)}
+        >
+          <EditorGlyph name="markdown" />
         </button>
-        <button aria-pressed={outline} onClick={() => setOutline(!outline)}>
-          {t("outline")}
+        <button
+          title={t("outline")}
+          aria-label={t("outline")}
+          aria-pressed={outline}
+          onClick={() => setOutline(!outline)}
+        >
+          <EditorGlyph name="outline" />
         </button>
-        <button disabled={source} onClick={() => file.current?.click()}>
-          {t("import")}
+        <button
+          title={t("import")}
+          aria-label={t("import")}
+          disabled={source}
+          onClick={() => file.current?.click()}
+        >
+          <EditorGlyph name="import" />
         </button>
-        <button onClick={exportFile}>{t("export")}</button>
-        <button onClick={() => window.print()}>{t("print")}</button>
+        <button
+          title={t("export")}
+          aria-label={t("export")}
+          onClick={exportFile}
+        >
+          <EditorGlyph name="export" />
+        </button>
+        <button
+          title={t("print")}
+          aria-label={t("print")}
+          onClick={() => window.print()}
+        >
+          <EditorGlyph name="print" />
+        </button>
       </div>
       {menu && (
         <Popover
@@ -361,7 +401,8 @@ export function PageEditor({
                 "image",
               ].map((kind) => (
                 <button key={kind} onClick={() => insert(kind)}>
-                  {t(kind)}
+                  <EditorGlyph name={kind} />
+                  <span>{t(kind)}</span>
                 </button>
               ))}
             </div>
@@ -472,85 +513,96 @@ export function PageEditor({
           }
         }}
       />
-      {dialog && (
-        <Modal label={t(dialog)} onClose={() => setDialog(null)}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              let valid = false;
-              try {
-                valid = [
-                  "https:",
-                  "http:",
-                  ...(dialog === "link" ? ["mailto:"] : []),
-                ].includes(new URL(url).protocol);
-              } catch {
-                /* validation below */
-              }
-              if (!valid) {
-                setError(t("invalidUrl"));
-                return;
-              }
-              if (dialog === "image")
-                editor?.chain().focus().setImage({ src: url, alt }).run();
-              else
-                editor
-                  ?.chain()
-                  .focus()
-                  .extendMarkRange("link")
-                  .setLink({ href: url })
-                  .run();
-              setDialog(null);
-              setError("");
-              setAlt("");
-            }}
-          >
-            <h2>{t(dialog)}</h2>
-            <label className="page-dialog-field">
-              {t("url")}
-              <input
-                autoFocus
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                required
-              />
-            </label>
-            {dialog === "image" && (
+      {dialog === "image" && slug ? (
+        <MediaPicker
+          slug={slug}
+          onClose={() => setDialog(null)}
+          onSelect={(src, alt) => {
+            editor?.chain().focus().setImage({ src, alt }).run();
+            setDialog(null);
+          }}
+        />
+      ) : (
+        dialog && (
+          <Modal label={t(dialog)} onClose={() => setDialog(null)}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                let valid = false;
+                try {
+                  valid = [
+                    "https:",
+                    "http:",
+                    ...(dialog === "link" ? ["mailto:"] : []),
+                  ].includes(new URL(url).protocol);
+                } catch {
+                  /* validation below */
+                }
+                if (!valid) {
+                  setError(t("invalidUrl"));
+                  return;
+                }
+                if (dialog === "image")
+                  editor?.chain().focus().setImage({ src: url, alt }).run();
+                else
+                  editor
+                    ?.chain()
+                    .focus()
+                    .extendMarkRange("link")
+                    .setLink({ href: url })
+                    .run();
+                setDialog(null);
+                setError("");
+                setAlt("");
+              }}
+            >
+              <h2>{t(dialog)}</h2>
               <label className="page-dialog-field">
-                {t("alt")}
+                {t("url")}
                 <input
-                  value={alt}
-                  onChange={(e) => setAlt(e.target.value)}
+                  autoFocus
+                  type="text"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
                   required
                 />
               </label>
-            )}
-            {error && <p role="alert">{error}</p>}
-            <div className="lists-modal-actions">
-              <button
-                type="button"
-                className="lists-secondary"
-                onClick={() => setDialog(null)}
-              >
-                {t("cancel")}
-              </button>
-              {dialog === "link" && (
+              {dialog === "image" && (
+                <label className="page-dialog-field">
+                  {t("alt")}
+                  <input
+                    value={alt}
+                    onChange={(e) => setAlt(e.target.value)}
+                    required
+                  />
+                </label>
+              )}
+              {error && <p role="alert">{error}</p>}
+              <div className="lists-modal-actions">
                 <button
                   type="button"
                   className="lists-secondary"
-                  onClick={() => {
-                    editor?.chain().focus().unsetLink().run();
-                    setDialog(null);
-                  }}
+                  onClick={() => setDialog(null)}
                 >
-                  {t("unlink")}
+                  {t("cancel")}
                 </button>
-              )}
-              <button className="lists-primary">{t("insert")}</button>
-            </div>
-          </form>
-        </Modal>
+                {dialog === "link" && (
+                  <button
+                    type="button"
+                    className="lists-secondary"
+                    onClick={() => {
+                      editor?.chain().focus().unsetLink().run();
+                      setDialog(null);
+                    }}
+                  >
+                    {t("unlink")}
+                  </button>
+                )}
+                <button className="lists-primary">{t("insert")}</button>
+              </div>
+            </form>
+          </Modal>
+        )
       )}
     </div>
   );

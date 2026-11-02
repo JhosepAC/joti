@@ -1,3 +1,5 @@
+"use client";
+import { ListIcon } from "@/features/lists/components/list-icon";
 import type { ReactNode } from "react";
 import { SPACE_ICON_CHOICES, type SpaceIconChoice } from "../types/space.types";
 import {
@@ -12,6 +14,24 @@ import {
 const [ROCKET, HOME, WORK, STUDY, IDEA, ENERGY, PIN, ART, HEART] =
   SPACE_ICON_CHOICES;
 export function SpaceSymbol({ value }: { value: SpaceIconChoice | string }) {
+  if (value.startsWith("symbol:")) return <ListIcon name={value.slice(7)} />;
+  if (value.startsWith("media:")) {
+    const [, slug, key] =
+      value.split(":"); /* eslint-disable-next-line @next/next/no-img-element */
+    return (
+      <img
+        className="workspace-space-image"
+        src={
+          "/api/gallery/media?slug=" +
+          encodeURIComponent(slug ?? "") +
+          "&key=" +
+          encodeURIComponent(key ?? "") +
+          "&variant=thumb"
+        }
+        alt=""
+      />
+    );
+  }
   if (value === ROCKET) return <RocketIcon />;
   if (value === HOME) return <HomeIcon />;
   if (value === WORK) return <BriefcaseIcon />;
