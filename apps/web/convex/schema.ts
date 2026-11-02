@@ -341,17 +341,7 @@ export default defineSchema({
     owner_id: v.id("auth_users"), // NOT NULL: a space cannot be orphaned
     name: v.string(), // 3-50 chars, trimmed, no control/zero-width characters
     slug: v.string(), // globally unique, /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-    icon: v.union(
-      v.literal("🚀"),
-      v.literal("🏠"),
-      v.literal("💼"),
-      v.literal("🎓"),
-      v.literal("🧠"),
-      v.literal("⚡"),
-      v.literal("📌"),
-      v.literal("🎨"),
-      v.literal("🩷"),
-    ),
+    icon: v.string(),
     purpose: v.union(
       v.literal("personal"),
       v.literal("work"),

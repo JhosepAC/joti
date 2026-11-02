@@ -1,4 +1,6 @@
-import { test, expect } from "vitest";
+import { test, expect, vi } from "vitest";
+import sharp from "sharp";
+import { api } from "./helpers";
 import { testClient, internal, sha256Hex } from "./helpers";
 test("authenticated templates create private seeded spaces, retry safely, and preserve blank content", async () => {
   const t = testClient(),
@@ -62,4 +64,75 @@ test("authenticated templates create private seeded spaces, retry safely, and pr
       locale: "es",
     }),
   ).rejects.toThrow("VALIDATION_ERROR");
+});
+test("space image icons are owned gallery media with strict dimensions", async () => {
+  vi.useFakeTimers();
+  try {
+    const t = testClient(),
+      token = "space-icon-session-12345678901234567890",
+      hash = sha256Hex(token);
+    await t.run(async (ctx) => {
+      const user = await ctx.db.insert("auth_users", {
+        email: "icon@example.test",
+        email_verified_at: 1,
+        failed_login_attempts: 0,
+      });
+      await ctx.db.insert("auth_sessions", {
+        token_hash: hash,
+        user_id: user,
+        created_at: Date.now(),
+        expires_at: Date.now() + 3600000,
+      });
+    });
+    const s = await t.mutation(internal.spaces.create.create, {
+      hash,
+      name: "Icon space",
+      template: "blank",
+      key: "icon-create-123",
+      locale: "es",
+      icon: "symbol:plane",
+    });
+    const grant = await t.action(api.lists.session.connect, {
+      token,
+      slug: s.slug,
+    });
+    const png = await sharp({
+      create: { width: 128, height: 128, channels: 3, background: "#4285f4" },
+    })
+      .png()
+      .toBuffer();
+    const image = await t.action(api.gallery.uploads.upload, {
+      ticket: grant.ticket,
+      key: "icon-image-123",
+      filename: "icon.png",
+      bytes: new Uint8Array(png).buffer,
+    });
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    await t.mutation(api.spaces.icons.set, {
+      ticket: grant.ticket,
+      key: image.key,
+    });
+    expect(
+      await t.run(
+        async (ctx) =>
+          (
+            await ctx.db
+              .query("spaces")
+              .withIndex("by_slug", (q) => q.eq("slug", s.slug))
+              .first()
+          )?.icon,
+      ),
+    ).toBe(`media:${s.slug}:${image.key}`);
+    await expect(
+      t.mutation(api.spaces.icons.set, { ticket: "invalid", key: image.key }),
+    ).rejects.toThrow("UNAUTHORIZED");
+    await expect(
+      t.mutation(api.spaces.icons.set, {
+        ticket: grant.ticket,
+        key: "foreign-media-123",
+      }),
+    ).rejects.toThrow("INVALID_IMAGE");
+  } finally {
+    vi.useRealTimers();
+  }
 });

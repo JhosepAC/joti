@@ -676,7 +676,14 @@
           "name": "En blanco",
           "description": "Una página vacía para empezar a tu manera."
         }
-      }
+      },
+      "icon": "Icono del espacio",
+      "iconHint": "Elige un icono o una imagen ligera.",
+      "uploadIcon": "Subir imagen",
+      "removeIcon": "Quitar imagen",
+      "chooseIcon": "Elegir icono {icon}",
+      "iconError": "Usa JPEG, PNG o WebP de hasta 2 MiB y 16 megapíxeles. Se guardará en WebP de 256 px (máximo 128 KiB).",
+      "chooseMedia": "Galería o enlace"
     }
   },
   "providers": {
@@ -1425,5 +1432,24 @@
     "moveEarlier": "Antes",
     "moveLater": "Después",
     "signIn": "Iniciar sesión"
+  },
+  "media": {
+    "title": "Insertar imagen",
+    "source": "Origen de la imagen",
+    "gallery": "Galería",
+    "upload": "Subir archivo",
+    "link": "Enlace",
+    "search": "Buscar en la galería",
+    "loading": "Cargando imágenes…",
+    "empty": "No hay imágenes disponibles. Puedes subir una o usar un enlace.",
+    "more": "Cargar más",
+    "close": "Cerrar",
+    "uploadHint": "JPEG, PNG, WebP o AVIF, hasta 8 MiB. Se guardará en la galería de este espacio.",
+    "error": "No se pudo preparar la imagen. Revisa el formato y el tamaño o reintenta desde Galería.",
+    "invalidUrl": "Introduce un enlace http o https válido.",
+    "url": "Enlace de la imagen",
+    "alt": "Descripción de la imagen",
+    "insert": "Insertar imagen",
+    "saving": "Guardando en Galería y preparando la imagen…"
   }
 }
