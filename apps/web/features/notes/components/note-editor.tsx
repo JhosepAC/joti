@@ -220,7 +220,7 @@ export function NoteEditor({
     );
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${draft.fields.title.replace(/[^\p{L}\p{N} _-]/gu, "").slice(0, 80) || "Nook"}.md`;
+    a.download = `${draft.fields.title.replace(/[^\p{L}\p{N} _-]/gu, "").slice(0, 80) || "Joti"}.md`;
     a.click();
     URL.revokeObjectURL(url);
   };

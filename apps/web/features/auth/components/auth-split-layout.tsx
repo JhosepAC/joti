@@ -1,5 +1,6 @@
 "use client";
 
+import { JotiLogo } from "@/components/ui/joti-logo";
 import {
   useEffect,
   useRef,
@@ -12,8 +13,7 @@ import { useTranslations } from "next-intl";
 import { useLocaleSwitcher } from "@/i18n/use-locale-switcher";
 import "./auth.css";
 
-type IconName =
-  "grid" | "check" | "note" | "calendar" | "plus" | "arrow";
+type IconName = "grid" | "check" | "note" | "calendar" | "plus" | "arrow";
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, ReactNode> = {
     grid: (
@@ -129,8 +129,8 @@ export function AuthSplitLayout({
   return (
     <main className={`auth-shell auth-studio ${className}`}>
       <header className="studio-header">
-        <Link href="/" className="studio-brand" aria-label="Nook">
-          <span>nook</span>
+        <Link href="/" className="studio-brand" aria-label="Joti">
+          <JotiLogo />
         </Link>
         <nav className="auth-language" aria-label={settings("language")}>
           <button
@@ -362,19 +362,21 @@ export function AuthSplitLayout({
               </button>
             ))}
           </div>
-          <p className="studio-play-hint">
-            {visual("invite")}
-          </p>
+          <p className="studio-play-hint">{visual("invite")}</p>
         </aside>
       </div>
       <footer className="studio-footer">
         <div className="studio-footer-brand">
-          <span>Nook</span>
+          <span>Joti</span>
           <span>{t("footer")}</span>
         </div>
         <p className="studio-footer-credit">
           {t("developedBy")}{" "}
-          <a href="https://jhosep-ac.pages.dev/" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://jhosep-ac.pages.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Jhosep Argomedo
           </a>
         </p>

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     "X-Content-Type-Options": "nosniff",
     "Cross-Origin-Resource-Policy": "same-origin",
   };
-  const token = request.cookies.get("nook-session")?.value;
+  const token = request.cookies.get("joti-session")?.value;
   if (!token || request.headers.get("sec-fetch-site") === "cross-site")
     return NextResponse.json(
       { code: "UNAUTHORIZED" },

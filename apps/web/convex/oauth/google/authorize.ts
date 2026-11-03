@@ -29,7 +29,7 @@ export const googleAuthorize = httpAction(async (ctx, request) => {
   const response = Response.redirect(buildGoogleAuthorizeUrl(redirectUri, state), 302);
   response.headers.append(
     "Set-Cookie",
-    `nook_oauth_next=${encodeURIComponent(next)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+    `joti_oauth_next=${encodeURIComponent(next)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
   );
   return response;
 });

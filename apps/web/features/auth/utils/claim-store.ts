@@ -24,8 +24,8 @@
  * window is small. The durable session can mint fresh account proof on sign-in.
  */
 
-const ACCOUNT_KEY = "nook:claim:account";
-const SPACE_KEY = "nook:claim:space";
+const ACCOUNT_KEY = "joti:claim:account";
+const SPACE_KEY = "joti:claim:space";
 
 export interface AccountGrant {
   email: string;

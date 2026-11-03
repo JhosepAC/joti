@@ -16,7 +16,7 @@ describe("account session bridge", () => {
         method: "POST",
         headers: {
           origin: "https://other.example",
-          cookie: "nook-session=private-test-token",
+          cookie: "joti-session=private-test-token",
         },
         body: "{}",
       }),

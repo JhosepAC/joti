@@ -8,11 +8,11 @@ vi.mock("convex/browser", () => ({
 }));
 import { POST } from "../../app/api/lists/access/route";
 function request(headers: Record<string, string> = {}, slug = "my-space") {
-  return new NextRequest("https://nook.example/api/lists/access?slug=" + slug, {
+  return new NextRequest("https://joti.example/api/lists/access?slug=" + slug, {
     method: "POST",
     headers: {
-      origin: "https://nook.example",
-      cookie: "nook-session=private-browser-token",
+      origin: "https://joti.example",
+      cookie: "joti-session=private-browser-token",
       ...headers,
     },
   });

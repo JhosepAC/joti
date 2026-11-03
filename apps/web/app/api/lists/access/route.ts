@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     request.headers.get("sec-fetch-site") === "cross-site"
   )
     return reply({ code: "FORBIDDEN" }, 403);
-  const token = request.cookies.get("nook-session")?.value;
+  const token = request.cookies.get("joti-session")?.value;
   const slug = request.nextUrl.searchParams.get("slug");
   if (!token) return reply({ code: "UNAUTHORIZED" }, 401);
   if (!slug || slug.length > 100)

@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Nook",
+    "appName": "Joti",
     "settings": {
       "button": "Settings",
       "menu": "Settings menu",
@@ -32,36 +32,36 @@
   },
   "metadata": {
     "app": {
-      "title": "Nook",
+      "title": "Joti",
       "description": "Your personal spaces for notes, tasks and more"
     },
     "login": {
-      "title": "Sign In - Nook",
-      "description": "Sign in to access your Nook dashboard"
+      "title": "Sign In - Joti",
+      "description": "Sign in to access your Joti dashboard"
     },
     "register": {
-      "title": "Create account - Nook",
-      "description": "Create your Nook account"
+      "title": "Create account - Joti",
+      "description": "Create your Joti account"
     },
     "forgotPassword": {
-      "title": "Recover password - Nook",
-      "description": "Regain access to your Nook account"
+      "title": "Recover password - Joti",
+      "description": "Regain access to your Joti account"
     },
     "resetPassword": {
-      "title": "Reset password - Nook",
+      "title": "Reset password - Joti",
       "description": "Choose a new password for your account"
     },
     "completeProfile": {
-      "title": "Complete your profile - Nook",
-      "description": "Complete your profile to start using Nook"
+      "title": "Complete your profile - Joti",
+      "description": "Complete your profile to start using Joti"
     },
     "spacesNew": {
-      "title": "Your first space - Nook",
-      "description": "Create the first space in your Nook account"
+      "title": "Your first space - Joti",
+      "description": "Create the first space in your Joti account"
     },
     "workspace": {
-      "title": "Space - Nook",
-      "description": "Your workspace in Nook"
+      "title": "Space - Joti",
+      "description": "Your workspace in Joti"
     }
   },
   "auth": {
@@ -110,7 +110,7 @@
         "subtitle": "All we need is a name and a username.",
         "username": "Username",
         "displayName": "Display Name",
-        "displayNamePlaceholder": "Nook User",
+        "displayNamePlaceholder": "Joti User",
         "displayNameHint": "1-100 characters, emoji allowed, no control chars",
         "restrictionsTitle": "Restrictions:",
         "restrictionLength": "3-20 characters, lowercase only",
@@ -187,7 +187,7 @@
       "usernameRule": "Username may only contain a-z, 0-9 and _",
       "usernameLength": "Username must be 3-20 characters",
       "displayName": "Display Name",
-      "displayNamePlaceholder": "Nook User",
+      "displayNamePlaceholder": "Joti User",
       "avatar": "Avatar",
       "skipAvatar": "Skip uses first letter",
       "previewAlt": "preview",
@@ -239,11 +239,11 @@
       "activationSent": "Code sent. It is valid for 10 minutes from the time it was sent."
     },
     "shell": {
-      "about": "About Nook",
+      "about": "About Joti",
       "title": "Life, in its place.",
       "description": "A space for every part of you. Bring your ideas, plans and to-dos together, your way.",
       "spaces": "Example spaces",
-      "example": "An example of what you can organize in Nook.",
+      "example": "An example of what you can organize in Joti.",
       "footer": "Less noise. More room for your life.",
       "account": "Account access",
       "developedBy": "Developed by:",
@@ -1115,7 +1115,7 @@
     "danger": "Danger zone",
     "back": "Back to my spaces",
     "logout": "Sign out",
-    "profileIntro": "Your personal details and the image that identifies you in Nook.",
+    "profileIntro": "Your personal details and the image that identifies you in Joti.",
     "securityIntro": "Manage account access and active sessions.",
     "preferencesIntro": "Adjust the available account preferences.",
     "dangerIntro": "Actions affecting your entire account require care.",
@@ -1146,7 +1146,7 @@
     "automatic": "From device",
     "weekStarts": "Week starts",
     "monday": "Monday",
-    "preferencesNote": "Nook uses its current light appearance. Dates and times follow your device; the calendar starts on Monday.",
+    "preferencesNote": "Joti uses its current light appearance. Dates and times follow your device; the calendar starts on Monday.",
     "password": "Password",
     "passwordHint": "We will send a single-use link to {email} to securely set a new password.",
     "resetPassword": "Send password change link",

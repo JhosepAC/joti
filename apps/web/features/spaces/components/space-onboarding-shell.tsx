@@ -1,5 +1,6 @@
 "use client";
 
+import { JotiLogo } from "@/components/ui/joti-logo";
 import { useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -31,8 +32,8 @@ export function SpaceOnboardingShell({
   return (
     <div className="space-setup">
       <header className="setup-header">
-        <Link href="/" className="setup-brand" aria-label="Nook">
-          nook
+        <Link href="/" className="setup-brand" aria-label="Joti">
+          <JotiLogo />
         </Link>
         <SpaceStepIndicator
           current={step}
@@ -47,7 +48,7 @@ export function SpaceOnboardingShell({
       </div>
       <footer className="setup-footer">
         <span>
-          Nook <span>· {t("footer")}</span>
+          Joti <span>· {t("footer")}</span>
         </span>
         <select
           aria-label={settings("language")}

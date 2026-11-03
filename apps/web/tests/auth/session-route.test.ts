@@ -8,7 +8,7 @@ vi.mock("convex/browser", () => ({
   },
 }));
 import { DELETE, GET, POST } from "../../app/api/auth/session/route";
-const origin = "https://nook.example";
+const origin = "https://joti.example";
 function request(
   method: string,
   body?: unknown,
@@ -71,7 +71,7 @@ describe("session cookie boundary", () => {
     expect(action).not.toHaveBeenCalled();
     action.mockResolvedValue(null);
     const result = await GET(
-      request("GET", undefined, { cookie: "nook-session=expired-proof" }),
+      request("GET", undefined, { cookie: "joti-session=expired-proof" }),
     );
     expect(await result.json()).toBeNull();
     expect(result.headers.get("set-cookie")).toContain("Max-Age=0");
@@ -81,7 +81,7 @@ describe("session cookie boundary", () => {
       new Error("Provider-specific sensitive diagnostics"),
     );
     const result = await GET(
-      request("GET", undefined, { cookie: "nook-session=valid-proof" }),
+      request("GET", undefined, { cookie: "joti-session=valid-proof" }),
     );
     expect(result.status).toBe(503);
     expect(result.headers.get("set-cookie")).toBeNull();
@@ -90,7 +90,7 @@ describe("session cookie boundary", () => {
   test("sign-out removes the browser cookie even when the revocation service fails", async () => {
     action.mockRejectedValue(new Error("offline"));
     const result = await DELETE(
-      request("DELETE", undefined, { cookie: "nook-session=old-proof" }),
+      request("DELETE", undefined, { cookie: "joti-session=old-proof" }),
     );
     expect(result.status).toBe(503);
     expect(result.headers.get("set-cookie")).toContain("Max-Age=0");

@@ -1,6 +1,6 @@
 # Calendar
 
-`CalendarModule` is mounted at `/w/[slug]?module=calendar`. It reuses the workspace shell, Nook Light tokens, list controls (`DatePicker`, searchable `ListSelect`), accessible `Modal`, and existing Convex provider. No new package or external service is required.
+`CalendarModule` is mounted at `/w/[slug]?module=calendar`. It reuses the workspace shell, Joti Light tokens, list controls (`DatePicker`, searchable `ListSelect`), accessible `Modal`, and existing Convex provider. No new package or external service is required.
 
 ## Data and authorization
 

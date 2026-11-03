@@ -17,7 +17,7 @@ async function operate(
       request.headers.get("origin") !== request.nextUrl.origin)
   )
     return reply({ code: "FORBIDDEN" }, 403);
-  const token = request.cookies.get("nook-session")?.value;
+  const token = request.cookies.get("joti-session")?.value;
   if (!token) return reply({ code: "UNAUTHORIZED" }, 401);
   const slug = request.nextUrl.searchParams.get("slug");
   if (!slug || slug.length > 100)
@@ -78,7 +78,7 @@ async function operate(
         slug,
         operation: operation === "item" ? input.action! : operation,
         locale:
-          request.cookies.get("nook-locale")?.value === "en" ? "en" : "es",
+          request.cookies.get("joti-locale")?.value === "en" ? "en" : "es",
         ...(operation === "save"
           ? {
               pageId: input.pageId as Id<"space_pages">,

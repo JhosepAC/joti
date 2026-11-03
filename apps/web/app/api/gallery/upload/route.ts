@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     request.headers.get("sec-fetch-site") === "cross-site"
   )
     return reply({ code: "FORBIDDEN" }, 403);
-  const token = request.cookies.get("nook-session")?.value;
+  const token = request.cookies.get("joti-session")?.value;
   if (!token) return reply({ code: "UNAUTHORIZED" }, 401);
   try {
     // Bound the stream too: Content-Length is untrusted and can be absent.

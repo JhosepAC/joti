@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       { code: "UNAUTHORIZED" },
       { status: 403, headers },
     );
-  const token = request.cookies.get("nook-session")?.value;
+  const token = request.cookies.get("joti-session")?.value;
   if (!token)
     return NextResponse.json(
       { code: "UNAUTHORIZED" },
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       headers: {
         ...headers,
         "Content-Type": "application/zip",
-        "Content-Disposition": 'attachment; filename="nook-gallery.zip"',
+        "Content-Disposition": 'attachment; filename="joti-gallery.zip"',
       },
     });
   } catch (e) {

@@ -12,7 +12,7 @@ People organizing study, work, personal projects, relationships, and shared plan
 
 ## Product Purpose
 
-Nook brings the information for each area of life into an independent, customizable space. A space defines context; its modules organize the information.
+Joti brings the information for each area of life into an independent, customizable space. A space defines context; its modules organize the information.
 
 ## Operating Context
 
@@ -20,7 +20,7 @@ Create an account, verify email, finish a profile, then create the first space o
 
 ## Capabilities and Constraints
 
-The application uses Next.js, React, Convex, and next-intl (Spanish and English). Preserve the existing stack and space onboarding. Use free tools and services. Authentication uses email and password; Google sign-in is excluded by the user's explicit request. The product name is Nook, confirmed by the user. Browser sessions use an HttpOnly cookie with a seven-day lifetime; short-lived scoped grants authorize Convex operations.
+The application uses Next.js, React, Convex, and next-intl (Spanish and English). Preserve the existing stack and space onboarding. Use free tools and services. Authentication uses email and password; Google sign-in is excluded by the user's explicit request. The product name is Joti, confirmed by the user. Browser sessions use an HttpOnly cookie with a seven-day lifetime; short-lived scoped grants authorize Convex operations.
 
 ## Evidence on Hand
 

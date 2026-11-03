@@ -1,4 +1,4 @@
-# Nook
+# Joti
 
 Plataforma de organización personal y colaborativa por espacios. Cada espacio reúne sus propias herramientas y contenido.
 

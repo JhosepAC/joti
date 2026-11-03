@@ -1,4 +1,4 @@
-# Galería de Nook
+# Galería de Joti
 
 Colección privada por espacio, integrada en `/w/[slug]?module=gallery`. Comparte las sesiones HttpOnly, los permisos de propietario y el grant temporal del workspace; no introduce cuentas, roles ni servicios externos. Los espacios compartidos todavía no existen en el proyecto.
 

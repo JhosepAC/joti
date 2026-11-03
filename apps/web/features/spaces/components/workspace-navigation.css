@@ -105,7 +105,7 @@
   background: #e8eaed;
 }
 @media (min-width: 761px) {
-  .nook-workspace[data-navigation-desktop="true"]:not([data-focus="true"]) {
+  .joti-workspace[data-navigation-desktop="true"]:not([data-focus="true"]) {
     --rail-size: 76px;
     --module-size: 248px;
     grid-template-columns: calc(var(--rail-size) + var(--module-size)) minmax(
@@ -114,7 +114,7 @@
       );
     transition: grid-template-columns 260ms cubic-bezier(0.23, 1, 0.32, 1);
   }
-  .nook-workspace .workspace-navigation {
+  .joti-workspace .workspace-navigation {
     grid-template-columns: var(--rail-size, 76px) var(--module-size, 248px);
     transition: grid-template-columns 260ms cubic-bezier(0.23, 1, 0.32, 1);
   }
@@ -125,31 +125,31 @@
       opacity 160ms ease,
       transform 260ms cubic-bezier(0.23, 1, 0.32, 1);
   }
-  .nook-workspace[data-rail-collapsed="true"] {
+  .joti-workspace[data-rail-collapsed="true"] {
     --rail-size: 24px !important;
   }
-  .nook-workspace[data-sidebar-collapsed="true"] {
+  .joti-workspace[data-sidebar-collapsed="true"] {
     --module-size: 24px !important;
   }
-  .nook-workspace[data-rail-collapsed="true"] .workspace-space-rail {
+  .joti-workspace[data-rail-collapsed="true"] .workspace-space-rail {
     opacity: 0;
     transform: translateX(-16px);
     pointer-events: none;
   }
-  .nook-workspace[data-rail-collapsed="true"] .workspace-rail-toggle {
+  .joti-workspace[data-rail-collapsed="true"] .workspace-rail-toggle {
     left: 1px;
   }
-  .nook-workspace[data-sidebar-collapsed="true"] .workspace-module-sidebar {
+  .joti-workspace[data-sidebar-collapsed="true"] .workspace-module-sidebar {
     opacity: 0;
     transform: translateX(-12px);
     pointer-events: none;
   }
-  .nook-workspace[data-sidebar-collapsed="true"] .workspace-sidebar-toggle {
+  .joti-workspace[data-sidebar-collapsed="true"] .workspace-sidebar-toggle {
     right: 1px;
   }
 }
 @media (min-width: 761px) and (max-width: 1150px) {
-  .nook-workspace[data-navigation-desktop="true"]:not([data-focus="true"]) {
+  .joti-workspace[data-navigation-desktop="true"]:not([data-focus="true"]) {
     --module-size: 212px;
   }
 }
@@ -160,7 +160,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nook-workspace,
+  .joti-workspace,
   .workspace-navigation,
   .workspace-space-rail,
   .workspace-module-sidebar,

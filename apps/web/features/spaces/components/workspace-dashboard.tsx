@@ -1,5 +1,6 @@
 "use client";
 
+import { JotiLogo } from "@/components/ui/joti-logo";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -56,7 +57,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
     [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem("nook:navigation") ?? "{}");
+      const saved = JSON.parse(localStorage.getItem("joti:navigation") ?? "{}");
       setRailCollapsed(saved.rail === true);
       setSidebarCollapsed(saved.sidebar === true);
     } catch {}
@@ -68,7 +69,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
     setSidebarCollapsed(s);
     try {
       localStorage.setItem(
-        "nook:navigation",
+        "joti:navigation",
         JSON.stringify({ rail: r, sidebar: s }),
       );
     } catch {}
@@ -180,8 +181,10 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
     );
   if (!data)
     return (
-      <div className="nook-workspace workspace-gate">
-        <span className="workspace-wordmark">nook</span>
+      <div className="joti-workspace workspace-gate">
+        <span className="workspace-wordmark" aria-label="Joti">
+          <JotiLogo />
+        </span>
         {loading ? (
           <p role="status">
             <SpinnerIcon />
@@ -239,7 +242,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
   );
   return (
     <div
-      className="nook-workspace"
+      className="joti-workspace"
       data-focus={focusMode}
       data-navigation-desktop={!mobile}
       data-rail-collapsed={!mobile && railCollapsed}
@@ -266,10 +269,10 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
           <Link
             href="/"
             className="workspace-wordmark"
-            aria-label="Nook"
+            aria-label="Joti"
             tabIndex={!mobile && railCollapsed ? -1 : undefined}
           >
-            nook
+            <JotiLogo compact />
           </Link>
           <div
             className="workspace-space-list"
@@ -722,7 +725,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                   </aside>
                 </div>
                 <footer className="workspace-canvas-footer">
-                  <span>Nook</span>
+                  <span>Joti</span>
                   <span>
                     {t("developedBy")}{" "}
                     <a

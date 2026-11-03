@@ -16,7 +16,7 @@ const RESERVED = new Set([
   "signup",
   "settings",
   "dashboard",
-  "nook",
+  "joti",
   "help",
   "support",
   "terms",

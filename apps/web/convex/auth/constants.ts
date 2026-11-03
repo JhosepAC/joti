@@ -21,7 +21,7 @@ export const RESERVED_USERNAMES = new Set([
   "signout",
   "settings",
   "dashboard",
-  "nook",
+  "joti",
   "help",
   "support",
   "terms",

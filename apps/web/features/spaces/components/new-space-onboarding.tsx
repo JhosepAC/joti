@@ -1,5 +1,6 @@
 "use client";
 
+import { JotiLogo } from "@/components/ui/joti-logo";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,8 +67,8 @@ export function NewSpaceOnboarding() {
     return (
       <div className="space-setup">
         <header className="setup-header">
-          <Link href="/" className="setup-brand">
-            nook
+          <Link href="/" className="setup-brand" aria-label="Joti">
+            <JotiLogo />
           </Link>
         </header>
         <main className="setup-gate">

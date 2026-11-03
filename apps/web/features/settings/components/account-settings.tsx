@@ -140,7 +140,7 @@ export function AccountSettings({ onClose }: { onClose?: () => void } = {}) {
               )}
             </span>
             <div>
-              <strong>{data?.name ?? "Nook"}</strong>
+              <strong>{data?.name ?? "Joti"}</strong>
               <span>{data ? `@${data.username}` : t("loading")}</span>
             </div>
           </div>

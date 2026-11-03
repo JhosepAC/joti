@@ -16,7 +16,7 @@ import {
   type EmailLocale,
 } from "./emailCopy";
 
-const RESEND_FROM = process.env.RESEND_FROM ?? "Nook <onboarding@resend.dev>";
+const RESEND_FROM = process.env.RESEND_FROM ?? "Joti <onboarding@resend.dev>";
 const REPLY_TO = process.env.RESEND_REPLY_TO ?? "jhosepjamil@gmail.com";
 
 export type EmailResult = { delivered: boolean; reason?: string };
