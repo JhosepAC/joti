@@ -132,13 +132,13 @@
    SKILLS/better-ui/enter-exit.md). The hidden state lives in the `from`
    keyframe, so an item whose animation never runs stays visible. Reduced motion
    keeps only the opacity fade; movement, scale and blur are gated. */
-@keyframes nook-enter-fade {
+@keyframes joti-enter-fade {
   from {
     opacity: 0;
   }
 }
 
-@keyframes nook-enter-up {
+@keyframes joti-enter-up {
   from {
     opacity: 0;
     transform: translateY(12px);
@@ -146,25 +146,25 @@
   }
 }
 
-.nook-enter {
-  animation: nook-enter-fade 300ms ease-out both;
+.joti-enter {
+  animation: joti-enter-fade 300ms ease-out both;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .nook-enter {
-    animation-name: nook-enter-up;
+  .joti-enter {
+    animation-name: joti-enter-up;
   }
 }
 
-.nook-enter-1 {
+.joti-enter-1 {
   animation-delay: 0ms;
 }
 
-.nook-enter-2 {
+.joti-enter-2 {
   animation-delay: 100ms;
 }
 
-.nook-enter-3 {
+.joti-enter-3 {
   animation-delay: 200ms;
 }
 
@@ -248,4 +248,29 @@ h6 {
   font-family: var(--font-varela-round), "Varela Round", sans-serif;
   font-weight: 400;
   font-style: normal;
+}
+
+/* The symbol stays legible without an enclosing app tile or decoration. */
+.joti-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  color: inherit;
+  line-height: 1;
+  white-space: nowrap;
+}
+.joti-logo > svg {
+  display: block;
+  width: 1.05em;
+  height: 1.24em;
+  flex: none;
+  overflow: visible;
+}
+.joti-logo > span {
+  font-weight: 650;
+  letter-spacing: -0.055em;
+}
+.workspace-wordmark .joti-logo > svg {
+  width: 30px;
+  height: 36px;
 }

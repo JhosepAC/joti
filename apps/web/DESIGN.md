@@ -1,5 +1,5 @@
 ---
-name: Nook Light
+name: Joti Light
 description: Content-first authentication, inspired by Google and Notion.
 colors:
   ink: "#202124"
@@ -41,13 +41,13 @@ typography:
     fontSize: "12px"
 ---
 
-# Nook Light
+# Joti Light
 
 Scope: `/auth/*`, first-space onboarding, and `/w/[slug]`. The user explicitly requested removing generic AI styling and using a predominantly light Google/Notion direction. This replaces the lavender studio and elevated account-card treatment.
 
 ## Layout and hierarchy
 
-One white canvas. Plain Nook wordmark and text language controls. The form is unboxed and left aligned, with no decorative icon above its heading. Desktop retains the interactive space example alongside the form; mobile places it below. Use spacing and typography to group information.
+One white canvas. Plain Joti wordmark and text language controls. The form is unboxed and left aligned, with no decorative icon above its heading. Desktop retains the interactive space example alongside the form; mobile places it below. Use spacing and typography to group information.
 
 ## Color and components
 
@@ -76,3 +76,7 @@ Lists extends the same frame with an editable title, user-selected icon, saved v
 Column/row grips provide direct rearrangement; resize edges preview width before saving. Keyboard and property-panel controls offer alternatives. Dialogs stay centered with a brief 160ms settle and native focus containment; reduced motion removes travel. Tables scroll horizontally instead of shrinking values into unreadable cells. Within Lists, navigation folds into a drawer at 1100px to preserve the working area. Explicit pending, disconnected, conflict, archive, and recovery states are part of the design.
 
 Selection uses a centered 44px utility gutter with no property divider. Searchable comboboxes, selection menus, color swatches, and a Monday-first calendar share custom light surfaces, selected states, keyboard navigation, and anchored 150ms entrances. Keep OS select/date pickers out of Lists. Preserve values when selection options are retired; expose their restoration in the property editor. Footer calculations reserve room for the result even when their label truncates. Sidebar item menus consistently group favorite, duplicate/rename, and open-in-new-tab actions.
+
+## Joti identity
+
+The custom SVG mark combines a lowercase j, its blue point, and a folded-sheet terminal. Use `JotiLogo` for wordmarks and its compact variant in the space rail. The standalone `public/joti-mark.svg`, application SVG icons, and ICO fallbacks share the same geometry. Preserve the aspect ratio and surrounding whitespace; do not add gradients or an enclosing tile.
