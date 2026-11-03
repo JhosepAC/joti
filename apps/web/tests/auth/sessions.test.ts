@@ -1,3 +1,4 @@
+import nodemailer from "nodemailer";
 import { describe, expect, test, vi } from "vitest";
 import {
   api,
@@ -193,17 +194,21 @@ describe("password reset ownership and atomicity", () => {
         failed_login_attempts: 0,
       }),
     );
-    vi.stubEnv("RESEND_API_KEY", "test-only-key");
+    vi.stubEnv("GMAIL_APP_PASSWORD", "abcdefghijklmnop");
     const send = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response('{"id":"test-email"}', { status: 200 }));
+      .fn()
+      .mockResolvedValue({ accepted: ["legacy@example.com"], rejected: [] });
+    vi.spyOn(nodemailer, "createTransport").mockReturnValue({
+      sendMail: send,
+      close: vi.fn(),
+    } as never);
     try {
       expect(
         await t.action(api.auth.passwordReset.requestPasswordReset, {
           email: "legacy@example.com",
         }),
       ).toEqual({ sent: true });
-      const body = String(send.mock.calls[0]?.[1]?.body);
+      const body = JSON.stringify(send.mock.calls[0]?.[0]);
       expect(body).toContain("/auth/reset-password?token=");
       expect(body).not.toContain("Google");
       expect(

@@ -1,7 +1,11 @@
 import { internalMutation, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
-import { VERIFICATION_MAX_ATTEMPTS } from "./constants";
+import {
+  VERIFICATION_CODE_COOLDOWN_MS,
+  VERIFICATION_CODE_EXPIRY_MS,
+  VERIFICATION_MAX_ATTEMPTS,
+} from "./constants";
 
 // ---------------------------------------------------------------------------
 // This module runs in the V8 isolate, so it must not import anything that
@@ -21,7 +25,12 @@ function constantTimeEqual(a: string, b: string): boolean {
 }
 
 export const upsertCode = internalMutation({
-  args: { email: v.string(), code_hash: v.string(), expires_at: v.number() },
+  args: {
+    email: v.string(),
+    code_hash: v.string(),
+    expires_at: v.number(),
+    enforceCooldown: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
     // Only the peppered SHA-256 digest is persisted, so a leaked database dump
     // or log entry does not hand out live verification codes (and cannot be
@@ -31,6 +40,16 @@ export const upsertCode = internalMutation({
       .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
 
+    if (
+      existing &&
+      args.enforceCooldown &&
+      Date.now() - (existing.expires_at - VERIFICATION_CODE_EXPIRY_MS) <
+        VERIFICATION_CODE_COOLDOWN_MS
+    )
+      throw new ConvexError({
+        code: "RATE_LIMITED",
+        message: "Please wait before requesting another code.",
+      });
     if (existing) {
       await ctx.db.patch(existing._id, {
         code: undefined,
@@ -72,7 +91,8 @@ export const verifyCode = internalMutation({
     }
 
     const matchesPeppered =
-      record.code_hash !== undefined && constantTimeEqual(record.code_hash, args.code_hash);
+      record.code_hash !== undefined &&
+      constantTimeEqual(record.code_hash, args.code_hash);
     const matchesLegacy =
       !matchesPeppered &&
       args.code_hash_legacy !== undefined &&
@@ -116,13 +136,17 @@ export const getByEmail = internalQuery({
 
 /** Removes the verification row entirely. */
 export const clearByEmail = internalMutation({
-  args: { email: v.string() },
+  args: { email: v.string(), code_hash: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const record = await ctx.db
       .query("auth_email_verifications")
       .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
-    if (record) await ctx.db.delete(record._id);
+    if (
+      record &&
+      (args.code_hash === undefined || record.code_hash === args.code_hash)
+    )
+      await ctx.db.delete(record._id);
   },
 });
 

@@ -19,6 +19,7 @@ import type * as auth_constants from "../auth/constants.js";
 import type * as auth_crypto from "../auth/crypto.js";
 import type * as auth_email from "../auth/email.js";
 import type * as auth_emailCopy from "../auth/emailCopy.js";
+import type * as auth_emailQuota from "../auth/emailQuota.js";
 import type * as auth_grantStore from "../auth/grantStore.js";
 import type * as auth_mutations from "../auth/mutations.js";
 import type * as auth_passwordReset from "../auth/passwordReset.js";
@@ -86,6 +87,7 @@ declare const fullApi: ApiFromModules<{
   "auth/crypto": typeof auth_crypto;
   "auth/email": typeof auth_email;
   "auth/emailCopy": typeof auth_emailCopy;
+  "auth/emailQuota": typeof auth_emailQuota;
   "auth/grantStore": typeof auth_grantStore;
   "auth/mutations": typeof auth_mutations;
   "auth/passwordReset": typeof auth_passwordReset;
