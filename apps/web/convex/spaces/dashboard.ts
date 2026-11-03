@@ -13,6 +13,7 @@ export const operate = action({
     locale: v.string(),
     operation: v.union(
       v.literal("load"),
+      v.literal("configure"),
       v.literal("create"),
       v.literal("save"),
       v.literal("duplicate"),
@@ -21,6 +22,9 @@ export const operate = action({
       v.literal("delete"),
       v.literal("icon"),
     ),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    modules: v.optional(v.array(v.string())),
     pageId: v.optional(v.id("space_pages")),
     title: v.optional(v.string()),
     body: v.optional(v.string()),

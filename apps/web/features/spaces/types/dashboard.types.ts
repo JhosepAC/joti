@@ -14,6 +14,8 @@ export interface DashboardSpace {
   name: string;
   icon: string;
   purpose: string;
+  modules?: string[];
+  description?: string;
 }
 export interface DashboardData {
   space: DashboardSpace;

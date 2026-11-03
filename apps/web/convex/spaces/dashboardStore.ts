@@ -1,3 +1,4 @@
+import { validateSpaceName, validateSpaceIcon } from "./validators";
 import { internalMutation } from "../_generated/server";
 import { ConvexError, v } from "convex/values";
 
@@ -9,6 +10,7 @@ export const operate = internalMutation({
     locale: v.string(),
     operation: v.union(
       v.literal("load"),
+      v.literal("configure"),
       v.literal("create"),
       v.literal("save"),
       v.literal("duplicate"),
@@ -17,6 +19,9 @@ export const operate = internalMutation({
       v.literal("delete"),
       v.literal("icon"),
     ),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    modules: v.optional(v.array(v.string())),
     pageId: v.optional(v.id("space_pages")),
     title: v.optional(v.string()),
     body: v.optional(v.string()),
@@ -45,6 +50,42 @@ export const operate = internalMutation({
     ).filter((space) => !space.deleted_at);
     const space = owned.find((space) => space.slug === args.slug);
     if (!space) return fail("NOT_FOUND");
+    if (args.operation === "configure") {
+      if (args.name !== undefined) space.name = validateSpaceName(args.name);
+      if (args.description !== undefined) {
+        if (
+          args.description.length > 280 ||
+          /[\u0000-\u001f]/.test(args.description)
+        )
+          return fail("VALIDATION_ERROR");
+        space.description = args.description.trim();
+      }
+      if (args.icon !== undefined)
+        space.icon =
+          /^symbol:(table|check|basket|plane|book|briefcase|heart|bolt|pin|tag)$/.test(
+            args.icon,
+          )
+            ? args.icon
+            : validateSpaceIcon(args.icon);
+      if (args.modules !== undefined) {
+        if (
+          args.modules.length > 5 ||
+          new Set(args.modules).size !== args.modules.length ||
+          args.modules.some(
+            (m) =>
+              !["pages", "lists", "calendar", "notes", "gallery"].includes(m),
+          )
+        )
+          return fail("VALIDATION_ERROR");
+        space.enabled_modules = args.modules;
+      }
+      await ctx.db.patch(space._id, {
+        name: space.name,
+        icon: space.icon,
+        description: space.description,
+        enabled_modules: space.enabled_modules,
+      });
+    }
     const profile = await ctx.db
       .query("auth_user_profiles")
       .withIndex("by_user_id", (q) => q.eq("user_id", user._id))
@@ -211,6 +252,8 @@ export const operate = internalMutation({
         name: space.name,
         icon: space.icon,
         purpose: space.purpose,
+        modules: space.enabled_modules ?? [],
+        description: space.description ?? "",
       },
       spaces: owned.map((item) => ({
         slug: item.slug,

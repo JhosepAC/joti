@@ -9,7 +9,7 @@ const reply = (value: unknown, status = 200) =>
   NextResponse.json(value, { status, headers });
 async function operate(
   request: NextRequest,
-  operation: "load" | "create" | "save" | "item",
+  operation: "load" | "create" | "save" | "item" | "configure",
 ) {
   if (
     request.headers.get("sec-fetch-site") === "cross-site" ||
@@ -23,6 +23,9 @@ async function operate(
   if (!slug || slug.length > 100)
     return reply({ code: "VALIDATION_ERROR" }, 400);
   let input: {
+    name?: string;
+    description?: string;
+    modules?: string[];
     pageId?: string;
     title?: string;
     body?: string;
@@ -31,7 +34,11 @@ async function operate(
     favorite?: boolean;
     icon?: string;
   } = {};
-  if (operation === "save" || operation === "item") {
+  if (
+    operation === "save" ||
+    operation === "item" ||
+    operation === "configure"
+  ) {
     if (
       !request.headers.get("content-type")?.startsWith("application/json") ||
       Number(request.headers.get("content-length") ?? 0) > 150000
@@ -44,7 +51,7 @@ async function operate(
     }
     if (
       !input ||
-      typeof input.pageId !== "string" ||
+      (operation !== "configure" && typeof input.pageId !== "string") ||
       (operation === "save" &&
         (typeof input.title !== "string" ||
           typeof input.body !== "string" ||
@@ -79,26 +86,33 @@ async function operate(
         operation: operation === "item" ? input.action! : operation,
         locale:
           request.cookies.get("joti-locale")?.value === "en" ? "en" : "es",
-        ...(operation === "save"
+        ...(operation === "configure"
           ? {
-              pageId: input.pageId as Id<"space_pages">,
-              title: input.title,
-              body: input.body,
-              revision: input.revision,
+              name: input.name,
+              description: input.description,
+              modules: input.modules,
+              icon: input.icon,
             }
-          : operation === "item"
+          : operation === "save"
             ? {
                 pageId: input.pageId as Id<"space_pages">,
-                ...(input.title !== undefined ? { title: input.title } : {}),
-                ...(input.icon !== undefined ? { icon: input.icon } : {}),
-                ...(input.revision !== undefined
-                  ? { revision: input.revision }
-                  : {}),
-                ...(input.favorite !== undefined
-                  ? { favorite: input.favorite }
-                  : {}),
+                title: input.title,
+                body: input.body,
+                revision: input.revision,
               }
-            : {}),
+            : operation === "item"
+              ? {
+                  pageId: input.pageId as Id<"space_pages">,
+                  ...(input.title !== undefined ? { title: input.title } : {}),
+                  ...(input.icon !== undefined ? { icon: input.icon } : {}),
+                  ...(input.revision !== undefined
+                    ? { revision: input.revision }
+                    : {}),
+                  ...(input.favorite !== undefined
+                    ? { favorite: input.favorite }
+                    : {}),
+                }
+              : {}),
       },
     );
     return reply(result);
@@ -122,6 +136,12 @@ async function operate(
   }
 }
 export const GET = (request: NextRequest) => operate(request, "load");
-export const POST = (request: NextRequest) => operate(request, "create");
+export const POST = (request: NextRequest) =>
+  operate(
+    request,
+    request.nextUrl.searchParams.get("configure") === "1"
+      ? "configure"
+      : "create",
+  );
 export const PATCH = (request: NextRequest) => operate(request, "save");
 export const PUT = (request: NextRequest) => operate(request, "item");

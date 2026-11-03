@@ -38,6 +38,7 @@ async function fixture(purpose: "personal" | "blank" = "personal") {
   const call = (
     input: {
       operation?:
+        | "configure"
         | "load"
         | "create"
         | "save"
@@ -232,5 +233,39 @@ describe("workspace pages", () => {
       }),
     ).rejects.toThrow("VALIDATION_ERROR");
     expect((await call()).pages[0]!.revision).toBe(1);
+  });
+});
+
+describe("space configuration", () => {
+  test("persists identity and module choices without removing documents", async () => {
+    const { call } = await fixture();
+    const initial = await call();
+    expect(initial.space.modules).toEqual([]);
+    const updated = await call({
+      operation: "configure",
+      name: "Research space",
+      description: "Our research",
+      icon: "🎓",
+      modules: ["pages", "notes"],
+    });
+    expect(updated.space.name).toBe("Research space");
+    expect(updated.space.modules).toEqual(["pages", "notes"]);
+    await call({ operation: "configure", modules: [] });
+    expect((await call()).pages).toEqual(initial.pages);
+    expect((await call()).space.modules).toEqual([]);
+  });
+  test("rejects invalid settings atomically and requires an owner session", async () => {
+    const { call, t, rows } = await fixture();
+    await expect(
+      call({ operation: "configure", name: "Changed", modules: ["unknown"] }),
+    ).rejects.toThrow("VALIDATION_ERROR");
+    expect((await call()).space.name).toBe("My space");
+    await expect(
+      call({ operation: "configure", modules: ["pages", "pages"] }),
+    ).rejects.toThrow("VALIDATION_ERROR");
+    await t.run((ctx) => ctx.db.delete(rows.session));
+    await expect(
+      call({ operation: "configure", name: "Changed" }),
+    ).rejects.toThrow("UNAUTHORIZED");
   });
 });
