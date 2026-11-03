@@ -150,6 +150,7 @@ export function useRegisterFlow() {
       const result = (await confirm({
         email: data.email.trim().toLowerCase(),
         code,
+        password: data.password,
       })) as { claim?: string };
       if (!result.claim) throw new Error("Session expired");
       setClaim(result.claim);

@@ -4,10 +4,16 @@ import { action } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { internal } from "../_generated/api";
-import { hashEmailCode, hashEmailCodeLegacy, issueClaimGrant, sha256Hex } from "./crypto";
+import {
+  hashPassword,
+  hashEmailCode,
+  hashEmailCodeLegacy,
+  issueClaimGrant,
+  sha256Hex,
+} from "./crypto";
 import { CLAIM_SCOPE_ACCOUNT } from "./constants";
 import { issueVerificationCode } from "./_codeService";
-import { validateEmail } from "./validators";
+import { validateEmail, validatePassword } from "./validators";
 
 // `requestEmailCode` and `resendEmailCode` both delegate to
 // `_codeService.issueVerificationCode`, which owns generation, throttling,
@@ -16,7 +22,11 @@ import { validateEmail } from "./validators";
 export const requestEmailCode: ReturnType<typeof action> = action({
   args: { email: v.string(), locale: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const { expiresAt } = await issueVerificationCode(ctx, args.email, args.locale);
+    const { expiresAt } = await issueVerificationCode(
+      ctx,
+      args.email,
+      args.locale,
+    );
     return { sent: true, expiresAt };
   },
 });
@@ -24,7 +34,11 @@ export const requestEmailCode: ReturnType<typeof action> = action({
 export const resendEmailCode: ReturnType<typeof action> = action({
   args: { email: v.string(), locale: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const { expiresAt } = await issueVerificationCode(ctx, args.email, args.locale);
+    const { expiresAt } = await issueVerificationCode(
+      ctx,
+      args.email,
+      args.locale,
+    );
     return { sent: true, expiresAt };
   },
 });
@@ -38,15 +52,24 @@ export const resendEmailCode: ReturnType<typeof action> = action({
  * successful check burns the code, so a captured request cannot be replayed.
  */
 export const confirmEmailCode: ReturnType<typeof action> = action({
-  args: { email: v.string(), code: v.string() },
+  args: {
+    email: v.string(),
+    code: v.string(),
+    password: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     // Canonical validation, not trim-only: overlong or malformed addresses
     // must not reach the DB lookup or mint grants for junk rows.
     const cleanEmail = validateEmail(args.email);
     const cleanCode = args.code.trim();
+    if (args.password !== undefined)
+      validatePassword(args.password, cleanEmail);
 
     if (!/^\d{6}$/.test(cleanCode)) {
-      throw new ConvexError({ code: "VALIDATION_ERROR", message: "Code must be 6 digits." });
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Code must be 6 digits.",
+      });
     }
 
     const result = (await ctx.runMutation(
@@ -82,7 +105,13 @@ export const confirmEmailCode: ReturnType<typeof action> = action({
     // usually finds nothing and `activateUser` throws "Account not found." --
     // that is the expected case, not a failure.
     await ctx
-      .runMutation(internal.auth.mutations.activateUser, { email: cleanEmail })
+      .runMutation(internal.auth.mutations.activateUser, {
+        email: cleanEmail,
+        password_hash:
+          args.password !== undefined
+            ? await hashPassword(args.password)
+            : undefined,
+      })
       .catch(() => undefined);
 
     return { verified: true, claim };

@@ -101,11 +101,10 @@ export const createUserInternal = internalMutation({
 // the verification code, which "verified" whichever password happened to be
 // stored last -- the attacker's.
 //
-// Accounts are now only ever created after the address is verified, via
-// `createUserInternal` (called by actions.register / actions.completeProfile).
+// Pending accounts have no profile or workspace access until address verification.
 
 export const activateUser = internalMutation({
-  args: { email: v.string() },
+  args: { email: v.string(), password_hash: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const cleanEmail = validateEmail(args.email);
     const user = await ctx.db
@@ -114,7 +113,10 @@ export const activateUser = internalMutation({
       .first();
     if (!user || user.deleted_at) throw new ConvexError("Account not found.");
     if (user.email_verified_at) return { userId: user._id, already: true };
-    await ctx.db.patch(user._id, { email_verified_at: Date.now() });
+    await ctx.db.patch(user._id, {
+      email_verified_at: Date.now(),
+      ...(args.password_hash ? { password_hash: args.password_hash } : {}),
+    });
     return { userId: user._id, already: false };
   },
 });
@@ -123,6 +125,7 @@ export const completeProfile = internalMutation({
   args: {
     userId: v.id("auth_users"),
     claim_hash: v.string(),
+    password_hash: v.optional(v.string()),
     username: v.string(),
     display_name: v.string(),
     bio: v.optional(v.string()),
@@ -172,6 +175,10 @@ export const completeProfile = internalMutation({
       .first();
     if (verification) await ctx.db.delete(verification._id);
 
+    // Address ownership is proven. Use the password chosen by the verified
+    // registrant, preventing pre-registration with an attacker-known password.
+    if (args.password_hash)
+      await ctx.db.patch(user._id, { password_hash: args.password_hash });
     await ctx.db.delete(proof._id);
     return { profileId };
   },
@@ -300,5 +307,23 @@ export const softDeleteUser = internalMutation({
   args: { userId: v.id("auth_users") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.userId, { deleted_at: Date.now() });
+  },
+});
+
+/** Save only the first pending password. Re-registration cannot replace credentials. */
+export const createPending = internalMutation({
+  args: { email: v.string(), password_hash: v.string() },
+  handler: async (ctx, args) => {
+    const email = validateEmail(args.email);
+    const existing = await ctx.db
+      .query("auth_users")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .first();
+    if (existing) return;
+    await ctx.db.insert("auth_users", {
+      email,
+      password_hash: args.password_hash,
+      failed_login_attempts: 0,
+    });
   },
 });

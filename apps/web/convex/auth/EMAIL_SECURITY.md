@@ -28,3 +28,9 @@ Regression tests mock SMTP; no real recipient is contacted. Tests cover TLS/opti
 ## Dependency audit — 2026-11-03
 
 `pnpm audit --prod` reports 14 advisories (3 critical, 5 high, 5 moderate, 1 low) in the existing dependency tree. No advisory was reported for Nodemailer 10.3.1. Reported affected packages include Next.js (critical RCE advisories; audit recommends >=16.4.1), Sharp (>=0.35.5), nanoid (>=3.3.18) and source-map-js (>=1.2.2). These require a separate dependency upgrade and regression pass; this transport change does not resolve them or prove exploitability in Joti. Re-run the audit before production deployment.
+
+## Resuming registration
+
+Step one persists an unverified user with a bcrypt password hash before sending the code, including delivery failures. Re-registration never replaces an existing password. Login checks the password and lockout before exposing the pending state and does not issue a session until the email is verified. The existing activation UI allows a code or resend, then login routes through the profile/space gate.
+
+The registration and activation clients supply the chosen password when redeeming the code. The backend validates it and binds its hash atomically with activation of an unverified account. This prevents a pre-registered password from surviving the address owner's confirmation. Profile completion also accepts the owner-chosen password only with a valid account grant and no existing profile. Verified accounts are not changed by code resends or repeated registration. Cleartext passwords are not persisted in browser storage. Older abandoned registrations made before this change cannot recover a password that was never saved: those users must restart registration.

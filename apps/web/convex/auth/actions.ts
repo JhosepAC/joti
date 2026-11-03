@@ -143,12 +143,8 @@ export const register: ReturnType<typeof action> = action({
 // ---------------------------------------------------------------------------
 // registerPending -- wizard step 1: request a verification code.
 //
-// It deliberately does NOT persist a password. The previous implementation
-// created the account here, which let an attacker pre-register someone else's
-// address and have the victim's code confirm the attacker's password. The
-// password is now committed only after the address is proven, by `register` or
-// `completeProfile`.
-// ---------------------------------------------------------------------------
+// Persist a hashed pending credential so login can resume verification. Repeated
+// requests cannot overwrite it; address confirmation binds the owner-chosen password.
 
 export const registerPending = action({
   args: {
@@ -159,8 +155,21 @@ export const registerPending = action({
   handler: async (ctx, args) => {
     const cleanEmail = validateEmail(args.email);
     if (args.password !== undefined) {
-      // Validate now for fast client-side feedback; never store it.
+      // Only a password hash is persisted; never the cleartext password.
       validatePassword(args.password, cleanEmail);
+    }
+
+    if (args.password !== undefined) {
+      await ctx.runMutation(internal.auth.rateLimit.consumeRateLimit, {
+        key: `pending-register:${cleanEmail}`,
+        limit: 5,
+        windowMs: HOUR_MS,
+      });
+      const passwordHash = await hashPassword(args.password);
+      await ctx.runMutation(internal.auth.mutations.createPending, {
+        email: cleanEmail,
+        password_hash: passwordHash,
+      });
     }
 
     // `_codeService.issueVerificationCode` owns generation, throttling, hashing
@@ -286,9 +295,20 @@ export const completeProfile: ReturnType<typeof action> = action({
       });
     }
 
+    let profilePasswordHash: string | undefined;
+    if (args.password !== undefined) {
+      validatePassword(args.password, cleanEmail, cleanUsername);
+      await ctx.runMutation(internal.auth.rateLimit.consumeRateLimit, {
+        key: `complete-profile:${cleanEmail}`,
+        limit: 5,
+        windowMs: HOUR_MS,
+      });
+      profilePasswordHash = await hashPassword(args.password);
+    }
     const result = (await ctx.runMutation(
       internal.auth.mutations.completeProfile,
       {
+        password_hash: profilePasswordHash,
         userId: existing._id,
         claim_hash: sha256Hex(args.claim),
         username: cleanUsername,
