@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Nook is a TypeScript monorepo managed with pnpm workspaces and Turborepo.
+Joti is a TypeScript monorepo managed with pnpm workspaces and Turborepo.
 
 - `apps/web/`: main Next.js App Router application. Routes live in `app/`; domain code lives in `features/auth/`, `features/spaces/`, and `features/lists/`.
 - `apps/web/convex/`: active backend schema, auth, sessions, spaces, and realtime lists. Keep backend changes here rather than in the root `convex/` scaffold. Same-origin session and scoped list access bridges live in `apps/web/app/api/`.

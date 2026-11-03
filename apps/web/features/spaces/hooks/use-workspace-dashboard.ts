@@ -55,14 +55,14 @@ export function useWorkspaceDashboard(slug: string) {
         )
         .catch(() => {});
     };
-    window.addEventListener("nook-profile-updated", refreshProfile);
+    window.addEventListener("joti-profile-updated", refreshProfile);
     const channel =
       typeof BroadcastChannel !== "undefined"
-        ? new BroadcastChannel("nook-account")
+        ? new BroadcastChannel("joti-account")
         : null;
     if (channel) channel.onmessage = refreshProfile;
     return () => {
-      window.removeEventListener("nook-profile-updated", refreshProfile);
+      window.removeEventListener("joti-profile-updated", refreshProfile);
       channel?.close();
     };
   }, [slug]);
@@ -80,7 +80,7 @@ export function useWorkspaceDashboard(slug: string) {
       try {
         const result = await request(slug, "GET", undefined, signal);
         if (signal?.aborted) return;
-        const key = `nook:pages-draft:${result.profile.username}:${slug}`;
+        const key = `joti:pages-draft:${result.profile.username}:${slug}`;
         const recovered: Record<string, Draft> = {};
         try {
           const saved = JSON.parse(sessionStorage.getItem(key) ?? "{}");

@@ -8,7 +8,7 @@ vi.mock("convex/browser", () => ({
   },
 }));
 import { GET, POST, PATCH, PUT } from "../../app/api/workspace/route";
-const origin = "https://nook.example";
+const origin = "https://joti.example";
 function request(
   method: string,
   body?: unknown,
@@ -18,7 +18,7 @@ function request(
     method,
     headers: {
       origin,
-      cookie: "nook-session=private-token",
+      cookie: "joti-session=private-token",
       "content-type": "application/json",
       ...headers,
     },

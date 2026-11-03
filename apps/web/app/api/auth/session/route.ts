@@ -2,7 +2,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { NextRequest, NextResponse } from "next/server";
 import { api } from "@/convex/_generated/api";
 
-const COOKIE = "nook-session";
+const COOKIE = "joti-session";
 const headers = { "Cache-Control": "no-store", Vary: "Cookie" };
 function response(body: unknown, status = 200) {
   return NextResponse.json(body, { status, headers });
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       expires: new Date(session.expiresAt),
     });
     if (session.locale === "es" || session.locale === "en")
-      result.cookies.set("nook-locale", session.locale, {
+      result.cookies.set("joti-locale", session.locale, {
         path: "/",
         sameSite: "lax",
         maxAge: 31536000,

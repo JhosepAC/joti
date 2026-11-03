@@ -147,7 +147,7 @@ function getCodePepper(): string {
  * SHA-256 value in the database.
  */
 export function hashEmailCode(code: string): string {
-  return sha256Hex(`nook-email-code-v1:${getCodePepper()}:${code}`);
+  return sha256Hex(`joti-email-code-v1:${getCodePepper()}:${code}`);
 }
 
 /**

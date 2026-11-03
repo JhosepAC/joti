@@ -347,7 +347,7 @@ export function NotesModule({
           missing={!model.data.notes.some((item) => item.key === selected)}
           history={model.data.history}
           notes={all}
-          storageKey={`nook:note-draft:${model.data.owner}:${slug}:${selected}`}
+          storageKey={`joti:note-draft:${model.data.owner}:${slug}:${selected}`}
           slug={slug}
           save={model.save}
           onClose={() => select(undefined)}

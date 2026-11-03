@@ -49,7 +49,7 @@ export function PageConflictDialog({
             );
             const a = document.createElement("a");
             a.href = url;
-            a.download = "Nook-draft.md";
+            a.download = "Joti-draft.md";
             a.click();
             URL.revokeObjectURL(url);
           }}
@@ -236,7 +236,7 @@ export function PageEditor({
     );
     const a = document.createElement("a");
     a.href = href;
-    a.download = `${title.replace(/[^\p{L}\p{N} _-]/gu, "").slice(0, 80) || "Nook"}.md`;
+    a.download = `${title.replace(/[^\p{L}\p{N} _-]/gu, "").slice(0, 80) || "Joti"}.md`;
     a.click();
     URL.revokeObjectURL(href);
   };

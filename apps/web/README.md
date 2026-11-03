@@ -1,4 +1,4 @@
-# Aplicación web de Nook
+# Aplicación web de Joti
 
 Aplicación Next.js con React, Convex y traducciones en español e inglés.
 
@@ -16,3 +16,7 @@ pnpm --filter web lint
 Desarrollo: http://localhost:3002. Configura `.env.local` a partir de `.env.example`; las variables privadas también deben existir en el backend de Convex. Desde esta carpeta, `pnpm exec convex dev` sincroniza el backend de desarrollo configurado.
 
 Consulta [la guía de autenticación](../../docs/authentication.md), [el contexto del producto](../../docs/business_context.md) y [las instrucciones de contribución](../../AGENTS.md).
+
+### Brand deployment
+
+Deploy the web app and Convex backend together when changing the brand. Cookies and browser preferences now use the `joti` prefix; users sign in again and browser-only preferences return to defaults. Existing workspace data is unchanged. Request a new verification code if one was issued before deployment. Update any explicitly configured `RESEND_FROM` display name to Joti while keeping its verified email address.

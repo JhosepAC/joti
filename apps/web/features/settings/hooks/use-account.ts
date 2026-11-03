@@ -44,9 +44,9 @@ export function useAccount() {
         if (!response.ok) throw Error(result.code);
         setData(result);
         if (input) {
-          window.dispatchEvent(new Event("nook-profile-updated"));
+          window.dispatchEvent(new Event("joti-profile-updated"));
           if (typeof BroadcastChannel !== "undefined") {
-            const channel = new BroadcastChannel("nook-account");
+            const channel = new BroadcastChannel("joti-account");
             channel.postMessage("updated");
             channel.close();
           }

@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api";
 export async function POST(r: NextRequest) {
   if (r.headers.get("origin") !== r.nextUrl.origin)
     return new Response(null, { status: 403 });
-  const token = r.cookies.get("nook-session")?.value;
+  const token = r.cookies.get("joti-session")?.value;
   if (!token) return new Response(null, { status: 401 });
   try {
     if (Number(r.headers.get("content-length")) > 1000) throw Error();

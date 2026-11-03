@@ -1,6 +1,6 @@
 # Workspace notes
 
-Notes is an Operate surface for capturing ideas within a space, as described in `docs/business_context.md`. Open it from the workspace's Notes module (`?module=notes`); `note=<key>` addresses a selected note. It preserves Nook Light and reuses the scoped session bridge, Convex subscriptions, custom selectors/modals, SVG icon library and the Pages Tiptap/Markdown editor. No new dependency or paid service is required.
+Notes is an Operate surface for capturing ideas within a space, as described in `docs/business_context.md`. Open it from the workspace's Notes module (`?module=notes`); `note=<key>` addresses a selected note. It preserves Joti Light and reuses the scoped session bridge, Convex subscriptions, custom selectors/modals, SVG icon library and the Pages Tiptap/Markdown editor. No new dependency or paid service is required.
 
 ## Implemented
 

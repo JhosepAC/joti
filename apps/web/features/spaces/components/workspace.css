@@ -1,4 +1,4 @@
-.nook-workspace {
+.joti-workspace {
   --ws-ground: #f7f7f5;
   --ws-paper: #fff;
   --ws-ink: #202124;
@@ -24,35 +24,35 @@
   scrollbar-color: #c6c8cc transparent;
   scrollbar-width: thin;
 }
-.nook-workspace *,
-.nook-workspace *::before,
-.nook-workspace *::after {
+.joti-workspace *,
+.joti-workspace *::before,
+.joti-workspace *::after {
   box-sizing: border-box;
 }
-.nook-workspace ::selection {
+.joti-workspace ::selection {
   background: #d3e3fd;
   color: var(--ws-ink);
 }
-.nook-workspace :where(h1, h2, h3, h4) {
+.joti-workspace :where(h1, h2, h3, h4) {
   font-family: var(--font-inter), system-ui, sans-serif;
 }
-.nook-workspace :where(button, input, textarea, a, select):focus-visible {
+.joti-workspace :where(button, input, textarea, a, select):focus-visible {
   outline: 2px solid var(--ws-accent);
   outline-offset: 3px;
 }
-.nook-workspace button {
+.joti-workspace button {
   font: inherit;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.nook-workspace button:disabled {
+.joti-workspace button:disabled {
   opacity: 0.5;
   cursor: default;
 }
-.nook-workspace a {
+.joti-workspace a {
   color: inherit;
 }
-.nook-workspace svg {
+.joti-workspace svg {
   flex-shrink: 0;
 }
 .workspace-navigation {
@@ -795,29 +795,29 @@
   display: inline-block;
   margin: 20px;
 }
-.nook-workspace button:active:not(:disabled) {
+.joti-workspace button:active:not(:disabled) {
   transform: scale(0.98);
 }
-.nook-workspace button {
+.joti-workspace button {
   transition: transform 100ms ease-out;
 }
-.nook-workspace[data-focus="true"] {
+.joti-workspace[data-focus="true"] {
   grid-template-columns: minmax(0, 1fr);
 }
-.nook-workspace[data-focus="true"] .workspace-navigation {
+.joti-workspace[data-focus="true"] .workspace-navigation {
   display: none;
 }
-.nook-workspace[data-focus="true"] .workspace-sheet {
+.joti-workspace[data-focus="true"] .workspace-sheet {
   margin-left: 8px;
 }
-.nook-workspace[data-focus="true"] .workspace-document {
+.joti-workspace[data-focus="true"] .workspace-document {
   max-width: 760px;
 }
-.nook-workspace[data-focus="true"] .workspace-focus {
+.joti-workspace[data-focus="true"] .workspace-focus {
   display: block;
 }
 @media (max-width: 1150px) {
-  .nook-workspace {
+  .joti-workspace {
     grid-template-columns: 288px minmax(0, 1fr);
   }
   .workspace-navigation {
@@ -859,7 +859,7 @@
   }
 }
 @media (max-width: 760px) {
-  .nook-workspace {
+  .joti-workspace {
     grid-template-columns: minmax(0, 1fr);
   }
   .workspace-navigation {
@@ -999,16 +999,16 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nook-workspace *,
-  .nook-workspace *::before,
-  .nook-workspace *::after {
+  .joti-workspace *,
+  .joti-workspace *::before,
+  .joti-workspace *::after {
     transition: none !important;
     animation: none !important;
     scroll-behavior: auto !important;
   }
 }
 @media (prefers-contrast: more) {
-  .nook-workspace {
+  .joti-workspace {
     --ws-muted: #303134;
     --ws-line: #5f6368;
   }

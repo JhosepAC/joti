@@ -35,7 +35,7 @@ export function useFirstSpaceFlow(options: {
   const submitting = useRef(false);
 
   const [step, setStep] = useState<FirstSpaceStep>(1);
-  const draftKey = `nook:first-space:${email}`;
+  const draftKey = `joti:first-space:${email}`;
   const [draft, setDraft] = useState<SpaceDraft>(() => {
     try {
       const saved = JSON.parse(sessionStorage.getItem(draftKey) ?? "null");

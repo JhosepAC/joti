@@ -148,7 +148,7 @@ export function GalleryModule({ slug }: { slug: string }) {
       const url = URL.createObjectURL(await r.blob()),
         a = document.createElement("a");
       a.href = url;
-      a.download = "nook-gallery.zip";
+      a.download = "joti-gallery.zip";
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     });

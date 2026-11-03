@@ -6,7 +6,7 @@ export async function POST(r: NextRequest) {
     NextResponse.json(d, { status, headers: { "Cache-Control": "no-store" } });
   if (r.headers.get("origin") !== r.nextUrl.origin)
     return reply({ code: "FORBIDDEN" }, 403);
-  const token = r.cookies.get("nook-session")?.value;
+  const token = r.cookies.get("joti-session")?.value;
   if (!token) return reply({ code: "UNAUTHORIZED" }, 401);
   try {
     const reader = r.body?.getReader();
@@ -39,7 +39,7 @@ export async function POST(r: NextRequest) {
           template: d.template,
           ...(typeof d.icon === "string" ? { icon: d.icon } : {}),
           key: d.key,
-          locale: r.cookies.get("nook-locale")?.value === "en" ? "en" : "es",
+          locale: r.cookies.get("joti-locale")?.value === "en" ? "en" : "es",
         },
       ),
     );

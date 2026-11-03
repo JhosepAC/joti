@@ -1,5 +1,5 @@
 {
-  "name": "nook",
+  "name": "joti",
   "private": true,
   "scripts": {
     "build": "turbo run build",

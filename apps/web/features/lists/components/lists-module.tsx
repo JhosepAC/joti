@@ -146,7 +146,7 @@ export function ListsModule({
     if (!list) return;
     let saved = "";
     try {
-      saved = sessionStorage.getItem(`nook:list-view:${list.key}`) ?? "";
+      saved = sessionStorage.getItem(`joti:list-view:${list.key}`) ?? "";
     } catch {}
     setViewId(
       list.views.some((view) => view.id === saved) ? saved : list.views[0]!.id,
@@ -163,7 +163,7 @@ export function ListsModule({
     setViewId(id);
     if (list)
       try {
-        sessionStorage.setItem(`nook:list-view:${list.key}`, id);
+        sessionStorage.setItem(`joti:list-view:${list.key}`, id);
       } catch {}
   };
   const send = (command: ListCommand) => {

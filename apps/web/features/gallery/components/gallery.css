@@ -1121,10 +1121,10 @@
   }
 }
 @media (min-width: 761px) and (max-width: 1100px) {
-  .nook-workspace[data-module="gallery"] {
+  .joti-workspace[data-module="gallery"] {
     grid-template-columns: minmax(0, 1fr);
   }
-  .nook-workspace[data-module="gallery"] .workspace-navigation {
+  .joti-workspace[data-module="gallery"] .workspace-navigation {
     position: fixed;
     inset: 0 auto 0 0;
     z-index: 51;
@@ -1137,19 +1137,19 @@
       transform 220ms cubic-bezier(0.23, 1, 0.32, 1),
       visibility 220ms;
   }
-  .nook-workspace[data-module="gallery"]
+  .joti-workspace[data-module="gallery"]
     .workspace-navigation[data-open="true"] {
     transform: translateX(0);
     visibility: visible;
   }
-  .nook-workspace[data-module="gallery"] .workspace-scrim {
+  .joti-workspace[data-module="gallery"] .workspace-scrim {
     position: fixed;
     inset: 0;
     z-index: 50;
     background: #20212455;
     border: 0;
   }
-  .nook-workspace[data-module="gallery"] .workspace-menu {
+  .joti-workspace[data-module="gallery"] .workspace-menu {
     display: grid;
     place-items: center;
     min-width: 40px;
@@ -1158,7 +1158,7 @@
     background: transparent;
     color: var(--ws-muted);
   }
-  .nook-workspace[data-module="gallery"] .workspace-menu svg {
+  .joti-workspace[data-module="gallery"] .workspace-menu svg {
     width: 20px;
     height: 20px;
   }

@@ -1,4 +1,4 @@
-# Autenticación de Nook
+# Autenticación de Joti
 
 ## Recorridos
 
@@ -13,7 +13,7 @@ Google no aparece en formularios, servicios cliente ni correos. Sus endpoints HT
 
 ## Sesiones y autorización
 
-`/api/auth/session` intercambia una prueba de cuenta por una cookie `nook-session`, HttpOnly, SameSite=Lax y Secure en producción. Dura siete días; el backend conserva únicamente su hash. Las mutaciones HTTP requieren el mismo origen, y las respuestas no se almacenan en caché. Se mantienen como máximo diez sesiones por cuenta.
+`/api/auth/session` intercambia una prueba de cuenta por una cookie `joti-session`, HttpOnly, SameSite=Lax y Secure en producción. Dura siete días; el backend conserva únicamente su hash. Las mutaciones HTTP requieren el mismo origen, y las respuestas no se almacenan en caché. Se mantienen como máximo diez sesiones por cuenta.
 
 Las funciones de Convex siguen comprobando grants de cuenta o espacio de 15 minutos, con rotación de un solo uso. La sesión puede emitir una prueba nueva desde el acceso. No equivale a configurar `ctx.auth` para futuras funciones: cualquier operación nueva debe comprobar su autorización explícitamente.
 

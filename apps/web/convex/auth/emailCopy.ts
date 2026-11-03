@@ -41,7 +41,7 @@ interface SimpleCopy {
 
 const verification: Record<EmailLocale, VerificationCopy> = {
   es: {
-    subject: "Tu código de verificación de Nook",
+    subject: "Tu código de verificación de Joti",
     htmlBody: (code) => {
       const safe = escapeHtml(code);
       return (
@@ -50,10 +50,10 @@ const verification: Record<EmailLocale, VerificationCopy> = {
       );
     },
     textBody: (code) =>
-      `Tu código de verificación de Nook es ${code}. Vence en 10 minutos.`,
+      `Tu código de verificación de Joti es ${code}. Vence en 10 minutos.`,
   },
   en: {
-    subject: "Your Nook verification code",
+    subject: "Your Joti verification code",
     htmlBody: (code) => {
       const safe = escapeHtml(code);
       return (
@@ -62,13 +62,13 @@ const verification: Record<EmailLocale, VerificationCopy> = {
       );
     },
     textBody: (code) =>
-      `Your Nook verification code is ${code}. It expires in 10 minutes.`,
+      `Your Joti verification code is ${code}. It expires in 10 minutes.`,
   },
 };
 
 const passwordReset: Record<EmailLocale, LinkCopy> = {
   es: {
-    subject: "Restablece tu contraseña de Nook",
+    subject: "Restablece tu contraseña de Joti",
     htmlBody: (to, link) => {
       const safeTo = escapeHtml(to);
       const safeLink = escapeHtml(link);
@@ -80,10 +80,10 @@ const passwordReset: Record<EmailLocale, LinkCopy> = {
       );
     },
     textBody: (to, link) =>
-      `Restablece tu contraseña de Nook (vence en 60 minutos): ${link}`,
+      `Restablece tu contraseña de Joti (vence en 60 minutos): ${link}`,
   },
   en: {
-    subject: "Reset your Nook password",
+    subject: "Reset your Joti password",
     htmlBody: (to, link) => {
       const safeTo = escapeHtml(to);
       const safeLink = escapeHtml(link);
@@ -95,26 +95,26 @@ const passwordReset: Record<EmailLocale, LinkCopy> = {
       );
     },
     textBody: (to, link) =>
-      `Reset your Nook password (expires in 60 minutes): ${link}`,
+      `Reset your Joti password (expires in 60 minutes): ${link}`,
   },
 };
 
 const passwordChanged: Record<EmailLocale, SimpleCopy> = {
   es: {
-    subject: "Tu contraseña de Nook cambió",
+    subject: "Tu contraseña de Joti cambió",
     htmlBody: () =>
       `<p>Tu contraseña se cambió correctamente.</p>
        <p>Si no fuiste tú, restablécela de inmediato y contacta soporte.</p>`,
     textBody: () =>
-      `Tu contraseña de Nook cambió. Si no fuiste tú, restablécela de inmediato.`,
+      `Tu contraseña de Joti cambió. Si no fuiste tú, restablécela de inmediato.`,
   },
   en: {
-    subject: "Your Nook password was changed",
+    subject: "Your Joti password was changed",
     htmlBody: () =>
       `<p>Your password was successfully changed.</p>
        <p>If you did not make this change, reset your password immediately and contact support.</p>`,
     textBody: () =>
-      `Your Nook password was changed. If this was not you, reset it immediately.`,
+      `Your Joti password was changed. If this was not you, reset it immediately.`,
   },
 };
 

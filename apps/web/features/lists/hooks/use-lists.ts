@@ -46,7 +46,7 @@ export function useLists(slug: string, selectedKey?: string) {
       ? { ticket: access.ticket, ...(selectedKey ? { selectedKey } : {}) }
       : "skip",
   );
-  const storageKey = `nook:lists:pending:${slug}`;
+  const storageKey = `joti:lists:pending:${slug}`;
   const renew = useCallback(() => {
     if (refreshing.current) return refreshing.current;
     refreshing.current = (async () => {

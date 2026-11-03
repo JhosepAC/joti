@@ -14,7 +14,7 @@ async function handle(request: NextRequest) {
       request.headers.get("origin") !== request.nextUrl.origin)
   )
     return reply({ code: "FORBIDDEN" }, 403);
-  const token = request.cookies.get("nook-session")?.value;
+  const token = request.cookies.get("joti-session")?.value;
   if (!token) return reply({ code: "UNAUTHORIZED" }, 401);
   try {
     const url = process.env.NEXT_PUBLIC_CONVEX_URL;

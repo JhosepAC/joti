@@ -1,4 +1,4 @@
-# Nook backend (Convex)
+# Joti backend (Convex)
 
 The active backend lives here, under `apps/web/convex/`. It implements email/password authentication and the first-space workflow. Google HTTP endpoints are intentionally not mounted; legacy provider tables and internal helpers remain to preserve existing data.
 
