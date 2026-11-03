@@ -1,4 +1,5 @@
 "use client";
+import { SpaceSettings, SPACE_MODULES } from "./space-settings";
 
 import { JotiLogo } from "@/components/ui/joti-logo";
 import { useEffect, useRef, useState } from "react";
@@ -42,9 +43,12 @@ import "./workspace-navigation.css";
 import "./workspace-pages-refinement.css";
 import { PageIconPicker } from "@/features/pages/components/page-icon-picker";
 import "./workspace-tree-controls.css";
+import "./space-settings.css";
 
 export function WorkspaceDashboard({ slug }: { slug: string }) {
   const t = useTranslations("spaces.dashboard");
+  const ts = useTranslations("spaceSettings");
+  const [spaceSettings, setSpaceSettings] = useState(false);
   const tLists = useTranslations("lists");
   const locale = useLocale();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -141,7 +145,29 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
       menuButton.current?.focus();
     };
   }, [drawer, mobile]);
+  useEffect(() => {
+    if (!data) return;
+    const module = ["lists", "calendar", "notes", "gallery", "pages"].includes(
+      view,
+    )
+      ? view
+      : view === "home"
+        ? null
+        : "pages";
+    if (module && !data.space.modules?.includes(module)) model.select("home");
+  }, [data, view, model]);
   const select = (next: string) => {
+    const module = ["lists", "calendar", "notes", "gallery", "pages"].includes(
+      next,
+    )
+      ? next
+      : next === "home"
+        ? null
+        : "pages";
+    if (module && !data?.space.modules?.includes(module)) {
+      setSpaceSettings(true);
+      return;
+    }
     model.select(next);
     setDrawer(false);
     const url = new URL(location.href);
@@ -343,47 +369,69 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 <HomeIcon />
                 {t("home")}
               </button>
-              <button
-                aria-current={isLists ? "page" : undefined}
-                onClick={() => select("lists")}
-              >
-                <ListIcon name="table" />
-                {tLists("moduleName")}
-              </button>
-              <button
-                aria-current={
-                  !home && !isLists && !isCalendar && !isNotes && !isGallery
-                    ? "page"
-                    : undefined
-                }
-                onClick={() => select("pages")}
-              >
-                <LayersIcon />
-                {t("pages")}
-              </button>
-              <button
-                aria-current={isCalendar ? "page" : undefined}
-                onClick={() => select("calendar")}
-              >
-                <ListGlyph name="calendar" />
-                {t("calendar")}
-              </button>
-              <button
-                aria-current={isNotes ? "page" : undefined}
-                onClick={() => select("notes")}
-              >
-                <ListIcon name="book" />
-                {t("notes")}
-              </button>
-              <button
-                aria-current={isGallery ? "page" : undefined}
-                onClick={() => select("gallery")}
-              >
-                <GalleryIcon />
-                {t("gallery")}
+              {data.space.modules?.includes("lists") && (
+                <button
+                  aria-current={isLists ? "page" : undefined}
+                  onClick={() => select("lists")}
+                >
+                  <ListIcon name="table" />
+                  {tLists("moduleName")}
+                </button>
+              )}
+              {data.space.modules?.includes("pages") && (
+                <button
+                  aria-current={
+                    !home && !isLists && !isCalendar && !isNotes && !isGallery
+                      ? "page"
+                      : undefined
+                  }
+                  onClick={() => select("pages")}
+                >
+                  <LayersIcon />
+                  {t("pages")}
+                </button>
+              )}
+              {data.space.modules?.includes("calendar") && (
+                <button
+                  aria-current={isCalendar ? "page" : undefined}
+                  onClick={() => select("calendar")}
+                >
+                  <ListGlyph name="calendar" />
+                  {t("calendar")}
+                </button>
+              )}
+              {data.space.modules?.includes("notes") && (
+                <button
+                  aria-current={isNotes ? "page" : undefined}
+                  onClick={() => select("notes")}
+                >
+                  <ListIcon name="book" />
+                  {t("notes")}
+                </button>
+              )}
+              {data.space.modules?.includes("gallery") && (
+                <button
+                  aria-current={isGallery ? "page" : undefined}
+                  onClick={() => select("gallery")}
+                >
+                  <GalleryIcon />
+                  {t("gallery")}
+                </button>
+              )}
+              <button onClick={() => setSpaceSettings(true)}>
+                <PlusIcon />
+                {ts("manage")}
               </button>
             </nav>
-            <div hidden={isCalendar || isNotes || isGallery}>
+            <div
+              hidden={
+                home ||
+                isCalendar ||
+                isNotes ||
+                isGallery ||
+                (!isLists && !data.space.modules?.includes("pages"))
+              }
+            >
               <div className="workspace-pages-heading">
                 <span>{isLists ? tLists("yourLists") : t("yourPages")}</span>
                 <button
@@ -666,77 +714,88 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 timezone={data.profile.timezone}
               />
             ) : isLists ? null : home ? (
-              <div className="workspace-home">
-                <div className="workspace-home-title">
+              <div className="space-overview">
+                <header>
                   <SpaceSymbol value={data.space.icon} />
-                  <h1>{data.space.name}</h1>
-                  <p>
-                    {t("homeDescription", {
-                      name: data.profile.displayName || data.profile.username,
-                    })}
-                  </p>
-                </div>
-                <div className="workspace-home-layout">
-                  <section className="workspace-home-pages">
-                    <div className="workspace-section-title">
-                      <h2>{t("startWriting")}</h2>
+                  <div>
+                    <h1>{data.space.name}</h1>
+                    <p>{data.space.description || ts("intro")}</p>
+                  </div>
+                  <button onClick={() => setSpaceSettings(true)}>
+                    {ts("title")}
+                  </button>
+                </header>
+                <section>
+                  <div className="space-overview-heading">
+                    <h2>{ts("modules")}</h2>
+                    <button onClick={() => setSpaceSettings(true)}>
+                      <PlusIcon />
+                      {ts("add")}
+                    </button>
+                  </div>
+                  {!data.space.modules?.length && (
+                    <div className="space-overview-empty">
+                      <LayersIcon />
+                      <h3>{ts("empty")}</h3>
+                      <p>{ts("emptyHint")}</p>
                       <button
-                        disabled={busy}
-                        onClick={() => void model.createPage()}
+                        className="workspace-primary"
+                        onClick={() => setSpaceSettings(true)}
                       >
-                        <PlusIcon />
-                        {t("newPage")}
+                        {ts("add")}
                       </button>
                     </div>
-                    {data.pages[0] && (
-                      <article className="workspace-first-page">
-                        <h3>
-                          <BlankIcon />
-                          {data.pages[0].title}
-                        </h3>
-                        <div>
-                          {(data.pages[0].body.trim()
-                            ? data.pages[0].body.split("\n\n").slice(0, 4)
-                            : [t("emptyPage")]
-                          ).map((paragraph, index) => (
-                            <p key={index}>{paragraph}</p>
-                          ))}
-                        </div>
-                        <button onClick={() => select(data.pages[0]!.id)}>
-                          {t("openFirstPage")}
+                  )}
+                  <div className="space-overview-modules">
+                    {SPACE_MODULES.filter((key) =>
+                      data.space.modules?.includes(key),
+                    ).map((key) => (
+                      <button key={key} onClick={() => select(key)}>
+                        <ListIcon
+                          name={
+                            key === "pages"
+                              ? "book"
+                              : key === "lists"
+                                ? "table"
+                                : key === "notes"
+                                  ? "book"
+                                  : key === "gallery"
+                                    ? "basket"
+                                    : "check"
+                          }
+                        />
+                        <span>
+                          <strong>{ts(key)}</strong>
+                          <small>{ts(`${key}Hint`)}</small>
+                        </span>
+                        <ListGlyph name="right" />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+                {data.space.modules?.includes("pages") && (
+                  <section>
+                    <h2>{ts("recent")}</h2>
+                    {[...data.pages]
+                      .sort((a, b) => b.updatedAt - a.updatedAt)
+                      .slice(0, 4)
+                      .map((item) => (
+                        <button
+                          className="space-recent"
+                          key={item.id}
+                          onClick={() => select(item.id)}
+                        >
+                          <ListIcon name={item.icon || "book"} />
+                          <strong>{item.title}</strong>
+                          <time>{date(item.updatedAt)}</time>
                         </button>
-                      </article>
-                    )}
-                    {data.pages.slice(1, 6).map(pageRow)}
+                      ))}
                   </section>
-                  <aside className="workspace-start-guide">
-                    <h2>{t("makeItYours")}</h2>
-                    <p>{t("guideDescription")}</p>
-                    <button
-                      onClick={() => select(data.pages[0]?.id ?? "pages")}
-                    >
-                      {t("openFirstPage")}
-                    </button>
-                    <div className="workspace-space-detail">
-                      <span>{t("spaceType")}</span>
-                      <strong>{t(`purposes.${data.space.purpose}`)}</strong>
-                    </div>
-                    <p className="workspace-guide-note">{t("draftHint")}</p>
-                  </aside>
-                </div>
-                <footer className="workspace-canvas-footer">
-                  <span>Joti</span>
-                  <span>
-                    {t("developedBy")}{" "}
-                    <a
-                      href="https://jhosep-ac.pages.dev/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Jhosep Argomedo
-                    </a>
-                  </span>
-                </footer>
+                )}
+                <aside className="space-overview-note">
+                  <h2>{ts("yourSpace")}</h2>
+                  <p>{ts("preserve")}</p>
+                </aside>
               </div>
             ) : page && draft ? (
               <article className="workspace-document">
@@ -812,6 +871,13 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
           </main>
         )}
       </div>
+      {spaceSettings && (
+        <SpaceSettings
+          space={data.space}
+          save={model.configureSpace}
+          onClose={() => setSpaceSettings(false)}
+        />
+      )}
       {createSpace && (
         <CreateSpaceDialog onClose={() => setCreateSpace(false)} />
       )}

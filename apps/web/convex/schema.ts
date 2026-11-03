@@ -352,6 +352,8 @@ export default defineSchema({
     created_at: v.number(),
     deleted_at: v.optional(v.number()), // soft delete
     starter_initialized_at: v.optional(v.number()),
+    enabled_modules: v.optional(v.array(v.string())),
+    description: v.optional(v.string()),
   })
     .index("by_owner_id", ["owner_id"])
     .index("by_slug", ["slug"]),

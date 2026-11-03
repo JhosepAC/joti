@@ -319,7 +319,26 @@ export function useWorkspaceDashboard(slug: string) {
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [drafts]);
+  async function configureSpace(input: {
+    name?: string;
+    icon?: string;
+    description?: string;
+    modules?: string[];
+  }) {
+    const response = await fetch(
+      `/api/workspace?slug=${encodeURIComponent(slug)}&configure=1`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      },
+    );
+    const fresh = await response.json();
+    if (!response.ok) throw new Error(fresh.code ?? "UNAVAILABLE");
+    setData(fresh);
+  }
   return {
+    configureSpace,
     data,
     view,
     drafts,
