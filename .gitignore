@@ -42,3 +42,9 @@ yarn-error.log*
 
 # Local visual review artifacts
 .taste-skill/
+
+# Agents
+.agents
+.codegraph
+apps/web/.impeccable/
+.husky/
