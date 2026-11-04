@@ -6,6 +6,7 @@ import { Popover } from "@/features/lists/components/overlays";
 import { ListGlyph } from "@/features/lists/components/list-icon";
 import { useLocale, useTranslations } from "next-intl";
 import type { DashboardSpace } from "../types/dashboard.types";
+import { spaceTileStyle } from "../utils/space-colors";
 import { SpaceSymbol } from "./space-symbol";
 export function RailSpaceLink({
   space,
@@ -30,17 +31,7 @@ export function RailSpaceLink({
     const r = el.getBoundingClientRect();
     setPosition({ left: Math.max(8, r.left), top: r.top - 8 });
   };
-  const tileStyle = {
-    background: space.background || undefined,
-    color:
-      space.background &&
-      parseInt(space.background.slice(1, 3), 16) * 0.299 +
-        parseInt(space.background.slice(3, 5), 16) * 0.587 +
-        parseInt(space.background.slice(5, 7), 16) * 0.114 <
-        140
-        ? "#ffffff"
-        : undefined,
-  };
+  const tileStyle = spaceTileStyle(space.background);
   return (
     <div
       className="rail-space-item"
@@ -85,9 +76,7 @@ export function RailSpaceLink({
         <SpaceSymbol value={space.icon} />
         <LinkProgress label={t("loading")} />
       </Link>
-      {active && (
-        <span className="rail-selection-mark" aria-hidden="true" />
-      )}
+      {active && <span className="rail-selection-mark" aria-hidden="true" />}
       {space.favorite && (
         <span className="rail-favorite" aria-hidden="true">
           <ListGlyph name="star" />

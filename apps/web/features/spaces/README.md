@@ -13,3 +13,9 @@ Favorites, background hex colors and the order of owned active spaces are persis
 Icon changes reuse the private media picker and optimized 256 px / 128 KiB WebP upload pipeline. Empty background restores the default. The active outline and side marker sit outside custom colors; dark colors use light vector icons.
 
 Recorded activity covers space metadata, icon and page edits. It is not a cross-module audit log: list, note, calendar and Gallery content edits are not aggregated. Older spaces without recorded edits show an explicit empty state. The author is the owner, the only editor in the current permission model.
+
+## Space colors
+
+Creation and settings share the named background palette (including default, light and dark colors). Creation persists the selection atomically with the space; omitted or empty backgrounds preserve the default. Both creation and configuration validate six-digit hex values on the backend and normalize casing. Existing custom hex colors remain supported in settings.
+
+`spaceTileStyle` selects black or white vector ink using WCAG relative luminance and the stronger contrast ratio, shared by creation preview, settings choices, rail and context-menu identity. The active rail item does not recolor its tile or icon; only the underline indicates selection. Uploaded images keep their original pixels and are not recolored. Tests check persistence, invalid CSS rejection, presets and 4,096 RGB samples at >=4.5:1 contrast.

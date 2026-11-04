@@ -51,7 +51,8 @@ export function validateSpaceName(name: string): string {
 // ---------------------------------------------------------------------------
 
 export function validateSpaceIcon(icon: string): SpaceIcon {
-  if (!SPACE_ICON_SET.has(icon)) fail("Please choose one of the suggested icons.");
+  if (!SPACE_ICON_SET.has(icon))
+    fail("Please choose one of the suggested icons.");
   return icon as SpaceIcon;
 }
 
@@ -61,7 +62,8 @@ export function validateSpaceIcon(icon: string): SpaceIcon {
 // ---------------------------------------------------------------------------
 
 export function validateSpacePurpose(purpose: string): SpacePurpose {
-  if (!SPACE_PURPOSE_SET.has(purpose)) fail("Please choose a purpose for this space.");
+  if (!SPACE_PURPOSE_SET.has(purpose))
+    fail("Please choose a purpose for this space.");
   return purpose as SpacePurpose;
 }
 
@@ -99,4 +101,11 @@ export function validateSlug(slug: string): string {
   }
   if (!SPACE_SLUG_REGEX.test(trimmed)) fail("Invalid space address.");
   return trimmed;
+}
+
+/** Empty uses the default palette; never allow CSS expressions or alpha colors. */
+export function validateSpaceBackground(value: string): string {
+  if (value !== "" && !/^#[a-fA-F0-9]{6}$/.test(value))
+    fail("Choose a valid six-digit hex background color.");
+  return value.toLowerCase();
 }

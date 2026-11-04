@@ -1,4 +1,8 @@
-import { validateSpaceName, validateSpaceIcon } from "./validators";
+import {
+  validateSpaceName,
+  validateSpaceIcon,
+  validateSpaceBackground,
+} from "./validators";
 import { internalMutation } from "../_generated/server";
 import { ConvexError, v } from "convex/values";
 
@@ -66,14 +70,8 @@ export const operate = internalMutation({
           await ctx.db.patch(item._id, { rail_position: index });
         }
       }
-      if (args.background !== undefined) {
-        if (
-          args.background !== "" &&
-          !/^#[a-fA-F0-9]{6}$/.test(args.background)
-        )
-          return fail("VALIDATION_ERROR");
-        space.icon_background = args.background;
-      }
+      if (args.background !== undefined)
+        space.icon_background = validateSpaceBackground(args.background);
       if (args.favorite !== undefined) space.favorite = args.favorite;
       if (
         args.name !== undefined ||

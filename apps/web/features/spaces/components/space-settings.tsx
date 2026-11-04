@@ -9,6 +9,8 @@ import { prepareSpaceIcon, readIconResponse } from "../utils/prepare-icon";
 import { Modal } from "@/features/lists/components/overlays";
 import { SPACE_ICON_CHOICES } from "../types/space.types";
 import { LIST_ICONS } from "@/features/lists/components/list-icon";
+import { SpaceColorPicker } from "./space-color-picker";
+import { spaceTileStyle } from "../utils/space-colors";
 import { SpaceSymbol } from "./space-symbol";
 import type { DashboardSpace } from "../types/dashboard.types";
 export const SPACE_MODULES = [
@@ -115,6 +117,7 @@ export function SpaceSettings({
                 key={value}
                 aria-label={value}
                 aria-pressed={value === icon}
+                style={spaceTileStyle(background)}
                 onClick={() => {
                   setIcon(value);
                   setPicture(null);
@@ -138,22 +141,11 @@ export function SpaceSettings({
               onChange={(e) => setBackground(e.target.value)}
             />
           </label>
-          <div className="space-color-swatches">
-            {["", "#d3e3fd", "#ceead6", "#fce8e6", "#feefc3", "#e8eaed"].map(
-              (color) => (
-                <button
-                  type="button"
-                  key={color}
-                  aria-label={color || t("defaultColor")}
-                  aria-pressed={background === color}
-                  style={{ background: color || "#f1f3f4" }}
-                  onClick={() => setBackground(color)}
-                >
-                  {color ? "" : t("defaultColor")}
-                </button>
-              ),
-            )}
-          </div>
+          <SpaceColorPicker
+            value={background}
+            onChange={setBackground}
+            disabled={busy}
+          />
         </fieldset>
         <fieldset hidden={mode !== "all"}>
           <legend>{t("modules")}</legend>

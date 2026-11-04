@@ -1499,5 +1499,17 @@
     "up": "Mover arriba",
     "down": "Mover abajo",
     "error": "No se guardó el cambio. Inténtalo de nuevo."
+  },
+  "spaceColors": {
+    "label": "Color del espacio",
+    "default": "Predeterminado",
+    "blue": "Azul",
+    "green": "Verde",
+    "pink": "Rosa",
+    "yellow": "Amarillo",
+    "gray": "Gris",
+    "navy": "Azul profundo",
+    "graphite": "Grafito",
+    "black": "Negro"
   }
 }

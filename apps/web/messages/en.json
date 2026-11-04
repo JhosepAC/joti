@@ -1499,5 +1499,17 @@
     "up": "Move up",
     "down": "Move down",
     "error": "Could not save. Please try again."
+  },
+  "spaceColors": {
+    "label": "Space color",
+    "default": "Default",
+    "blue": "Blue",
+    "green": "Green",
+    "pink": "Pink",
+    "yellow": "Yellow",
+    "gray": "Gray",
+    "navy": "Deep blue",
+    "graphite": "Graphite",
+    "black": "Black"
   }
 }

@@ -25,6 +25,7 @@ test("authenticated templates create private seeded spaces, retry safely, and pr
       template,
       key: `operation-${template}`,
       locale: "es",
+      background: template === "blank" ? "" : "#183A46",
     };
     const first = await t.mutation(internal.spaces.create.create, input),
       again = await t.mutation(internal.spaces.create.create, input);
@@ -43,6 +44,9 @@ test("authenticated templates create private seeded spaces, retry safely, and pr
       };
     });
     expect(result.space?.is_private).toBe(true);
+    expect(result.space?.icon_background).toBe(
+      template === "blank" ? "" : "#183a46",
+    );
     expect(result.pages.length).toBe(template === "blank" ? 1 : 3);
     expect(result.pages[0]?.body.length === 0).toBe(template === "blank");
   }
@@ -64,6 +68,23 @@ test("authenticated templates create private seeded spaces, retry safely, and pr
       locale: "es",
     }),
   ).rejects.toThrow("VALIDATION_ERROR");
+  for (const background of [
+    "black",
+    "#fff",
+    "#00000000",
+    "url(https://example.com)",
+  ]) {
+    await expect(
+      t.mutation(internal.spaces.create.create, {
+        hash,
+        name: "Invalid color",
+        template: "blank",
+        key: "invalid-color-test",
+        locale: "es",
+        background,
+      }),
+    ).rejects.toThrow("VALIDATION_ERROR");
+  }
 });
 test("space image icons are owned gallery media with strict dimensions", async () => {
   vi.useFakeTimers();

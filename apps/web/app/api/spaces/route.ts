@@ -27,7 +27,10 @@ export async function POST(r: NextRequest) {
     if (
       typeof d.name !== "string" ||
       typeof d.template !== "string" ||
-      typeof d.key !== "string"
+      typeof d.key !== "string" ||
+      (d.background !== undefined &&
+        (typeof d.background !== "string" ||
+          (d.background !== "" && !/^#[a-f0-9]{6}$/i.test(d.background))))
     )
       return reply({ code: "VALIDATION_ERROR" }, 400);
     return reply(
@@ -38,6 +41,7 @@ export async function POST(r: NextRequest) {
           name: d.name,
           template: d.template,
           ...(typeof d.icon === "string" ? { icon: d.icon } : {}),
+          ...(d.background !== undefined ? { background: d.background } : {}),
           key: d.key,
           locale: r.cookies.get("joti-locale")?.value === "en" ? "en" : "es",
         },

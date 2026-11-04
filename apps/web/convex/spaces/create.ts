@@ -1,6 +1,11 @@
 import { internalMutation } from "../_generated/server";
 import { v, ConvexError } from "convex/values";
-import { toSlugBase, validateSpaceName, validateSpaceIcon } from "./validators";
+import {
+  toSlugBase,
+  validateSpaceName,
+  validateSpaceIcon,
+  validateSpaceBackground,
+} from "./validators";
 export const create = internalMutation({
   args: {
     hash: v.string(),
@@ -9,6 +14,7 @@ export const create = internalMutation({
     key: v.string(),
     locale: v.string(),
     icon: v.optional(v.string()),
+    background: v.optional(v.string()),
   },
   handler: async (ctx, a) => {
     function fail(code: string): never {
@@ -23,6 +29,7 @@ export const create = internalMutation({
     if (!user || user.deleted_at || !user.email_verified_at)
       fail("UNAUTHORIZED");
     const name = validateSpaceName(a.name);
+    const background = validateSpaceBackground(a.background ?? "");
     if (
       !["university", "work", "couple", "project", "blank"].includes(
         a.template,
@@ -64,6 +71,7 @@ export const create = internalMutation({
               : "📌";
     const space = await ctx.db.insert("spaces", {
       owner_id: user._id,
+      icon_background: background,
       name,
       slug,
       icon: a.icon

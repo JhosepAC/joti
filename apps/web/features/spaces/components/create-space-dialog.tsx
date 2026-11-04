@@ -16,6 +16,8 @@ import {
 } from "@/features/gallery/components/media-picker";
 import { prepareSpaceIcon, readIconResponse } from "../utils/prepare-icon";
 import "./create-space-dialog.css";
+import { SpaceColorPicker } from "./space-color-picker";
+import { spaceTileStyle } from "../utils/space-colors";
 export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
   const t = useTranslations("spaces.create"),
     router = useRouter(),
@@ -25,6 +27,7 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
     [error, setError] = useState("");
   const params = useParams(),
     currentSlug = String(params.slug ?? "");
+  const [background, setBackground] = useState("");
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const iconButton = useRef<HTMLButtonElement>(null);
   const [mediaOpen, setMediaOpen] = useState(false);
@@ -73,7 +76,13 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
             const r = await fetch("/api/spaces", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name, template, icon, key: key.current }),
+              body: JSON.stringify({
+                name,
+                template,
+                icon,
+                background,
+                key: key.current,
+              }),
               signal: AbortSignal.timeout(25000),
             });
             const d = await r.json();
@@ -126,6 +135,7 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
           <button
             ref={iconButton}
             className="space-create-icon-trigger"
+            style={spaceTileStyle(background)}
             type="button"
             aria-label={t("editIcon")}
             aria-haspopup="dialog"
@@ -275,6 +285,11 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
               ))}
             </div>
 
+            <SpaceColorPicker
+              value={background}
+              onChange={setBackground}
+              disabled={busy}
+            />
             <div className="space-create-icon-actions">
               <button
                 type="button"

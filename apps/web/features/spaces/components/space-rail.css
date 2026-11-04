@@ -31,8 +31,6 @@
 }
 .workspace-space-list .rail-space-item > a[aria-current] {
   outline: none;
-  background: #e5edfc;
-  color: #174ea6;
 }
 .workspace-space-list .rail-space-item > a[aria-current]::before {
   display: none;
