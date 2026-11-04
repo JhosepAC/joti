@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Modal } from "@/features/lists/components/overlays";
+import { Modal, Popover } from "@/features/lists/components/overlays";
 import {
   ListIcon,
   ListGlyph,
@@ -15,6 +15,7 @@ import {
   uploadMedia,
 } from "@/features/gallery/components/media-picker";
 import { prepareSpaceIcon, readIconResponse } from "../utils/prepare-icon";
+import "./create-space-dialog.css";
 export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
   const t = useTranslations("spaces.create"),
     router = useRouter(),
@@ -24,9 +25,16 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
     [error, setError] = useState("");
   const params = useParams(),
     currentSlug = String(params.slug ?? "");
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const iconButton = useRef<HTMLButtonElement>(null);
   const [mediaOpen, setMediaOpen] = useState(false);
   const key = useRef(crypto.randomUUID());
-  const [icon, setIcon] = useState("🚀"),
+  const [icon, setIcon] = useState(
+      () =>
+        SPACE_ICON_CHOICES[
+          Math.floor(Math.random() * SPACE_ICON_CHOICES.length)
+        ] as string,
+    ),
     [picture, setPicture] = useState<File | null>(null),
     [preview, setPreview] = useState("");
   const pictureInput = useRef<HTMLInputElement>(null),
@@ -114,97 +122,62 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
             <ListGlyph name="close" />
           </button>
         </header>
-        <section className="space-icon-picker" aria-label={t("icon")}>
-          <div className="space-icon-preview">
+        <div className="space-create-identity">
+          <button
+            ref={iconButton}
+            className="space-create-icon-trigger"
+            type="button"
+            aria-label={t("editIcon")}
+            aria-haspopup="dialog"
+            aria-expanded={iconPickerOpen}
+            disabled={busy}
+            onClick={() => setIconPickerOpen((value) => !value)}
+          >
             {preview ? (
               <img src={preview} alt="" />
             ) : (
               <SpaceSymbol value={icon} />
             )}
-          </div>
-          <div>
-            <strong>{t("icon")}</strong>
-            <p>{t("iconHint")}</p>
-            <button
-              type="button"
+            <span className="space-create-icon-edit" aria-hidden="true">
+              <ListGlyph name="edit" />
+            </span>
+          </button>
+          <label className="space-create-name">
+            {t("name")}
+            <input
+              autoFocus
+              required
+              minLength={3}
+              maxLength={50}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t("placeholder")}
               disabled={busy}
-              onClick={() => pictureInput.current?.click()}
-            >
-              {t("uploadIcon")}
-            </button>
-            {currentSlug && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setMediaOpen(true)}
-              >
-                {t("chooseMedia")}
-              </button>
-            )}
-            {picture && (
-              <button type="button" onClick={() => setPicture(null)}>
-                {t("removeIcon")}
-              </button>
-            )}
-          </div>
-          <input
-            hidden
-            ref={pictureInput}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={async (e) => {
-              const input = e.target.files?.[0];
-              e.target.value = "";
-              if (!input) return;
-              try {
-                if (
-                  input.size > 2 * 1024 * 1024 ||
-                  !["image/jpeg", "image/png", "image/webp"].includes(
-                    input.type,
-                  )
-                )
-                  throw Error();
-                setPicture(await prepareSpaceIcon(input));
-                setError("");
-              } catch {
-                setError(t("iconError"));
-              }
-            }}
-          />
-          <div className="space-icon-options">
-            {[
-              ...SPACE_ICON_CHOICES,
-              ...LIST_ICONS.map((v) => "symbol:" + v),
-            ].map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-label={t("chooseIcon", { icon: v })}
-                aria-pressed={!picture && icon === v}
-                disabled={busy}
-                onClick={() => {
-                  setIcon(v);
-                  setPicture(null);
-                }}
-              >
-                <SpaceSymbol value={v} />
-              </button>
-            ))}
-          </div>
-        </section>
-        <label className="space-create-name">
-          {t("name")}
-          <input
-            autoFocus
-            required
-            minLength={3}
-            maxLength={50}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t("placeholder")}
-            disabled={busy}
-          />
-        </label>
+            />
+          </label>
+        </div>
+        <input
+          hidden
+          ref={pictureInput}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={async (e) => {
+            const input = e.target.files?.[0];
+            e.target.value = "";
+            if (!input) return;
+            try {
+              if (
+                input.size > 2 * 1024 * 1024 ||
+                !["image/jpeg", "image/png", "image/webp"].includes(input.type)
+              )
+                throw Error();
+              setPicture(await prepareSpaceIcon(input));
+              setError("");
+            } catch {
+              setError(t("iconError"));
+            }
+          }}
+        />
         <fieldset disabled={busy}>
           <legend>{t("template")}</legend>
           <div className="space-template-options">
@@ -242,6 +215,107 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
           </button>
         </footer>
       </form>
+      {iconPickerOpen && (
+        <Popover
+          anchor={iconButton}
+          label={t("icon")}
+          onClose={() => {
+            setIconPickerOpen(false);
+            iconButton.current?.focus();
+          }}
+        >
+          <div className="space-create-icon-popover">
+            <strong>{t("icon")}</strong>
+            <div
+              className="space-icon-options"
+              onKeyDown={(event) => {
+                const buttons = Array.from(
+                  event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                    "button",
+                  ),
+                );
+                const index = buttons.indexOf(
+                  document.activeElement as HTMLButtonElement,
+                );
+                const delta: Record<string, number> = {
+                  ArrowRight: 1,
+                  ArrowLeft: -1,
+                  ArrowDown: 5,
+                  ArrowUp: -5,
+                };
+                if (event.key in delta) {
+                  event.preventDefault();
+                  buttons[
+                    (index + delta[event.key]! + buttons.length) %
+                      buttons.length
+                  ]?.focus();
+                }
+              }}
+            >
+              {[
+                ...SPACE_ICON_CHOICES,
+                ...LIST_ICONS.map((v) => "symbol:" + v),
+              ].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  aria-label={t("chooseIcon", { icon: v })}
+                  aria-pressed={!picture && icon === v}
+                  data-popover-focus={!picture && icon === v ? "" : undefined}
+                  disabled={busy}
+                  onClick={() => {
+                    setIcon(v);
+                    setPicture(null);
+                    setIconPickerOpen(false);
+                    iconButton.current?.focus();
+                  }}
+                >
+                  <SpaceSymbol value={v} />
+                </button>
+              ))}
+            </div>
+
+            <div className="space-create-icon-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setIconPickerOpen(false);
+                  pictureInput.current?.click();
+                }}
+              >
+                <ListGlyph name="plus" />
+                {t("uploadIcon")}
+              </button>
+              {currentSlug && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIconPickerOpen(false);
+                    setMediaOpen(true);
+                  }}
+                >
+                  <ListIcon name="basket" />
+                  {t("chooseMedia")}
+                </button>
+              )}
+              {picture && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPicture(null);
+                    setIconPickerOpen(false);
+                    iconButton.current?.focus();
+                  }}
+                >
+                  {t("removeIcon")}
+                </button>
+              )}
+            </div>
+            <p>{t("iconHint")}</p>
+          </div>
+        </Popover>
+      )}
+
       {mediaOpen && (
         <MediaPicker
           slug={currentSlug}

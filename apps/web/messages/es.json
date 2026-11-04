@@ -683,7 +683,8 @@
       "removeIcon": "Quitar imagen",
       "chooseIcon": "Elegir icono {icon}",
       "iconError": "Usa JPEG, PNG o WebP de hasta 2 MiB y 16 megapíxeles. Se guardará en WebP de 256 px (máximo 128 KiB).",
-      "chooseMedia": "Galería o enlace"
+      "chooseMedia": "Galería o enlace",
+      "editIcon": "Cambiar icono del espacio"
     }
   },
   "providers": {
