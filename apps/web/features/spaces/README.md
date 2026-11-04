@@ -8,7 +8,7 @@ Home presents selected tools and recent documents when Pages is enabled. It does
 
 ## Space rail
 
-Favorites, background hex colors and the order of owned active spaces are persisted by the owner-authorized configuration bridge. Right click, Shift+F10 or the options button opens the context panel. Alt+Up/Down and move buttons provide alternatives to dragging. A destination marker, reduced-motion-aware FLIP transition and failure rollback support ordering. Next.js pending navigation shows an indicator after 180 ms.
+Favorites, background hex colors and the order of owned active spaces are persisted by the owner-authorized configuration bridge. Right click opens the context panel. Shift+F10 or the context-menu key provides keyboard access; no additional options button is shown. Alt+Up/Down and move buttons provide alternatives to dragging. A destination marker, reduced-motion-aware FLIP transition and failure rollback support ordering. Next.js pending navigation shows an indicator after 180 ms.
 
 Icon changes reuse the private media picker and optimized 256 px / 128 KiB WebP upload pipeline. Empty background restores the default. The active outline and side marker sit outside custom colors; dark colors use light vector icons.
 

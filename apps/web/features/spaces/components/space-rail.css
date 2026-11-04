@@ -1,0 +1,250 @@
+/* Workspace dock: the selected workspace sits on a separate, stable base. */
+.workspace-space-rail {
+  background: #edf0f4;
+}
+.workspace-space-list {
+  gap: 18px;
+  padding: 10px 0 14px;
+}
+.rail-space-item {
+  position: relative;
+  isolation: isolate;
+  width: 44px;
+  height: 44px;
+}
+.rail-space-item::before {
+  content: "";
+  position: absolute;
+  inset: -8px -9px;
+  border-radius: 20px;
+  background: #fff;
+  opacity: 0;
+  transform: scale(0.92);
+  z-index: -1;
+  pointer-events: none;
+}
+.rail-space-item[data-selected]::before {
+  opacity: 1;
+  transform: scale(1);
+}
+.workspace-space-list .rail-space-item > a {
+  position: relative;
+  overflow: visible;
+  background: #dfe5ed;
+  color: #3c4656;
+  border-radius: 14px;
+  outline: none;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+.workspace-space-list .rail-space-item > a > svg {
+  width: 44px;
+  height: 44px;
+  padding: 11px;
+  background: transparent !important;
+  color: inherit !important;
+}
+.workspace-space-list .rail-space-item > a[aria-current] {
+  outline: none;
+  background: #e5edfc;
+  color: #174ea6;
+}
+.workspace-space-list .rail-space-item > a[aria-current]::before {
+  display: none;
+}
+.workspace-space-list .rail-space-item > a:hover {
+  transform: translateY(-2px);
+}
+.workspace-space-list .rail-space-item > a:active {
+  transform: scale(0.95);
+}
+.workspace-space-list .rail-space-item > a:focus-visible {
+  outline: 2px solid #0b57d0;
+  outline-offset: 4px;
+}
+.rail-space-item[data-menu-open] > a {
+  outline: 2px solid #8a9bb6;
+  outline-offset: 3px;
+}
+.rail-selection-mark {
+  position: absolute;
+  right: -4px;
+  bottom: -5px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  background: #0b57d0;
+  color: #fff;
+  border: 3px solid #fff;
+  box-sizing: border-box;
+  border-radius: 8px;
+  pointer-events: none;
+}
+.rail-selection-mark svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2.4;
+}
+.rail-favorite {
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #edf0f4;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 6px;
+  color: #815400;
+}
+.rail-favorite svg {
+  width: 10px;
+  height: 10px;
+}
+.workspace-space-list .workspace-space-image {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+.workspace-add-space {
+  border: 1px solid #ccd3dd !important;
+  border-radius: 14px;
+  color: #5f6d80;
+  background: transparent;
+}
+.workspace-add-space:hover {
+  background: #dfe5ed;
+  color: #202124;
+}
+.workspace-add-space::before {
+  background: #ced6e1;
+  left: 4px;
+  right: 4px;
+}
+.rail-space-slot[data-drop] {
+  background: #dce7fb;
+  border-radius: 16px;
+  outline: 4px solid #dce7fb;
+}
+.rail-space-slot[data-drop]::before {
+  height: 3px;
+  background: #0b57d0;
+  left: -5px;
+  right: -5px;
+}
+.rail-space-slot[data-dragging="true"] .rail-space-item {
+  transform: scale(0.94);
+}
+.rail-space-menu {
+  width: 260px;
+  padding: 6px;
+  font-size: 13px;
+}
+.rail-menu-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 16px;
+}
+.rail-menu-identity > span {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: #edf0f4;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.rail-menu-identity svg {
+  width: 20px;
+  height: 20px;
+}
+.rail-menu-identity img {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  object-fit: cover;
+}
+.rail-menu-identity strong {
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.rail-space-menu button,
+.rail-space-menu > a {
+  padding: 10px;
+  border-radius: 8px;
+  gap: 12px;
+}
+.rail-space-menu button:focus-visible,
+.rail-space-menu > a:focus-visible {
+  outline: 2px solid #0b57d0;
+  outline-offset: -2px;
+  background: #eef3fd;
+}
+.rail-space-menu hr {
+  margin: 7px 8px;
+  border-color: #e6e9ee;
+}
+.rail-space-activity {
+  background: #f4f6f8;
+  border-radius: 10px;
+  margin: 8px 4px 4px;
+  padding: 12px;
+  gap: 6px;
+  font-size: 12px;
+}
+.rail-space-activity > span:first-child {
+  margin-bottom: 3px;
+}
+.rail-keyboard-order {
+  gap: 6px;
+  padding: 4px;
+}
+.rail-keyboard-order button {
+  justify-content: center;
+  background: #f4f6f8;
+  font-size: 11px;
+  gap: 5px;
+  padding: 9px 4px;
+}
+.rail-keyboard-order svg {
+  width: 13px;
+  height: 13px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rail-space-item::before {
+    transition:
+      opacity 160ms ease,
+      transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .workspace-space-list .rail-space-item > a {
+    transition:
+      transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      background 150ms ease;
+  }
+  .rail-selection-mark {
+    animation: rail-mark-enter 180ms ease-out;
+  }
+  @keyframes rail-mark-enter {
+    from {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+@media (prefers-contrast: more) {
+  .rail-space-item[data-selected]::before {
+    outline: 2px solid #202124;
+  }
+  .rail-selection-mark {
+    background: #002b80;
+  }
+}

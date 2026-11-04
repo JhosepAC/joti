@@ -21,7 +21,7 @@ export function RailSpaceLink({
   const t = useTranslations("spaceRail"),
     locale = useLocale();
   const [menu, setMenu] = useState(false);
-  const anchor = useRef<HTMLButtonElement>(null);
+  const anchor = useRef<HTMLAnchorElement>(null);
   const [position, setPosition] = useState<{
     left: number;
     top: number;
@@ -30,21 +30,29 @@ export function RailSpaceLink({
     const r = el.getBoundingClientRect();
     setPosition({ left: Math.max(8, r.left), top: r.top - 8 });
   };
+  const tileStyle = {
+    background: space.background || undefined,
+    color:
+      space.background &&
+      parseInt(space.background.slice(1, 3), 16) * 0.299 +
+        parseInt(space.background.slice(3, 5), 16) * 0.587 +
+        parseInt(space.background.slice(5, 7), 16) * 0.114 <
+        140
+        ? "#ffffff"
+        : undefined,
+  };
   return (
-    <div className="rail-space-item">
+    <div
+      className="rail-space-item"
+      data-selected={active || undefined}
+      data-menu-open={menu || undefined}
+    >
       <Link
+        ref={anchor}
+        aria-haspopup="dialog"
+        aria-expanded={menu}
         href={`/w/${space.slug}`}
-        style={{
-          background: space.background || undefined,
-          color:
-            space.background &&
-            parseInt(space.background.slice(1, 3), 16) * 0.299 +
-              parseInt(space.background.slice(3, 5), 16) * 0.587 +
-              parseInt(space.background.slice(5, 7), 16) * 0.114 <
-              140
-              ? "#ffffff"
-              : undefined,
-        }}
+        style={tileStyle}
         draggable={false}
         onContextMenu={(event) => {
           event.preventDefault();
@@ -77,19 +85,11 @@ export function RailSpaceLink({
         <SpaceSymbol value={space.icon} />
         <LinkProgress label={t("loading")} />
       </Link>
-      <button
-        ref={anchor}
-        className="rail-space-more"
-        aria-label={t("options", { name: space.name })}
-        aria-haspopup="dialog"
-        aria-expanded={menu}
-        onClick={() => {
-          setPosition(null);
-          setMenu(!menu);
-        }}
-      >
-        <ListGlyph name="more" />
-      </button>
+      {active && (
+        <span className="rail-selection-mark" aria-hidden="true">
+          <ListGlyph name="tick" />
+        </span>
+      )}
       {space.favorite && (
         <span className="rail-favorite" aria-hidden="true">
           <ListGlyph name="star" />
@@ -105,7 +105,12 @@ export function RailSpaceLink({
           }}
         >
           <div className="rail-space-menu">
-            <strong>{space.name}</strong>
+            <header className="rail-menu-identity">
+              <span style={tileStyle}>
+                <SpaceSymbol value={space.icon} />
+              </span>
+              <strong>{space.name}</strong>
+            </header>
             <button
               onClick={() => {
                 setMenu(false);
@@ -131,7 +136,17 @@ export function RailSpaceLink({
                 onAction("icon");
               }}
             >
-              <ListGlyph name="edit" />
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="8" cy="8" r="1.5" />
+                <path d="m4 17 5-5 4 4 3-3 5 5" />
+              </svg>
               {t("icon")}
             </button>
             <button
@@ -140,6 +155,19 @@ export function RailSpaceLink({
                 onAction("all");
               }}
             >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                aria-hidden="true"
+              >
+                <path
+                  d="m9 3-.5 3-3 1L3 6l-2 4 2.5 2v2L1 16l2 4 3-1 2.5 1 .5 3h5l.5-3 3-1 2.5 1 2-4-2.5-2v-2L22 10l-2-4-3 1-2.5-1L14 3Z"
+                  transform="translate(1 -1) scale(.9)"
+                />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
               {t("settings")}
             </button>
             <hr />
@@ -169,8 +197,14 @@ export function RailSpaceLink({
               )}
             </div>
             <div className="rail-keyboard-order">
-              <button onClick={() => onMove(-1)}>{t("up")}</button>
-              <button onClick={() => onMove(1)}>{t("down")}</button>
+              <button onClick={() => onMove(-1)}>
+                <ListGlyph name="up" />
+                {t("up")}
+              </button>
+              <button onClick={() => onMove(1)}>
+                <ListGlyph name="down" />
+                {t("down")}
+              </button>
             </div>
           </div>
         </Popover>

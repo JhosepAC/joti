@@ -44,6 +44,7 @@ import "./workspace-pages-refinement.css";
 import { PageIconPicker } from "@/features/pages/components/page-icon-picker";
 import "./workspace-tree-controls.css";
 import "./space-settings.css";
+import "./space-rail.css";
 
 export function WorkspaceDashboard({ slug }: { slug: string }) {
   const t = useTranslations("spaces.dashboard");
