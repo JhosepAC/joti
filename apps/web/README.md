@@ -19,4 +19,4 @@ Consulta [la guía de autenticación](../../docs/authentication.md), [el context
 
 ### Brand deployment
 
-Deploy the web app and Convex backend together when changing the brand. Cookies and browser preferences now use the `joti` prefix; users sign in again and browser-only preferences return to defaults. Existing workspace data is unchanged. Request a new verification code if one was issued before deployment. Update any explicitly configured `RESEND_FROM` display name to Joti while keeping its verified email address.
+Deploy the web app and Convex backend together when changing the brand. Cookies and browser preferences now use the `joti` prefix; users sign in again and browser-only preferences return to defaults. Existing workspace data is unchanged. Request a new verification code if one was issued before deployment. Transactional email now uses Gmail. Configure `GMAIL_APP_PASSWORD` on Convex; see `convex/auth/EMAIL_SECURITY.md`.

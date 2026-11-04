@@ -83,8 +83,8 @@ async function consumeResetQuota(
  * throttles every address identically (see consumeResetQuota). The raw token
  * is emailed and only its SHA-256 digest is persisted; it is never logged.
  *
- * The one exception is a failed email delivery, which throws
- * EMAIL_DELIVERY_FAILED instead of reporting a success that never happened.
+ * Delivery failures also return the generic acknowledgement to avoid disclosing
+ * account existence. `sent` is a legacy response key, not a delivery receipt.
  */
 export const requestPasswordReset: ReturnType<typeof action> = action({
   args: { email: v.string(), locale: v.optional(v.string()) },
@@ -125,6 +125,7 @@ export const requestPasswordReset: ReturnType<typeof action> = action({
 
     const resetLink = `${getAppUrl()}/auth/reset-password?token=${encodeURIComponent(rawToken)}`;
     const delivery = await sendPasswordResetEmail(
+      ctx,
       cleanEmail,
       resetLink,
       locale,
@@ -140,10 +141,8 @@ export const requestPasswordReset: ReturnType<typeof action> = action({
           token_hash: tokenHash,
         },
       );
-      throw new ConvexError({
-        code: "EMAIL_DELIVERY_FAILED",
-        message: "We could not send the reset email. Please try again later.",
-      });
+      // Keep the public response identical to an unknown account, including outages.
+      return { sent: true };
     }
 
     return { sent: true };
@@ -255,7 +254,7 @@ export const resetPassword: ReturnType<typeof action> = action({
       },
     );
 
-    await sendPasswordChangedEmail(record.email, locale);
+    await sendPasswordChangedEmail(ctx, record.email, locale);
 
     return { success: true };
   },

@@ -22,7 +22,7 @@ Al cerrar sesión se elimina la cookie y se revoca la sesión; si el backend fal
 ## Configuración
 
 1. Copia `apps/web/.env.example` a `.env.local` en la misma carpeta. Usa la URL de tu Convex y `NEXT_PUBLIC_APP_URL=http://localhost:3002` en desarrollo.
-2. Configura `EMAIL_CODE_PEPPER` (secreto aleatorio de al menos 32 caracteres), `RESEND_API_KEY` y un `RESEND_FROM` autorizado en el despliegue de Convex. Configura también allí `NEXT_PUBLIC_APP_URL` para los enlaces de correo. Usa los límites del plan gratuito; no se incorporan herramientas de pago.
+2. Configura `EMAIL_CODE_PEPPER` (secreto aleatorio de al menos 32 caracteres), `GMAIL_APP_PASSWORD` (contraseña de aplicación de Google para `jhosepjamil@gmail.com`, con verificación en dos pasos) en el despliegue de Convex. Configura también allí `NEXT_PUBLIC_APP_URL` para los enlaces de correo. Usa los límites del plan gratuito; no se incorporan herramientas de pago.
 3. Desde `apps/web`, ejecuta `pnpm exec convex dev` para sincronizar el esquema y las funciones con el backend de desarrollo. `convex codegen` genera tipos, sin activar el cambio en el despliegue.
 4. En producción usa HTTPS. No guardes secretos en variables `NEXT_PUBLIC_`, Git o logs.
 
@@ -32,4 +32,4 @@ Los códigos duran diez minutos y admiten cinco intentos. Hay 60 segundos entre 
 
 Ejecuta `pnpm --filter web test`, `pnpm check-types`, `pnpm lint`, `node scripts/i18n-check.mjs` y `pnpm build` desde la raíz. Vitest usa convex-test y dobles de red: no envía correo real.
 
-Antes de publicar, comprueba con una dirección que controles: registro y entrega real del código, código incorrecto/vencido, reenvío, usuario ocupado, foto inválida, perfil sin foto, recarga del perfil, primer espacio, acceso existente, cierre de sesión, cambio de idioma, enlace vencido/usado, contraseña repetida y recuperación completa. Verifica teclado, móvil y movimiento reducido. La entrega real de Resend depende de las credenciales y del remitente configurado.
+Antes de publicar, comprueba con una dirección que controles: registro y entrega real del código, código incorrecto/vencido, reenvío, usuario ocupado, foto inválida, perfil sin foto, recarga del perfil, primer espacio, acceso existente, cierre de sesión, cambio de idioma, enlace vencido/usado, contraseña repetida y recuperación completa. Verifica teclado, móvil y movimiento reducido. La aceptación real de Gmail requiere la credencial de aplicación en Convex; no garantiza llegada a la bandeja de entrada. Consulta `apps/web/convex/auth/EMAIL_SECURITY.md`.

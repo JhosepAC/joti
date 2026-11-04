@@ -18,5 +18,22 @@ export function getAppUrl(): string {
       "NEXT_PUBLIC_APP_URL is not set. Refusing to build redirect links against a guessed origin.",
     );
   }
-  return clean;
+  const url = new URL(clean);
+  if (
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash ||
+    url.pathname !== "/" ||
+    (url.protocol !== "https:" &&
+      !(
+        url.protocol === "http:" &&
+        ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
+      ))
+  ) {
+    throw new Error(
+      "App URL must be an HTTPS origin (HTTP allowed only for local development).",
+    );
+  }
+  return url.origin;
 }

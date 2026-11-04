@@ -54,15 +54,20 @@ export async function issueVerificationCode(
 
   // Cooldown first, then the hourly cap, so a burst cannot fan out into
   // hundreds of provider calls.
-  const recent = (await ctx.runQuery(internal.auth.verificationInternal.getByEmail, {
-    email,
-  })) as { expires_at: number } | null;
+  const recent = (await ctx.runQuery(
+    internal.auth.verificationInternal.getByEmail,
+    {
+      email,
+    },
+  )) as { expires_at: number } | null;
 
   if (recent) {
     const sentAt = recent.expires_at - VERIFICATION_CODE_EXPIRY_MS;
     const elapsed = Date.now() - sentAt;
     if (elapsed >= 0 && elapsed < VERIFICATION_CODE_COOLDOWN_MS) {
-      const waitSec = Math.ceil((VERIFICATION_CODE_COOLDOWN_MS - elapsed) / 1000);
+      const waitSec = Math.ceil(
+        (VERIFICATION_CODE_COOLDOWN_MS - elapsed) / 1000,
+      );
       throw new ConvexError({
         code: "RATE_LIMITED",
         message: `Please wait ${waitSec}s before requesting another code.`,
@@ -79,22 +84,28 @@ export async function issueVerificationCode(
   const code = generateCode();
   const expiresAt = Date.now() + VERIFICATION_CODE_EXPIRY_MS;
 
+  const codeHash = hashEmailCode(code);
   await ctx.runMutation(internal.auth.verificationInternal.upsertCode, {
     email,
-    code_hash: hashEmailCode(code),
+    code_hash: codeHash,
+    enforceCooldown: true,
     expires_at: expiresAt,
   });
 
-  const delivery = await sendVerificationCodeEmail(email, code, locale);
+  const delivery = await sendVerificationCodeEmail(ctx, email, code, locale);
   if (!delivery.delivered) {
     // Roll back the row so a later retry (once the provider is fixed) starts
     // clean instead of tripping over this attempt's cooldown. The hourly send
     // cap is deliberately NOT refunded: it bounds how fast anyone can make us
     // hit the provider, working or not.
-    await ctx.runMutation(internal.auth.verificationInternal.clearByEmail, { email });
+    await ctx.runMutation(internal.auth.verificationInternal.clearByEmail, {
+      email,
+      code_hash: codeHash,
+    });
     throw new ConvexError({
       code: "EMAIL_DELIVERY_FAILED",
-      message: "We could not send the verification email. Please try again later.",
+      message:
+        "We could not send the verification email. Please try again later.",
     });
   }
 

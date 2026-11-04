@@ -220,6 +220,7 @@ export function useLogin() {
       await confirmCodeAction({
         email: pendingEmail,
         code: activationCode.trim(),
+        password: credentials.password,
       });
       setRequiresActivation(false);
       setErrors({});
