@@ -14,6 +14,10 @@ export interface DashboardSpace {
   name: string;
   icon: string;
   purpose: string;
+  background?: string;
+  favorite?: boolean;
+  editedAt?: number;
+  editedBy?: string;
   modules?: string[];
   description?: string;
 }

@@ -1479,6 +1479,24 @@
     "empty": "Empieza con lo que necesitas",
     "emptyHint": "Elige las herramientas que usarás en este espacio.",
     "recent": "Documentos recientes",
-    "yourSpace": "Un espacio que crece contigo"
+    "yourSpace": "Un espacio que crece contigo",
+    "chooseImage": "Elegir imagen",
+    "background": "Color de fondo (hexadecimal)",
+    "defaultColor": "Predeterminado"
+  },
+  "spaceRail": {
+    "options": "Opciones de {name}",
+    "loading": "Cambiando de espacio",
+    "favorite": "Agregar a favoritos",
+    "unfavorite": "Quitar de favoritos",
+    "rename": "Cambiar nombre",
+    "icon": "Cambiar icono",
+    "settings": "Configuración",
+    "newTab": "Abrir en una pestaña nueva",
+    "lastEdit": "Última edición del espacio",
+    "noActivity": "Aún sin cambios registrados",
+    "up": "Mover arriba",
+    "down": "Mover abajo",
+    "error": "No se guardó el cambio. Inténtalo de nuevo."
   }
 }

@@ -19,6 +19,8 @@ export const operate = internalMutation({
       v.literal("delete"),
       v.literal("icon"),
     ),
+    background: v.optional(v.string()),
+    order: v.optional(v.array(v.string())),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     modules: v.optional(v.array(v.string())),
@@ -51,6 +53,36 @@ export const operate = internalMutation({
     const space = owned.find((space) => space.slug === args.slug);
     if (!space) return fail("NOT_FOUND");
     if (args.operation === "configure") {
+      if (args.order !== undefined) {
+        if (
+          args.order.length !== owned.length ||
+          new Set(args.order).size !== owned.length ||
+          args.order.some((slug) => !owned.some((s) => s.slug === slug))
+        )
+          return fail("VALIDATION_ERROR");
+        for (const [index, slug] of args.order.entries()) {
+          const item = owned.find((s) => s.slug === slug)!;
+          item.rail_position = index;
+          await ctx.db.patch(item._id, { rail_position: index });
+        }
+      }
+      if (args.background !== undefined) {
+        if (
+          args.background !== "" &&
+          !/^#[a-fA-F0-9]{6}$/.test(args.background)
+        )
+          return fail("VALIDATION_ERROR");
+        space.icon_background = args.background;
+      }
+      if (args.favorite !== undefined) space.favorite = args.favorite;
+      if (
+        args.name !== undefined ||
+        args.icon !== undefined ||
+        args.background !== undefined ||
+        args.description !== undefined ||
+        args.modules !== undefined
+      )
+        space.edited_at = Date.now();
       if (args.name !== undefined) space.name = validateSpaceName(args.name);
       if (args.description !== undefined) {
         if (
@@ -80,6 +112,9 @@ export const operate = internalMutation({
         space.enabled_modules = args.modules;
       }
       await ctx.db.patch(space._id, {
+        icon_background: space.icon_background,
+        favorite: space.favorite,
+        edited_at: space.edited_at,
         name: space.name,
         icon: space.icon,
         description: space.description,
@@ -228,6 +263,10 @@ export const operate = internalMutation({
         });
       }
     }
+    if (!["load", "configure"].includes(args.operation)) {
+      space.edited_at = Date.now();
+      await ctx.db.patch(space._id, { edited_at: space.edited_at });
+    }
     const pages = await ctx.db
       .query("space_pages")
       .withIndex("by_space_id", (q) => q.eq("space_id", space._id))
@@ -254,13 +293,33 @@ export const operate = internalMutation({
         purpose: space.purpose,
         modules: space.enabled_modules ?? [],
         description: space.description ?? "",
+        favorite: space.favorite ?? false,
+        background: space.icon_background ?? "",
+        editedAt: space.edited_at,
+        editedBy: space.edited_at
+          ? profile?.display_name || profile?.username || user.email
+          : undefined,
       },
-      spaces: owned.map((item) => ({
-        slug: item.slug,
-        name: item.name,
-        icon: item.icon,
-        purpose: item.purpose,
-      })),
+      spaces: owned
+        .sort(
+          (a, b) =>
+            (a.rail_position ?? a.created_at) -
+            (b.rail_position ?? b.created_at),
+        )
+        .map((item) => ({
+          slug: item.slug,
+          name: item.name,
+          icon: item.icon,
+          purpose: item.purpose,
+          description: item.description ?? "",
+          modules: item.enabled_modules ?? [],
+          favorite: item.favorite ?? false,
+          background: item.icon_background ?? "",
+          editedAt: item.edited_at,
+          editedBy: item.edited_at
+            ? profile?.display_name || profile?.username || user.email
+            : undefined,
+        })),
       profile: {
         displayName: profile?.display_name ?? "",
         avatarUrl,

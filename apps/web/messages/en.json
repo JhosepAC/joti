@@ -1479,6 +1479,24 @@
     "empty": "Start with what you need",
     "emptyHint": "Choose the tools you will use in this space.",
     "recent": "Recent documents",
-    "yourSpace": "A space that grows with you"
+    "yourSpace": "A space that grows with you",
+    "chooseImage": "Choose image",
+    "background": "Background color (hex)",
+    "defaultColor": "Default"
+  },
+  "spaceRail": {
+    "options": "Options for {name}",
+    "loading": "Switching space",
+    "favorite": "Add to favorites",
+    "unfavorite": "Remove from favorites",
+    "rename": "Rename",
+    "icon": "Change icon",
+    "settings": "Settings",
+    "newTab": "Open in a new tab",
+    "lastEdit": "Last space edit",
+    "noActivity": "No changes recorded yet",
+    "up": "Move up",
+    "down": "Move down",
+    "error": "Could not save. Please try again."
   }
 }
