@@ -21,6 +21,7 @@ export const set = mutation({
     )
       throw new ConvexError({ code: "INVALID_IMAGE" });
     await ctx.db.patch(auth.space._id, {
+      edited_at:Date.now(),
       icon: `media:${auth.space.slug}:${i.key}`,
     });
   },

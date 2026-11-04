@@ -23,6 +23,8 @@ async function operate(
   if (!slug || slug.length > 100)
     return reply({ code: "VALIDATION_ERROR" }, 400);
   let input: {
+    background?: string;
+    order?: string[];
     name?: string;
     description?: string;
     modules?: string[];
@@ -88,6 +90,9 @@ async function operate(
           request.cookies.get("joti-locale")?.value === "en" ? "en" : "es",
         ...(operation === "configure"
           ? {
+              background: input.background,
+              order: input.order,
+              favorite: input.favorite,
               name: input.name,
               description: input.description,
               modules: input.modules,

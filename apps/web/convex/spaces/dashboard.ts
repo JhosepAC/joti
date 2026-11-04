@@ -22,6 +22,8 @@ export const operate = action({
       v.literal("delete"),
       v.literal("icon"),
     ),
+    background: v.optional(v.string()),
+    order: v.optional(v.array(v.string())),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     modules: v.optional(v.array(v.string())),

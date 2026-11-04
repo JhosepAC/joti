@@ -269,3 +269,59 @@ describe("space configuration", () => {
     ).rejects.toThrow("UNAUTHORIZED");
   });
 });
+
+describe("space rail settings", () => {
+  test("persists favorite, color and activity without changing the URL", async () => {
+    const { call } = await fixture();
+    const fresh = await call({
+      operation: "configure",
+      favorite: true,
+      background: "#123456",
+      name: "Renamed space",
+    });
+    expect(fresh.space.favorite).toBe(true);
+    expect(fresh.space.background).toBe("#123456");
+    expect(fresh.space.editedBy).toBe("Writer");
+    expect(fresh.space.editedAt).toBeGreaterThan(0);
+    expect(fresh.space.slug).toBe("my-space");
+    await expect(
+      call({ operation: "configure", background: "url(evil)" }),
+    ).rejects.toThrow("VALIDATION_ERROR");
+    expect((await call()).space.background).toBe("#123456");
+    expect(
+      (await call({ operation: "configure", background: "", favorite: false }))
+        .space.favorite,
+    ).toBe(false);
+  });
+  test("reorders only an exact permutation of owned active spaces", async () => {
+    const { call, t, rows } = await fixture();
+    await t.run((ctx) =>
+      ctx.db.insert("spaces", {
+        owner_id: rows.user,
+        name: "Second",
+        slug: "second",
+        icon: "🏠",
+        purpose: "blank",
+        is_private: true,
+        created_at: Date.now(),
+      }),
+    );
+    expect(
+      (
+        await call({ operation: "configure", order: ["second", "my-space"] })
+      ).spaces.map((s) => s.slug),
+    ).toEqual(["second", "my-space"]);
+    for (const order of [
+      ["second", "second"],
+      ["unknown", "my-space"],
+      ["my-space"],
+    ])
+      await expect(call({ operation: "configure", order })).rejects.toThrow(
+        "VALIDATION_ERROR",
+      );
+    expect((await call()).spaces.map((s) => s.slug)).toEqual([
+      "second",
+      "my-space",
+    ]);
+  });
+});

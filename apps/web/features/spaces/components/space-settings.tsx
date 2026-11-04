@@ -1,6 +1,11 @@
 "use client";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import {
+  MediaPicker,
+  uploadMedia,
+} from "@/features/gallery/components/media-picker";
+import { prepareSpaceIcon, readIconResponse } from "../utils/prepare-icon";
 import { Modal } from "@/features/lists/components/overlays";
 import { SPACE_ICON_CHOICES } from "../types/space.types";
 import { LIST_ICONS } from "@/features/lists/components/list-icon";
@@ -17,9 +22,12 @@ export function SpaceSettings({
   space,
   save,
   onClose,
+  mode = "all",
 }: {
+  mode?: "all" | "name" | "icon";
   space: DashboardSpace;
   save: (input: {
+    background?: string;
     name: string;
     description: string;
     icon?: string;
@@ -27,6 +35,9 @@ export function SpaceSettings({
   }) => Promise<void>;
   onClose: () => void;
 }) {
+  const [media, setMedia] = useState(false),
+    [picture, setPicture] = useState<File | null>(null),
+    [background, setBackground] = useState(space.background ?? "");
   const t = useTranslations("spaceSettings");
   const [name, setName] = useState(space.name),
     [description, setDescription] = useState(space.description ?? ""),
@@ -48,11 +59,21 @@ export function SpaceSettings({
           setBusy(true);
           setError(false);
           try {
+            if (picture) {
+              const key = await uploadMedia(space.slug, picture);
+              const response = await fetch("/api/spaces/icon", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ slug: space.slug, key }),
+              });
+              if (!response.ok) throw new Error("upload failed");
+            }
             await save({
+              background,
               name,
               description,
               modules,
-              ...(icon !== space.icon ? { icon } : {}),
+              ...(!picture && icon !== space.icon ? { icon } : {}),
             });
             onClose();
           } catch {
@@ -63,7 +84,7 @@ export function SpaceSettings({
         }}
       >
         <h2>{t("title")}</h2>
-        <label>
+        <label hidden={mode === "icon"}>
           {t("name")}
           <input
             required
@@ -73,7 +94,7 @@ export function SpaceSettings({
             onChange={(e) => setName(e.target.value)}
           />
         </label>
-        <label>
+        <label hidden={mode !== "all"}>
           {t("description")}
           <textarea
             maxLength={280}
@@ -82,7 +103,7 @@ export function SpaceSettings({
             onChange={(e) => setDescription(e.target.value)}
           />
         </label>
-        <fieldset>
+        <fieldset hidden={mode === "name"}>
           <legend>{t("icon")}</legend>
           <div className="space-settings-icons">
             {[
@@ -94,14 +115,47 @@ export function SpaceSettings({
                 key={value}
                 aria-label={value}
                 aria-pressed={value === icon}
-                onClick={() => setIcon(value)}
+                onClick={() => {
+                  setIcon(value);
+                  setPicture(null);
+                }}
               >
                 <SpaceSymbol value={value} />
               </button>
             ))}
           </div>
+          <button type="button" onClick={() => setMedia(true)}>
+            {t("chooseImage")}
+          </button>
+          {picture && <p role="status">{picture.name}</p>}
+          <label>
+            {t("background")}
+            <input
+              value={background}
+              placeholder="#d3e3fd"
+              maxLength={7}
+              pattern="#[a-fA-F0-9]{6}|"
+              onChange={(e) => setBackground(e.target.value)}
+            />
+          </label>
+          <div className="space-color-swatches">
+            {["", "#d3e3fd", "#ceead6", "#fce8e6", "#feefc3", "#e8eaed"].map(
+              (color) => (
+                <button
+                  type="button"
+                  key={color}
+                  aria-label={color || t("defaultColor")}
+                  aria-pressed={background === color}
+                  style={{ background: color || "#f1f3f4" }}
+                  onClick={() => setBackground(color)}
+                >
+                  {color ? "" : t("defaultColor")}
+                </button>
+              ),
+            )}
+          </div>
         </fieldset>
-        <fieldset>
+        <fieldset hidden={mode !== "all"}>
           <legend>{t("modules")}</legend>
           <p>{t("preserve")}</p>
           {SPACE_MODULES.map((key) => (
@@ -137,6 +191,26 @@ export function SpaceSettings({
           </button>
         </footer>
       </form>
+      {media && (
+        <MediaPicker
+          slug={space.slug}
+          onClose={() => setMedia(false)}
+          onSelect={async (url) => {
+            setError(false);
+            try {
+              const response = await fetch(url, {
+                signal: AbortSignal.timeout(15000),
+              });
+              setPicture(
+                await prepareSpaceIcon(await readIconResponse(response)),
+              );
+              setMedia(false);
+            } catch {
+              setError(true);
+            }
+          }}
+        />
+      )}
     </Modal>
   );
 }

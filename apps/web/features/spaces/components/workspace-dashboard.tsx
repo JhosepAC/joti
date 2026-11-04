@@ -37,7 +37,7 @@ import { GalleryIcon } from "@/features/gallery/components/gallery-icon";
 import { CalendarModule } from "@/features/calendar/components/calendar-module";
 import { ListGlyph } from "@/features/lists/components/list-icon";
 import { CreateSpaceDialog } from "./create-space-dialog";
-import { RailSpaceLink } from "./rail-space-link";
+import { SpaceRail } from "./space-rail";
 import "./workspace.css";
 import "./workspace-navigation.css";
 import "./workspace-pages-refinement.css";
@@ -304,13 +304,11 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             className="workspace-space-list"
             inert={!mobile && railCollapsed ? true : undefined}
           >
-            {data.spaces.map((space) => (
-              <RailSpaceLink
-                key={space.slug}
-                space={space}
-                active={space.slug === slug}
-              />
-            ))}
+            <SpaceRail
+              spaces={data.spaces}
+              slug={slug}
+              configure={model.configureSpace}
+            />
             <button
               className="workspace-add-space"
               aria-label={t("newSpace")}
