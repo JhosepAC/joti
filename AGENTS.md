@@ -33,6 +33,10 @@ Follow existing TypeScript/React style: two-space indentation, double quotes, se
 
 Vitest uses Node and `convex-test` for an in-process backend. Name tests `*.test.ts`; discovery currently includes only `tests/auth/**/*.test.ts`. Keep tests outside `convex/`. Reuse `helpers.ts` and `setup.ts`, cover regressions and failure paths, and avoid live services. No coverage threshold is configured.
 
+## Version Control — Trunk-Based Development (TBD)
+
+`main` is the single integration trunk. This replaces Gitflow: do not start new work from `develop` or create long-lived feature/release branches. Integrate small, independently working changes into `main` at least daily, preferably several times a day. Work directly on `main` when appropriate; if isolation or review is needed, use a short-lived branch from `main` and integrate it promptly after checks pass. Keep the trunk buildable; use feature flags for incomplete behavior instead of prolonged branch divergence. Existing `develop` and feature branches are historical and must not be deleted or rewritten automatically. Continue using Conventional Commits and the required validation below.
+
 ## Commit & Pull Request Guidelines
 
 Use Conventional Commits, for example `feat(web): add space preview`. Configured scopes are `repo`, `web`, `ui`, `convex`, `custom-backend`, and `docs`. The Husky pre-commit hook runs `pnpm check-types`. PRs should explain behavior changes, link relevant issues, report validation, and include screenshots for UI changes.
