@@ -12,21 +12,6 @@
   width: 44px;
   height: 44px;
 }
-.rail-space-item::before {
-  content: "";
-  position: absolute;
-  inset: -8px -9px;
-  border-radius: 20px;
-  background: #fff;
-  opacity: 0;
-  transform: scale(0.92);
-  z-index: -1;
-  pointer-events: none;
-}
-.rail-space-item[data-selected]::before {
-  opacity: 1;
-  transform: scale(1);
-}
 .workspace-space-list .rail-space-item > a {
   position: relative;
   overflow: visible;
@@ -63,28 +48,19 @@
   outline-offset: 4px;
 }
 .rail-space-item[data-menu-open] > a {
-  outline: 2px solid #8a9bb6;
+  outline: 1px solid #8a9bb6;
   outline-offset: 3px;
 }
 .rail-selection-mark {
   position: absolute;
-  right: -4px;
-  bottom: -5px;
-  width: 20px;
-  height: 20px;
-  display: grid;
-  place-items: center;
+  left: 50%;
+  bottom: -8px;
+  width: 14px;
+  height: 3px;
+  margin-left: -7px;
   background: #0b57d0;
-  color: #fff;
-  border: 3px solid #fff;
-  box-sizing: border-box;
-  border-radius: 8px;
+  border-radius: 3px;
   pointer-events: none;
-}
-.rail-selection-mark svg {
-  width: 11px;
-  height: 11px;
-  stroke-width: 2.4;
 }
 .rail-favorite {
   top: -5px;

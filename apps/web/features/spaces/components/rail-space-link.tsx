@@ -86,9 +86,7 @@ export function RailSpaceLink({
         <LinkProgress label={t("loading")} />
       </Link>
       {active && (
-        <span className="rail-selection-mark" aria-hidden="true">
-          <ListGlyph name="tick" />
-        </span>
+        <span className="rail-selection-mark" aria-hidden="true" />
       )}
       {space.favorite && (
         <span className="rail-favorite" aria-hidden="true">
