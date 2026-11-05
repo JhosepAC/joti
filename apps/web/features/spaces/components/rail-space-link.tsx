@@ -78,11 +78,6 @@ export function RailSpaceLink({
         <LinkProgress label={t("loading")} />
       </Link>
       {active && <span className="rail-selection-mark" aria-hidden="true" />}
-      {space.favorite && (
-        <span className="rail-favorite" aria-hidden="true">
-          <ListGlyph name="star" />
-        </span>
-      )}
       {menu && (
         <Popover
           anchor={anchor}

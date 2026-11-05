@@ -196,7 +196,6 @@ export function SpaceSettings({
         <header className="space-settings-header">
           <div>
             <h2>{title}</h2>
-            <p>{space.name}</p>
           </div>
           <button
             type="button"

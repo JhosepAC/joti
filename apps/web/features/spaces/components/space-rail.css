@@ -60,23 +60,6 @@
   border-radius: 3px;
   pointer-events: none;
 }
-.rail-favorite {
-  top: -5px;
-  right: -5px;
-  width: 16px;
-  height: 16px;
-  display: grid;
-  place-items: center;
-  border: 2px solid #edf0f4;
-  box-sizing: border-box;
-  background: #fff;
-  border-radius: 6px;
-  color: #815400;
-}
-.rail-favorite svg {
-  width: 10px;
-  height: 10px;
-}
 .workspace-space-list .workspace-space-image {
   width: 44px;
   height: 44px;
@@ -219,4 +202,26 @@
   .rail-selection-mark {
     background: #002b80;
   }
+}
+
+.rail-space-group {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.rail-space-group + .rail-space-group {
+  border-top: 1px solid #ced6e1;
+  padding-top: 11px;
+}
+.rail-space-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #526073;
+}
+.rail-space-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 16px;
 }

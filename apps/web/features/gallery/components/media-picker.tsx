@@ -1,5 +1,5 @@
 "use client";
-import { X } from "lucide-react";
+import { ImageUp, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/features/lists/components/overlays";
@@ -138,14 +138,18 @@ export function MediaPicker({
         <Collection slug={slug} onSelect={onSelect} />
       ) : tab === "upload" ? (
         <label className="media-upload">
-          {t("uploadHint")}
+          <ImageUp className="media-upload-icon" aria-hidden="true" />
+          <strong>{t("chooseFile")}</strong>
+          <span>{t("uploadHint")}</span>
           <input
             type="file"
+            aria-label={t("chooseFile")}
             accept="image/jpeg,image/png,image/webp,image/avif"
             disabled={busy}
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
+              e.currentTarget.value = "";
               setBusy(true);
               setError("");
               try {

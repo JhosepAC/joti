@@ -1444,6 +1444,7 @@
     "empty": "No images available. Upload a file or use a link.",
     "more": "Load more",
     "close": "Close",
+    "chooseFile": "Choose file",
     "uploadHint": "JPEG, PNG, WebP or AVIF, up to 8 MiB. Saved to this space’s gallery.",
     "error": "Could not prepare the image. Check the format and size or retry in Gallery.",
     "invalidUrl": "Enter a valid http or https link.",
@@ -1499,6 +1500,8 @@
     "defaultColor": "Default"
   },
   "spaceRail": {
+    "favoritesGroup": "Favorites",
+    "spacesGroup": "Spaces",
     "options": "Options for {name}",
     "loading": "Switching space",
     "favorite": "Add to favorites",

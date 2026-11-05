@@ -56,12 +56,22 @@ export function SpaceRail({
     }
     positions.current.clear();
   }, [items]);
+  const groups = [
+    { key: "favoritesGroup", items: items.filter((space) => space.favorite) },
+    { key: "spacesGroup", items: items.filter((space) => !space.favorite) },
+  ];
+
   async function move(from: string, to: string) {
     if (busy || from === to) return;
     const next = [...items],
       a = next.findIndex((s) => s.slug === from),
       b = next.findIndex((s) => s.slug === to);
-    if (a < 0 || b < 0) return;
+    if (
+      a < 0 ||
+      b < 0 ||
+      Boolean(next[a]?.favorite) !== Boolean(next[b]?.favorite)
+    )
+      return;
     next.splice(b, 0, next.splice(a, 1)[0]!);
     for (const [key, el] of slots.current)
       positions.current.set(key, el.getBoundingClientRect().top);
@@ -81,63 +91,86 @@ export function SpaceRail({
   }
   return (
     <>
-      {items.map((space, index) => (
-        <div
-          ref={(el) => {
-            if (el) slots.current.set(space.slug, el);
-            else slots.current.delete(space.slug);
-          }}
-          className="rail-space-slot"
-          key={space.slug}
-          data-drop={
-            target === space.slug
-              ? items.findIndex((s) => s.slug === drag) < index
-                ? "after"
-                : "before"
-              : undefined
-          }
-          data-dragging={drag === space.slug ? "true" : undefined}
-          draggable={!busy}
-          onDragStart={(e) => {
-            setDrag(space.slug);
-            e.dataTransfer.setData("text/plain", space.slug);
-            e.dataTransfer.effectAllowed = "move";
-          }}
-          onDragOver={(e) => {
-            if (drag && drag !== space.slug) {
-              e.preventDefault();
-              setTarget(space.slug);
-              e.dataTransfer.dropEffect = "move";
-            }
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            if (drag) void move(drag, space.slug);
-          }}
-          onDragEnd={() => {
-            setDrag(null);
-            setTarget(null);
-          }}
-        >
-          <RailSpaceLink
-            space={space}
-            active={space.slug === slug}
-            onMove={(direction) => {
-              const to = items[index + direction];
-              if (to) void move(space.slug, to.slug);
-            }}
-            onAction={(action) => {
-              if (action === "favorite") {
-                if (busy) return;
-                setBusy(true);
-                void configure({ favorite: !space.favorite }, space.slug)
-                  .catch(() => setError(true))
-                  .finally(() => setBusy(false));
-              } else setEditor({ space, mode: action });
-            }}
-          />
-        </div>
-      ))}
+      {groups
+        .filter((group) => group.items.length > 0)
+        .map((group) => (
+          <section
+            key={group.key}
+            className="rail-space-group"
+            aria-label={t(group.key)}
+          >
+            <span className="rail-space-group-label">{t(group.key)}</span>
+            <div className="rail-space-grid">
+              {group.items.map((space, index) => (
+                <div
+                  ref={(el) => {
+                    if (el) slots.current.set(space.slug, el);
+                    else slots.current.delete(space.slug);
+                  }}
+                  className="rail-space-slot"
+                  key={space.slug}
+                  data-drop={
+                    target === space.slug
+                      ? group.items.findIndex((s) => s.slug === drag) < index
+                        ? "after"
+                        : "before"
+                      : undefined
+                  }
+                  data-dragging={drag === space.slug ? "true" : undefined}
+                  draggable={!busy}
+                  onDragStart={(e) => {
+                    setDrag(space.slug);
+                    e.dataTransfer.setData("text/plain", space.slug);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={(e) => {
+                    if (
+                      drag &&
+                      drag !== space.slug &&
+                      group.items.some((item) => item.slug === drag)
+                    ) {
+                      e.preventDefault();
+                      setTarget(space.slug);
+                      e.dataTransfer.dropEffect = "move";
+                    } else {
+                      setTarget(null);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (drag) void move(drag, space.slug);
+                  }}
+                  onDragEnd={() => {
+                    setDrag(null);
+                    setTarget(null);
+                  }}
+                >
+                  <RailSpaceLink
+                    space={space}
+                    active={space.slug === slug}
+                    onMove={(direction) => {
+                      const to = group.items[index + direction];
+                      if (to) void move(space.slug, to.slug);
+                    }}
+                    onAction={(action) => {
+                      if (action === "favorite") {
+                        if (busy) return;
+                        setBusy(true);
+                        setError(false);
+                        void configure(
+                          { favorite: !space.favorite },
+                          space.slug,
+                        )
+                          .catch(() => setError(true))
+                          .finally(() => setBusy(false));
+                      } else setEditor({ space, mode: action });
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
       {error && (
         <p className="rail-space-error" role="alert">
           {t("error")}

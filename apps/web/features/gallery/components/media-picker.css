@@ -17,9 +17,18 @@
   cursor: pointer;
 }
 .media-picker header button {
-  background: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
   border: 0;
-  font-size: 25px;
+  border-radius: 7px;
+}
+.media-picker header button:hover:not(:disabled) {
+  background: #e8edf4;
 }
 .media-picker nav {
   display: flex;
@@ -87,12 +96,48 @@
   text-overflow: ellipsis;
   margin-top: 6px;
 }
-.media-upload {
-  border: 1px dashed #dadce0;
-  border-radius: 10px;
-  padding: 24px;
-  background: #f8f9fa;
-  line-height: 1.7;
+.media-picker .media-upload {
+  position: relative;
+  justify-items: center;
+  gap: 8px;
+  border: 1px solid #d5dfeb;
+  border-radius: 12px;
+  padding: 28px 16px;
+  background: #f5f8fc;
+  text-align: center;
+  cursor: pointer;
+}
+.media-upload:hover:not(:has(input:disabled)) {
+  border-color: #87a9d6;
+  background: #edf4fd;
+}
+.media-upload:focus-within {
+  outline: 2px solid #0b57d0;
+  outline-offset: 2px;
+}
+.media-upload:has(input:disabled) {
+  opacity: 0.65;
+  cursor: wait;
+}
+.media-upload-icon {
+  width: 28px;
+  height: 28px;
+  color: #174ea6;
+}
+.media-upload strong {
+  font-size: 14px;
+  color: #174579;
+}
+.media-upload > span {
+  color: #526073;
+}
+.media-picker .media-upload input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: inherit;
 }
 .media-picker button:focus-visible {
   outline: 2px solid #0b57d0;

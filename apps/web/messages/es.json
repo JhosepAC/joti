@@ -1444,6 +1444,7 @@
     "empty": "No hay imágenes disponibles. Puedes subir una o usar un enlace.",
     "more": "Cargar más",
     "close": "Cerrar",
+    "chooseFile": "Elegir archivo",
     "uploadHint": "JPEG, PNG, WebP o AVIF, hasta 8 MiB. Se guardará en la galería de este espacio.",
     "error": "No se pudo preparar la imagen. Revisa el formato y el tamaño o reintenta desde Galería.",
     "invalidUrl": "Introduce un enlace http o https válido.",
@@ -1499,6 +1500,8 @@
     "defaultColor": "Predeterminado"
   },
   "spaceRail": {
+    "favoritesGroup": "Favoritos",
+    "spacesGroup": "Espacios",
     "options": "Opciones de {name}",
     "loading": "Cambiando de espacio",
     "favorite": "Agregar a favoritos",

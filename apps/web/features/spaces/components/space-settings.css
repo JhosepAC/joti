@@ -198,21 +198,6 @@
   }
 }
 
-.rail-favorite {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  pointer-events: none;
-  width: 14px;
-  height: 14px;
-  background: #fff;
-  border-radius: 50%;
-  color: #8a5b00;
-}
-.rail-favorite svg {
-  width: 12px;
-  height: 12px;
-}
 .rail-space-slot {
   position: relative;
 }
@@ -384,12 +369,6 @@
   line-height: 1.25;
   letter-spacing: -0.02em;
 }
-.space-settings-header p {
-  margin: 4px 0 0;
-  color: var(--space-muted);
-  overflow-wrap: anywhere;
-  font-size: 13px;
-}
 .space-settings-header > button {
   display: grid;
   place-items: center;
@@ -416,7 +395,6 @@
   flex-direction: column;
   gap: 4px;
   padding: 13px 10px;
-  background: #f4f6f9;
   border-inline-end: 1px solid var(--space-line);
 }
 .space-settings-nav > button {
