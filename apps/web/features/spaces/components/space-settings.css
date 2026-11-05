@@ -600,16 +600,40 @@
   color: #fff;
 }
 .space-settings-danger {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
   padding: 16px;
-  border-radius: 9px;
-  background: #fff3f2;
+  margin-top: 14px;
+  border: 1px solid var(--space-line);
+  border-radius: 10px;
+  background: #f7f8fa;
+}
+.space-settings-danger-icon {
+  align-self: flex-start;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: var(--space-muted);
+}
+.space-settings-danger-copy {
+  flex: 1 1 190px;
+  min-width: 0;
+}
+.space-settings-danger-copy strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
 }
 .space-settings-danger button {
-  justify-self: start;
-  background: #f9dfdd;
-  color: #942326;
+  margin-inline-start: auto;
+  background: #fff;
+  color: #344156;
+  box-shadow: inset 0 0 0 1px #d4dbe5;
+}
+.space-settings-danger button:hover:not(:disabled) {
+  background: #e9edf3;
 }
 .space-settings-confirm form {
   display: grid;
@@ -622,7 +646,7 @@
   gap: 8px;
 }
 .space-settings-confirm-actions .space-settings-delete {
-  background: #a32227;
+  background: #863943;
   color: #fff;
 }
 .space-settings-form :is(button, input):disabled,

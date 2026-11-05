@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { clearGrants } from "@/features/auth/utils/claim-store";
@@ -337,8 +338,14 @@ export function SpaceSettings({
               <section>
                 <h3>{t("management")}</h3>
                 <div className="space-settings-danger">
-                  <strong>{t("deleteSpace")}</strong>
-                  <p>{t("deleteHint")}</p>
+                  <Trash2
+                    className="space-settings-danger-icon"
+                    aria-hidden="true"
+                  />
+                  <div className="space-settings-danger-copy">
+                    <strong>{t("deleteSpace")}</strong>
+                    <p>{t("deleteHint")}</p>
+                  </div>
                   <button
                     type="button"
                     disabled={busy || preparing}
