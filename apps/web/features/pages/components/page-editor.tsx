@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  type Editor,
+  EditorContent,
+  useEditor,
+  useEditorState,
+} from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
@@ -15,6 +20,7 @@ import "./pages.css";
 import { useParams } from "next/navigation";
 import { MediaPicker } from "@/features/gallery/components/media-picker";
 import { EditorGlyph } from "./editor-glyph";
+import { WritingStyleMark } from "./writing-style";
 
 export function PageConflictDialog({
   busy,
@@ -118,6 +124,7 @@ export function PageEditor({
   readOnly = false,
   iconOnly = false,
   showIcon = true,
+  writingTools,
 }: {
   body: string;
   title: string;
@@ -128,10 +135,14 @@ export function PageEditor({
   readOnly?: boolean;
   iconOnly?: boolean;
   showIcon?: boolean;
+  writingTools?: (editor: Editor, disabled: boolean) => ReactNode;
 }) {
   const params = useParams(),
     slug = String(params.slug ?? "");
   const t = useTranslations("pages");
+  const tn = useTranslations("notes");
+  const [blockQuery, setBlockQuery] = useState("");
+  const [activeBlock, setActiveBlock] = useState(0);
   const [source, setSource] = useState(false);
   const [menu, setMenu] = useState<"insert" | "icon" | null>(null);
   const [dialog, setDialog] = useState<"link" | "image" | null>(null);
@@ -155,6 +166,7 @@ export function PageEditor({
       TaskItem.configure({ nested: true }),
       Image.configure({ allowBase64: false }),
       TableKit,
+      WritingStyleMark,
       Markdown,
     ],
     content: body,
@@ -207,8 +219,35 @@ export function PageEditor({
         emitUpdate: false,
       });
   }, [body, editor, source]);
+  const blocks = [
+    "paragraph",
+    "h1",
+    "h2",
+    "h3",
+    "bullet",
+    "numbered",
+    "task",
+    "quote",
+    "codeBlock",
+    "divider",
+    "table",
+    "link",
+    "image",
+  ] as const;
+  const visibleBlocks = blocks.filter(
+    (kind) =>
+      !blockQuery ||
+      `${t(kind)} ${tn(`blockHints.${kind}`)}`
+        .toLocaleLowerCase()
+        .includes(blockQuery.toLocaleLowerCase().trim()),
+  );
+  const openInsert = () => {
+    setBlockQuery("");
+    setActiveBlock(0);
+    setMenu("insert");
+  };
   const insert = (kind: string) => {
-    if (!editor) return;
+    if (!editor || readOnly) return;
     const chain = editor.chain().focus();
     if (kind === "paragraph") chain.setParagraph().run();
     if (kind === "h1" || kind === "h2" || kind === "h3")
@@ -254,10 +293,14 @@ export function PageEditor({
           e.key === "/" &&
           editor?.state.selection.$from.parent.isTextblock &&
           !editor.state.selection.$from.parent.textContent &&
-          !source
+          !source &&
+          !readOnly &&
+          !e.nativeEvent.isComposing &&
+          e.target instanceof HTMLElement &&
+          e.target.closest(".page-prose")
         ) {
           e.preventDefault();
-          setMenu("insert");
+          openInsert();
         }
       }}
     >
@@ -279,7 +322,7 @@ export function PageEditor({
           ref={anchor}
           disabled={source}
           aria-expanded={menu === "insert"}
-          onClick={() => setMenu(menu === "insert" ? null : "insert")}
+          onClick={() => (menu === "insert" ? setMenu(null) : openInsert())}
         >
           <EditorGlyph name="insert" />
         </button>
@@ -310,6 +353,7 @@ export function PageEditor({
             {label}
           </button>
         ))}
+        {writingTools && editor && writingTools(editor, source || readOnly)}
         <button
           title={t("undo")}
           aria-label={t("undo")}
@@ -388,27 +432,55 @@ export function PageEditor({
               ))}
             </div>
           ) : (
-            <div className="page-insert-menu">
-              {[
-                "paragraph",
-                "h1",
-                "h2",
-                "h3",
-                "bullet",
-                "numbered",
-                "task",
-                "quote",
-                "codeBlock",
-                "divider",
-                "table",
-                "link",
-                "image",
-              ].map((kind) => (
-                <button key={kind} onClick={() => insert(kind)}>
+            <div
+              className={`page-insert-menu${writingTools ? " note-insert-menu" : ""}`}
+            >
+              {writingTools && (
+                <input
+                  data-popover-focus
+                  value={blockQuery}
+                  aria-label={tn("findBlock")}
+                  placeholder={tn("findBlock")}
+                  onChange={(event) => {
+                    setBlockQuery(event.target.value);
+                    setActiveBlock(0);
+                  }}
+                  onKeyDown={(event) => {
+                    if (!visibleBlocks.length || event.nativeEvent.isComposing)
+                      return;
+                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                      event.preventDefault();
+                      const step = event.key === "ArrowDown" ? 1 : -1;
+                      const next =
+                        (activeBlock + step + visibleBlocks.length) %
+                        visibleBlocks.length;
+                      setActiveBlock(next);
+                      event.currentTarget.parentElement
+                        ?.querySelectorAll("button")
+                        [next]?.scrollIntoView({ block: "nearest" });
+                    }
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      insert(visibleBlocks[activeBlock]!);
+                    }
+                  }}
+                />
+              )}
+              {visibleBlocks.map((kind, index) => (
+                <button
+                  type="button"
+                  key={kind}
+                  data-highlighted={writingTools && index === activeBlock}
+                  onClick={() => insert(kind)}
+                >
                   <EditorGlyph name={kind} />
-                  <span>{t(kind)}</span>
+                  <span>
+                    {t(kind)}
+                    {writingTools && <small>{tn(`blockHints.${kind}`)}</small>}
+                  </span>
                 </button>
               ))}
+              {!visibleBlocks.length && <p>{tn("noBlocks")}</p>}
             </div>
           )}
         </Popover>
@@ -475,6 +547,19 @@ export function PageEditor({
           {editor?.isEmpty && (
             <p className="page-placeholder">{t("placeholder")}</p>
           )}
+        </div>
+      )}
+      {writingTools && (
+        <div className="note-writing-stats">
+          {(() => {
+            const content = (source ? body : (state?.content ?? "")).trim();
+            const words = content ? content.split(/\s+/).length : 0;
+            return tn("writingStats", {
+              words,
+              characters: content.length,
+              minutes: Math.ceil(words / 220),
+            });
+          })()}
         </div>
       )}
       {body.length > 30000 && (

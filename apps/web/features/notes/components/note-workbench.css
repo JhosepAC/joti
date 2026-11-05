@@ -152,3 +152,144 @@
     display: none;
   }
 }
+.note-workbench .page-editor {
+  --ws-ink: #202124;
+  --ws-muted: #525961;
+  --ws-line: #e8ebef;
+  --ws-accent: #0b57d0;
+}
+
+.note-workbench .page-tools {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  gap: 3px;
+  padding: 6px 2px;
+}
+
+.note-workbench .page-tools button {
+  min-height: 34px;
+}
+
+.note-workbench .page-tools svg {
+  width: 17px;
+  height: 17px;
+}
+
+.note-tool-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-inline: 1px solid #e8ebef;
+  padding-inline: 4px;
+}
+
+.note-template {
+  margin-top: 12px;
+}
+
+.note-workbench .notes-metadata > span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.note-workbench .notes-tag-editor > button {
+  border-radius: 999px;
+}
+
+.note-insert-menu {
+  width: min(320px, calc(100vw - 44px));
+}
+
+.note-insert-menu input,
+.note-tool-dialog input {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  border-radius: 7px;
+  border: 1px solid #d9dfe6;
+}
+
+.note-insert-menu input {
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+
+.note-insert-menu button[data-highlighted="true"] {
+  background: #eef2f7;
+}
+
+.note-insert-menu button small {
+  display: block;
+  color: #525961;
+  font-size: 12px;
+}
+
+.note-writing-stats {
+  color: #525961;
+  font-size: 12px;
+  padding-block: 10px;
+  border-top: 1px solid #e8ebef;
+}
+
+.note-tool-dialog label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.note-tool-dialog > button {
+  margin-top: 12px;
+}
+
+.note-shortcuts > div {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-block: 8px;
+}
+
+@media print {
+  .note-workbench
+    :is(.note-template, .note-writing-stats, .page-tools, .page-table-tools) {
+    display: none !important;
+  }
+}
+.note-style-panel {
+  display: grid;
+  gap: 10px;
+  min-width: 210px;
+  padding: 6px;
+}
+
+.note-style-panel fieldset {
+  margin: 0;
+  padding: 4px;
+  border: 0;
+}
+
+.note-style-panel legend {
+  font-size: 12px;
+  color: #525961;
+}
+
+.note-style-panel button {
+  min-width: 36px;
+  min-height: 36px;
+  padding-inline: 4px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #f5f7f9;
+  cursor: pointer;
+}
+
+.note-style-panel button + button {
+  margin-inline-start: 4px;
+}
+
+.note-style-panel button:is(:hover, [aria-pressed="true"]) {
+  border-color: #7487a4;
+}

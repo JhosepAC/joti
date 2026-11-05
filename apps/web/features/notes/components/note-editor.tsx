@@ -22,6 +22,7 @@ import { PageEditor } from "@/features/pages/components/page-editor";
 import { PageIconPicker } from "@/features/pages/components/page-icon-picker";
 import { ListIcon } from "@/features/lists/components/list-icon";
 import "./note-workbench.css";
+import { NoteWritingTools } from "./note-writing-tools";
 import {
   NOTE_COLORS,
   validateNote,
@@ -432,12 +433,34 @@ export function NoteEditor({
               onChange={(color) => edit({ color })}
             />
             <span>
-              {new Intl.DateTimeFormat(locale, {
-                dateStyle: "medium",
-                timeStyle: "short",
-              }).format(note.updatedAt)}
+              {(["createdAt", "updatedAt"] as const).map((key) => (
+                <time key={key} dateTime={new Date(note[key]).toISOString()}>
+                  {t(key, {
+                    date: new Intl.DateTimeFormat(locale, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(note[key]),
+                  })}
+                </time>
+              ))}
             </span>
           </div>
+          {!readOnly && !draft.fields.body.trim() && (
+            <div className="note-template">
+              <ListSelect
+                label={t("template")}
+                placeholder={t("template")}
+                value=""
+                options={["meeting", "project", "journal"].map((value) => ({
+                  value,
+                  label: t(`templates.${value}.label`),
+                }))}
+                onChange={(value) =>
+                  edit({ body: t(`templates.${value}.body`) })
+                }
+              />
+            </div>
+          )}
           <div className="notes-tag-editor">
             {draft.fields.tags.map((label) => (
               <button
@@ -477,8 +500,22 @@ export function NoteEditor({
                   placeholder={t("addTag")}
                   value={tag}
                   maxLength={30}
+                  list="note-known-tags"
                   onChange={(e) => setTag(e.target.value)}
                 />
+                <datalist id="note-known-tags">
+                  {[...new Set(notes.flatMap((item) => item.tags))]
+                    .filter(
+                      (label) =>
+                        !draft.fields.tags.some(
+                          (current) =>
+                            current.toLowerCase() === label.toLowerCase(),
+                        ),
+                    )
+                    .map((label) => (
+                      <option key={label} value={label} />
+                    ))}
+                </datalist>
               </form>
             )}
           </div>
@@ -493,6 +530,9 @@ export function NoteEditor({
               readOnly={readOnly}
               onChange={(body) => edit({ body })}
               showIcon={false}
+              writingTools={(editor, disabled) => (
+                <NoteWritingTools editor={editor} disabled={disabled} />
+              )}
               onIcon={(icon) => edit({ icon })}
               onSave={() => void saveRef.current()}
             />

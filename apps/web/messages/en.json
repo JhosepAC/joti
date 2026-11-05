@@ -1183,6 +1183,93 @@
     "edit": "Edit note",
     "capture": "Write an idea before it slips away…",
     "captureAction": "Save idea",
+    "underline": "Underline",
+    "clearFormat": "Clear formatting",
+    "moveBlock": "Drag selected block or use arrow keys",
+    "moveUp": "Move block up",
+    "moveDown": "Move block down",
+    "replaceText": "Find and replace",
+    "findText": "Find text",
+    "replacement": "Replace with",
+    "replaceAll": "Replace all",
+    "replaced": "{count, plural, one {Replaced # match} other {Replaced # matches}}",
+    "copyRich": "Copy formatted note",
+    "copiedRich": "Formatted note copied",
+    "copyFailed": "The clipboard is unavailable.",
+    "shortcuts": "Keyboard shortcuts",
+    "saveShortcut": "Save note",
+    "insertShortcut": "Insert block on an empty line",
+    "boldShortcut": "Toggle bold",
+    "writingTools": "Writing tools",
+    "findBlock": "Find a block",
+    "noBlocks": "No matching blocks",
+    "writingStats": "{words} words · {characters} characters · {minutes} min read",
+    "template": "Use a template",
+    "createdAt": "Created {date}",
+    "updatedAt": "Edited {date}",
+    "templates": {
+      "meeting": {
+        "label": "Meeting",
+        "body": "## Agenda\n\n## Decisions\n\n## Next steps\n\n- [ ] "
+      },
+      "project": {
+        "label": "Project",
+        "body": "## Goal\n\n## Milestones\n\n## Next steps\n\n- [ ] "
+      },
+      "journal": {
+        "label": "Journal",
+        "body": "## Today\n\n## What I learned\n\n## Tomorrow"
+      }
+    },
+    "blockHints": {
+      "paragraph": "Continue with plain text",
+      "h1": "Start a major section",
+      "h2": "Group a topic",
+      "h3": "Add a subsection",
+      "bullet": "Group related items",
+      "numbered": "Write a sequence",
+      "task": "Track actions with checkboxes",
+      "quote": "Set apart a quotation",
+      "codeBlock": "Preserve code indentation",
+      "divider": "Separate sections",
+      "table": "Arrange data in rows",
+      "link": "Link to a resource",
+      "image": "Insert a picture from the gallery or a URL"
+    },
+    "textStyle": "Text appearance",
+    "copyFormat": "Copy formatting",
+    "applyFormat": "Apply formatting",
+    "styleFields": {
+      "color": "Color",
+      "backgroundColor": "Highlight",
+      "fontFamily": "Typeface",
+      "fontSize": "Size"
+    },
+    "styleChoices": {
+      "color": {
+        "0": "Ink",
+        "1": "Blue",
+        "2": "Green",
+        "3": "Red"
+      },
+      "backgroundColor": {
+        "0": "Yellow",
+        "1": "Blue",
+        "2": "Green",
+        "3": "Pink"
+      },
+      "fontFamily": {
+        "0": "Serif",
+        "1": "Monospace",
+        "2": "System"
+      },
+      "fontSize": {
+        "0": "14 px",
+        "1": "18 px",
+        "2": "22 px",
+        "3": "26 px"
+      }
+    },
     "saveFailed": "Save failed",
     "focusMode": "Focus mode",
     "expandEditor": "Expand editor",

@@ -71,6 +71,14 @@ export function Popover({
       role="dialog"
       aria-label={label}
       className={`lists-surface lists-popover ${wide ? "lists-popover-wide" : ""}`}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && !event.defaultPrevented) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (ref.current?.matches(":popover-open")) ref.current.hidePopover();
+          anchor.current?.focus();
+        }
+      }}
       onToggle={(event) => {
         if (event.newState === "closed") close.current();
       }}
@@ -80,6 +88,7 @@ export function Popover({
     anchor.current?.closest("dialog, [popover]") ?? document.body,
   );
 }
+
 export function Modal({
   label,
   onClose,

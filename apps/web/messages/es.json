@@ -1183,6 +1183,93 @@
     "edit": "Editar nota",
     "capture": "Escribe una idea para no perderla…",
     "captureAction": "Guardar idea",
+    "underline": "Subrayar",
+    "clearFormat": "Limpiar formato",
+    "moveBlock": "Arrastra el bloque seleccionado o usa las flechas",
+    "moveUp": "Subir bloque",
+    "moveDown": "Bajar bloque",
+    "replaceText": "Buscar y reemplazar",
+    "findText": "Buscar texto",
+    "replacement": "Reemplazar por",
+    "replaceAll": "Reemplazar todo",
+    "replaced": "{count, plural, one {# coincidencia reemplazada} other {# coincidencias reemplazadas}}",
+    "copyRich": "Copiar nota con formato",
+    "copiedRich": "Nota con formato copiada",
+    "copyFailed": "El portapapeles no está disponible.",
+    "shortcuts": "Atajos de teclado",
+    "saveShortcut": "Guardar nota",
+    "insertShortcut": "Insertar bloque en una línea vacía",
+    "boldShortcut": "Activar o desactivar negrita",
+    "writingTools": "Herramientas de escritura",
+    "findBlock": "Buscar un bloque",
+    "noBlocks": "No hay bloques que coincidan",
+    "writingStats": "{words} palabras · {characters} caracteres · {minutes} min de lectura",
+    "template": "Usar una plantilla",
+    "createdAt": "Creada el {date}",
+    "updatedAt": "Editada el {date}",
+    "templates": {
+      "meeting": {
+        "label": "Reunión",
+        "body": "## Agenda\n\n## Decisiones\n\n## Próximos pasos\n\n- [ ] "
+      },
+      "project": {
+        "label": "Proyecto",
+        "body": "## Objetivo\n\n## Hitos\n\n## Próximos pasos\n\n- [ ] "
+      },
+      "journal": {
+        "label": "Diario",
+        "body": "## Hoy\n\n## Qué aprendí\n\n## Mañana"
+      }
+    },
+    "blockHints": {
+      "paragraph": "Continúa con texto normal",
+      "h1": "Abre una sección principal",
+      "h2": "Agrupa un tema",
+      "h3": "Añade una subsección",
+      "bullet": "Agrupa elementos relacionados",
+      "numbered": "Escribe una secuencia",
+      "task": "Marca acciones con casillas",
+      "quote": "Destaca una cita",
+      "codeBlock": "Conserva la sangría del código",
+      "divider": "Separa secciones",
+      "table": "Organiza datos en filas",
+      "link": "Enlaza a un recurso",
+      "image": "Inserta una imagen de la galería o de una URL"
+    },
+    "textStyle": "Apariencia del texto",
+    "copyFormat": "Copiar formato",
+    "applyFormat": "Aplicar formato",
+    "styleFields": {
+      "color": "Color",
+      "backgroundColor": "Resaltado",
+      "fontFamily": "Tipografía",
+      "fontSize": "Tamaño"
+    },
+    "styleChoices": {
+      "color": {
+        "0": "Tinta",
+        "1": "Azul",
+        "2": "Verde",
+        "3": "Rojo"
+      },
+      "backgroundColor": {
+        "0": "Amarillo",
+        "1": "Azul",
+        "2": "Verde",
+        "3": "Rosa"
+      },
+      "fontFamily": {
+        "0": "Serif",
+        "1": "Monoespaciada",
+        "2": "Sistema"
+      },
+      "fontSize": {
+        "0": "14 px",
+        "1": "18 px",
+        "2": "22 px",
+        "3": "26 px"
+      }
+    },
     "saveFailed": "Error al guardar",
     "focusMode": "Modo de enfoque",
     "expandEditor": "Expandir editor",
