@@ -117,6 +117,7 @@ export function PageEditor({
   onSave,
   readOnly = false,
   iconOnly = false,
+  showIcon = true,
 }: {
   body: string;
   title: string;
@@ -126,6 +127,7 @@ export function PageEditor({
   onSave: () => void;
   readOnly?: boolean;
   iconOnly?: boolean;
+  showIcon?: boolean;
 }) {
   const params = useParams(),
     slug = String(params.slug ?? "");
@@ -260,15 +262,17 @@ export function PageEditor({
       }}
     >
       <div className="page-tools" aria-label={t("tools")}>
-        <button
-          ref={iconAnchor}
-          title={t("icon")}
-          aria-label={t("icon")}
-          aria-expanded={menu === "icon"}
-          onClick={() => setMenu(menu === "icon" ? null : "icon")}
-        >
-          <ListIcon name={icon ?? "book"} />
-        </button>
+        {showIcon && (
+          <button
+            ref={iconAnchor}
+            title={t("icon")}
+            aria-label={t("icon")}
+            aria-expanded={menu === "icon"}
+            onClick={() => setMenu(menu === "icon" ? null : "icon")}
+          >
+            <ListIcon name={icon ?? "book"} />
+          </button>
+        )}
         <button
           title={t("insert")}
           aria-label={t("insert")}

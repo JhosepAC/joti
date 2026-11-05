@@ -1,11 +1,27 @@
 "use client";
-import { X } from "lucide-react";
+import {
+  Archive,
+  Check,
+  Copy,
+  Download,
+  FileText,
+  Focus,
+  History,
+  Maximize2,
+  Minimize2,
+  Pin,
+  RotateCcw,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Modal } from "@/features/lists/components/overlays";
 import { ListSelect } from "@/features/lists/components/list-select";
 import { PageEditor } from "@/features/pages/components/page-editor";
-import { AccountGlyph } from "@/features/settings/components/account-glyph";
+import { PageIconPicker } from "@/features/pages/components/page-icon-picker";
+import { ListIcon } from "@/features/lists/components/list-icon";
+import "./note-workbench.css";
 import {
   NOTE_COLORS,
   validateNote,
@@ -65,7 +81,10 @@ export function NoteEditor({
     try {
       const stored = JSON.parse(sessionStorage.getItem(storageKey) ?? "null");
       if (stored && Number.isSafeInteger(stored.baseRevision)) {
-        validateNote(stored.fields);
+        validateNote({
+          ...stored.fields,
+          title: stored.fields.title.trim() || t("untitled"),
+        });
         return stored as { fields: Fields; baseRevision: number };
       }
     } catch {}
@@ -76,7 +95,9 @@ export function NoteEditor({
     [actionBusy, setActionBusy] = useState(false),
     [confirm, setConfirm] = useState<"discard" | "delete" | null>(null),
     [showHistory, setShowHistory] = useState(false),
-    [tag, setTag] = useState("");
+    [tag, setTag] = useState(""),
+    [focused, setFocused] = useState(false),
+    [expanded, setExpanded] = useState(false);
   const current = useRef(draft),
     lastServer = useRef(fields(note)),
     pending = useRef<{ signature: string; op: NoteOperation } | null>(null),
@@ -121,7 +142,10 @@ export function NoteEditor({
     const snapshot = current.current;
     let normalized: Fields;
     try {
-      normalized = validateNote(snapshot.fields);
+      normalized = validateNote({
+        ...snapshot.fields,
+        title: snapshot.fields.title.trim() || t("untitled"),
+      });
     } catch {
       setError("VALIDATION_ERROR");
       return null;
@@ -175,8 +199,15 @@ export function NoteEditor({
   }, [draft, dirty, busy, actionBusy, error]);
   const close = () => {
     if (busy || actionBusy) return;
-    if (dirty) setConfirm("discard");
-    else onClose();
+    if (!dirty) onClose();
+    else if (error) setConfirm("discard");
+    else {
+      const closingFields = current.current.fields;
+      void saveNow().then((revision) => {
+        if (revision === null) setConfirm("discard");
+        else if (current.current.fields === closingFields) onClose();
+      });
+    }
   };
   const run = async (
     kind: "delete" | "duplicate" | "promote" | "restoreVersion",
@@ -235,36 +266,78 @@ export function NoteEditor({
     )
     .slice(0, 4);
   return (
-    <Modal className="notes-dialog" label={t("edit")} onClose={close}>
+    <Modal
+      className={`notes-dialog${expanded ? " notes-expanded" : ""}`}
+      label={t("edit")}
+      onClose={close}
+    >
       <div
-        className="notes-editor"
+        className="notes-editor note-workbench"
+        data-focus={focused}
         data-color={draft.fields.color}
-        onKeyDown={(e) => {
-          if (e.key === "Escape" && !confirm) {
-            e.preventDefault();
-            e.stopPropagation();
-            close();
-          }
-        }}
       >
         <header className="notes-editor-bar">
-          <span role="status">
-            {t(busy ? "saving" : dirty ? "unsaved" : "saved")}
+          <span className="note-document-type">
+            <FileText aria-hidden="true" />
+            {t("edit")}
           </span>
           <div>
-            <button
-              aria-pressed={draft.fields.pinned}
-              disabled={busy || actionBusy || readOnly}
-              onClick={() => edit({ pinned: !draft.fields.pinned })}
+            <span
+              role="status"
+              className="note-save-state"
+              data-error={!!error}
             >
-              {t(draft.fields.pinned ? "unpin" : "pin")}
+              {!error && !busy && !dirty && <Check aria-hidden="true" />}
+              {t(
+                error
+                  ? "saveFailed"
+                  : busy
+                    ? "saving"
+                    : dirty
+                      ? "unsaved"
+                      : "saved",
+              )}
+            </span>
+            <button
+              type="button"
+              title={t("focusMode")}
+              aria-label={t("focusMode")}
+              aria-pressed={focused}
+              onClick={() => setFocused(!focused)}
+            >
+              <Focus aria-hidden="true" />
             </button>
             <button
+              type="button"
+              title={t("expandEditor")}
+              aria-label={t("expandEditor")}
+              aria-pressed={expanded}
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? (
+                <Minimize2 aria-hidden="true" />
+              ) : (
+                <Maximize2 aria-hidden="true" />
+              )}
+            </button>
+            <button
+              type="button"
+              title={t(draft.fields.pinned ? "unpin" : "pin")}
+              aria-label={t(draft.fields.pinned ? "unpin" : "pin")}
+              aria-pressed={draft.fields.pinned}
+              disabled={actionBusy || readOnly}
+              onClick={() => edit({ pinned: !draft.fields.pinned })}
+            >
+              <Pin aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              title={t("close")}
               aria-label={t("close")}
               disabled={busy || actionBusy}
               onClick={close}
             >
-              <AccountGlyph name="close" />
+              <X aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -310,17 +383,42 @@ export function NoteEditor({
               {t(note.trashed ? "inTrash" : "inArchive")}
             </p>
           )}
-          <label className="sr-only" htmlFor="note-title">
-            {t("title")}
-          </label>
-          <input
-            id="note-title"
-            className="notes-title"
-            value={draft.fields.title}
-            maxLength={120}
-            readOnly={readOnly}
-            onChange={(e) => edit({ title: e.target.value })}
-          />
+          <div className="note-title-row">
+            {readOnly ? (
+              <span className="note-static-icon">
+                <ListIcon name={draft.fields.icon} />
+              </span>
+            ) : (
+              <PageIconPicker
+                icon={draft.fields.icon}
+                options={[
+                  "book",
+                  "bolt",
+                  "heart",
+                  "briefcase",
+                  "pin",
+                  "tag",
+                  "check",
+                  "plane",
+                  "basket",
+                  "table",
+                ]}
+                onChange={(icon) => edit({ icon })}
+              />
+            )}
+            <label className="sr-only" htmlFor="note-title">
+              {t("title")}
+            </label>
+            <input
+              id="note-title"
+              className="notes-title"
+              value={draft.fields.title}
+              placeholder={t("untitled")}
+              maxLength={120}
+              readOnly={readOnly || actionBusy}
+              onChange={(e) => edit({ title: e.target.value })}
+            />
+          </div>
           <div className="notes-metadata">
             <ListSelect
               label={t("color")}
@@ -394,6 +492,7 @@ export function NoteEditor({
               icon={draft.fields.icon}
               readOnly={readOnly}
               onChange={(body) => edit({ body })}
+              showIcon={false}
               onIcon={(icon) => edit({ icon })}
               onSave={() => void saveRef.current()}
             />
@@ -419,6 +518,7 @@ export function NoteEditor({
             disabled={busy || actionBusy || readOnly}
             onClick={() => edit({ archived: true, pinned: false })}
           >
+            <Archive aria-hidden="true" />
             {t("archive")}
           </button>
           {readOnly && (
@@ -426,6 +526,7 @@ export function NoteEditor({
               disabled={busy || actionBusy}
               onClick={() => edit({ archived: false, trashed: false })}
             >
+              <RotateCcw aria-hidden="true" />
               {t("restore")}
             </button>
           )}
@@ -435,6 +536,7 @@ export function NoteEditor({
               disabled={busy || actionBusy}
               onClick={() => setConfirm("delete")}
             >
+              <Trash2 aria-hidden="true" />
               {t("delete")}
             </button>
           ) : (
@@ -442,6 +544,7 @@ export function NoteEditor({
               disabled={busy || actionBusy}
               onClick={() => edit({ trashed: true, pinned: false })}
             >
+              <Trash2 aria-hidden="true" />
               {t("trash")}
             </button>
           )}
@@ -449,21 +552,27 @@ export function NoteEditor({
             disabled={busy || actionBusy}
             onClick={() => void run("duplicate")}
           >
+            <Copy aria-hidden="true" />
             {t("duplicate")}
           </button>
           <button
             disabled={busy || actionBusy || readOnly}
             onClick={() => void run("promote")}
           >
+            <FileText aria-hidden="true" />
             {t(note.pageId ? "openPage" : "toPage")}
           </button>
           <button
             onClick={() => setShowHistory(!showHistory)}
             aria-expanded={showHistory}
           >
+            <History aria-hidden="true" />
             {t("history")}
           </button>
-          <button onClick={exportDraft}>{t("export")}</button>
+          <button onClick={exportDraft}>
+            <Download aria-hidden="true" />
+            {t("export")}
+          </button>
         </footer>
         {showHistory && (
           <section className="notes-history">

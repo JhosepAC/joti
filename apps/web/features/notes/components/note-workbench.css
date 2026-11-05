@@ -1,0 +1,154 @@
+.notes-dialog.lists-modal:has(.note-workbench) {
+  width: min(1140px, calc(100vw - 32px));
+  max-width: none;
+  height: min(900px, calc(100dvh - 32px));
+  max-height: none;
+  border: 0;
+  background: #fff;
+  box-shadow: 0 20px 60px rgb(32 33 36 / 24%);
+}
+
+.notes-dialog.notes-expanded.lists-modal {
+  width: 100vw;
+  height: 100dvh;
+  border-radius: 0;
+}
+
+.note-workbench .notes-editor-bar {
+  padding: 8px clamp(12px, 3vw, 28px);
+  background: #fafbfc;
+  gap: 8px;
+}
+
+.note-workbench .notes-editor-bar > div {
+  gap: 4px;
+}
+
+.note-document-type,
+.note-save-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #525961;
+  font-size: 12px;
+}
+
+.note-save-state {
+  margin-inline-end: 8px;
+  text-align: end;
+}
+
+.note-save-state[data-error="true"] {
+  color: #a32424;
+}
+
+.note-workbench svg {
+  flex-shrink: 0;
+}
+
+.note-workbench :is(.notes-editor-bar, .notes-editor-actions) svg {
+  width: 16px;
+  height: 16px;
+}
+
+.note-workbench .notes-editor-bar button:hover:not(:disabled) {
+  background: #eceff3;
+}
+
+.note-workbench .notes-editor-scroll {
+  padding: clamp(18px, 4vw, 44px) clamp(14px, 5vw, 56px) 28px;
+}
+
+.note-workbench .notes-editor-scroll > * {
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+.note-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.note-workbench .notes-title {
+  min-width: 0;
+  padding: 0;
+  font-size: clamp(27px, 5vw, 43px);
+  line-height: 1.2;
+}
+
+.note-title-row :is(.page-title-icon, .note-static-icon) {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #e7e9ed;
+  border-radius: 10px;
+  background: var(--note-fill, #f5f7f9);
+  color: #3b4655;
+}
+
+.note-title-row .page-title-icon:hover {
+  border-color: #b6c0cf;
+}
+
+.note-title-row svg {
+  width: 22px;
+  height: 22px;
+}
+
+.note-workbench :focus-visible {
+  outline: 2px solid #7487a4;
+  outline-offset: 2px;
+}
+
+.note-workbench .notes-editor-actions {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.note-workbench .notes-editor-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.note-workbench[data-focus="true"]
+  :is(
+    .notes-metadata,
+    .notes-tag-editor,
+    .notes-related,
+    .notes-editor-actions,
+    .notes-history
+  ) {
+  display: none;
+}
+
+@media (max-width: 540px) {
+  .notes-dialog.lists-modal:has(.note-workbench) {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .note-document-type {
+    font-size: 0 !important;
+  }
+
+  .note-workbench .notes-editor-bar button {
+    min-width: 34px;
+    min-height: 36px;
+  }
+}
+
+@media print {
+  .note-workbench .note-title-row :is(.page-title-icon, .note-static-icon) {
+    display: none;
+  }
+}
