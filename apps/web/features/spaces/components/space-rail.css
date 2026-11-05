@@ -1,6 +1,6 @@
 /* Workspace dock: the selected workspace sits on a separate, stable base. */
 .workspace-space-rail {
-  background: #edf0f4;
+  background: var(--ws-sidebar);
 }
 .workspace-space-list {
   gap: 18px;

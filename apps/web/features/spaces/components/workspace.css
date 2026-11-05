@@ -1,6 +1,7 @@
 .joti-workspace {
   --ws-ground: #f7f7f5;
   --ws-paper: #fff;
+  --ws-sidebar: #fafbfc;
   --ws-ink: #202124;
   --ws-muted: #5f6368;
   --ws-line: #e8eaed;
@@ -10,9 +11,9 @@
   --ws-error: #b3261e;
   --ws-radius: 12px;
   display: grid;
+  background: var(--ws-ground);
   grid-template-columns: 324px minmax(0, 1fr);
   height: 100dvh;
-  background: var(--ws-ground);
   color: var(--ws-ink);
   color-scheme: light;
   font:
@@ -135,6 +136,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  background: var(--ws-ground);
 }
 .workspace-module-sidebar > header {
   display: flex;
@@ -168,13 +170,50 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.workspace-module-sidebar > header > .workspace-space-menu-trigger {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 27px;
+  height: 27px;
+  margin: 0 0 0 -5px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ws-muted);
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+.workspace-module-sidebar > header > .workspace-space-menu-trigger:hover,
+.workspace-module-sidebar
+  > header
+  > .workspace-space-menu-trigger[aria-expanded="true"] {
+  background: var(--ws-active);
+  color: var(--ws-ink);
+}
+.workspace-module-sidebar
+  > header
+  > .workspace-space-menu-trigger[aria-expanded="true"]
+  svg {
+  transform: rotate(180deg);
+}
+.workspace-module-sidebar
+  > header
+  > .workspace-space-menu-trigger:focus-visible {
+  outline: 2px solid var(--ws-accent);
+  outline-offset: 2px;
+}
 .workspace-module-sidebar > header > button {
   margin-left: auto;
   background: transparent;
   border: 0;
   font-size: 26px;
-  min-width: 40px;
-  min-height: 44px;
+  min-width: 20px;
+  min-height: 20px;
 }
 .workspace-sidebar-body {
   padding: 14px 12px;
@@ -375,7 +414,7 @@
   background: var(--ws-paper);
   border: 1px solid var(--ws-line);
   border-radius: var(--ws-radius);
-  margin: 8px 8px 8px 0;
+  margin: 8px;
   overflow: hidden;
 }
 .workspace-toolbar {
@@ -1088,4 +1127,12 @@
 }
 .workspace-account-actions button:active {
   transform: scale(0.96);
+}
+.workspace-account-actions button.workspace-logout:hover {
+  background: #e8c7ca;
+  color: #8c252f;
+}
+.workspace-account-actions button.workspace-logout:focus-visible {
+  outline: 2px solid #a4323d;
+  outline-offset: 2px;
 }

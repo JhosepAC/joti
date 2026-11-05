@@ -1,5 +1,5 @@
 "use client";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { SpaceSettings, SPACE_MODULES } from "./space-settings";
 
 import { JotiLogo } from "@/components/ui/joti-logo";
@@ -39,6 +39,7 @@ import { CalendarModule } from "@/features/calendar/components/calendar-module";
 import { ListGlyph } from "@/features/lists/components/list-icon";
 import { CreateSpaceDialog } from "./create-space-dialog";
 import { SpaceRail } from "./space-rail";
+import { SpaceActionsPopover } from "./rail-space-link";
 import "./workspace.css";
 import "./workspace-navigation.css";
 import "./workspace-pages-refinement.css";
@@ -50,13 +51,15 @@ import "./space-rail.css";
 export function WorkspaceDashboard({ slug }: { slug: string }) {
   const t = useTranslations("spaces.dashboard");
   const ts = useTranslations("spaceSettings");
-  const [spaceSettings, setSpaceSettings] = useState<"design" | "tools" | null>(
-    null,
-  );
+  const [spaceSettings, setSpaceSettings] = useState<
+    "design" | "tools" | "name" | "icon" | null
+  >(null);
   const tLists = useTranslations("lists");
   const locale = useLocale();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsButton = useRef<HTMLButtonElement>(null);
+  const spaceMenuButton = useRef<HTMLButtonElement>(null);
+  const [spaceMenuOpen, setSpaceMenuOpen] = useState(false);
   const model = useWorkspaceDashboard(slug);
   const { data, view, drafts, error, loading, busy, page, draft, dirty } =
     model;
@@ -351,7 +354,21 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
         >
           <header>
             <WorkspaceSpaceBadge space={data.space} />
-            <strong title={data.space.name}>{data.space.name}</strong>
+            <strong className="workspace-space-name" title={data.space.name}>
+              {data.space.name}
+            </strong>
+            <button
+              ref={spaceMenuButton}
+              type="button"
+              className="workspace-space-menu-trigger"
+              aria-label={t("settings")}
+              title={t("settings")}
+              aria-haspopup="dialog"
+              aria-expanded={spaceMenuOpen}
+              onClick={() => setSpaceMenuOpen((open) => !open)}
+            >
+              <ChevronDown size={15} strokeWidth={1.8} aria-hidden="true" />
+            </button>
             {mobile && (
               <button
                 type="button"
@@ -586,6 +603,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 <AccountGlyph name="settings" />
               </button>
               <button
+                className="workspace-logout"
                 aria-label={t("signOut")}
                 title={t("signOut")}
                 disabled={signingOut}
@@ -596,6 +614,27 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             </div>
           </footer>
         </aside>
+        {spaceMenuOpen && (
+          <SpaceActionsPopover
+            space={data.space}
+            anchor={spaceMenuButton}
+            onClose={() => {
+              setSpaceMenuOpen(false);
+              spaceMenuButton.current?.focus();
+            }}
+            onAction={(action) => {
+              if (action === "favorite") {
+                void model
+                  .configureSpace({
+                    favorite: !data.space.favorite,
+                  })
+                  .catch(() => {});
+              } else {
+                setSpaceSettings(action === "all" ? "design" : action);
+              }
+            }}
+          />
+        )}
       </div>
       <div
         className="workspace-sheet"
@@ -879,7 +918,16 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
         <SpaceSettings
           space={data.space}
           save={model.configureSpace}
-          initialSection={spaceSettings}
+          mode={
+            spaceSettings === "name" || spaceSettings === "icon"
+              ? spaceSettings
+              : "all"
+          }
+          initialSection={
+            spaceSettings === "name" || spaceSettings === "icon"
+              ? "design"
+              : spaceSettings
+          }
           onClose={() => setSpaceSettings(null)}
         />
       )}
