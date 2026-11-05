@@ -1,4 +1,13 @@
 "use client";
+import {
+  Archive,
+  Grid2X2,
+  List,
+  Pin,
+  StickyNote,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ListIcon, ListGlyph } from "@/features/lists/components/list-icon";
@@ -7,6 +16,13 @@ import { useNotes, errorCode, type NoteOperation } from "../hooks/use-notes";
 import { NoteEditor } from "./note-editor";
 import type { Note, NoteSummary } from "@/convex/notes/model";
 import "./notes.css";
+const noteFilters = [
+  { value: "all", Icon: StickyNote },
+  { value: "pinned", Icon: Pin },
+  { value: "archive", Icon: Archive },
+  { value: "trash", Icon: Trash2 },
+] as const;
+
 export function NotesModule({
   slug,
   onPage,
@@ -222,18 +238,22 @@ export function NotesModule({
           value={capture}
           onChange={(e) => setCapture(e.target.value)}
         />
-        <button disabled={busy || !capture.trim() || !model.data}>
+        <button
+          className="lists-primary"
+          disabled={busy || !capture.trim() || !model.data}
+        >
           {t("captureAction")}
         </button>
       </form>
       <div className="notes-toolbar">
         <div className="notes-tabs" role="group" aria-label={t("filter")}>
-          {["all", "pinned", "archive", "trash"].map((value) => (
+          {noteFilters.map(({ value, Icon }) => (
             <button
               key={value}
               aria-pressed={filter === value}
               onClick={() => setFilter(value)}
             >
+              <Icon aria-hidden="true" />
               {t(value)}
             </button>
           ))}
@@ -243,25 +263,42 @@ export function NotesModule({
             aria-pressed={layout === "grid"}
             onClick={() => setLayout("grid")}
           >
+            <Grid2X2 aria-hidden="true" />
             {t("grid")}
           </button>
           <button
             aria-pressed={layout === "list"}
             onClick={() => setLayout("list")}
           >
+            <List aria-hidden="true" />
             {t("list")}
           </button>
         </div>
       </div>
       <div className="notes-filters">
-        <input
-          ref={search}
-          type="search"
-          aria-label={t("search")}
-          placeholder={t("search")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="notes-search">
+          <input
+            ref={search}
+            type="search"
+            aria-label={t("search")}
+            placeholder={t("search")}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {query && (
+            <button
+              type="button"
+              className="notes-search-clear"
+              aria-label={t("clearSearch")}
+              onClick={() => {
+                setQuery("");
+                search.current?.focus();
+              }}
+            >
+              <X size={14} aria-hidden="true" />
+            </button>
+          )}
+        </div>
         <ListSelect
           label={t("tags")}
           value={tag}
