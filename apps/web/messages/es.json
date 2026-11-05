@@ -1270,6 +1270,8 @@
         "3": "26 px"
       }
     },
+    "noteActions": "Acciones de la nota",
+    "exportPdf": "Exportar PDF",
     "saveFailed": "Error al guardar",
     "focusMode": "Modo de enfoque",
     "expandEditor": "Expandir editor",

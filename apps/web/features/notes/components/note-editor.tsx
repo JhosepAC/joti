@@ -9,6 +9,8 @@ import {
   History,
   Maximize2,
   Minimize2,
+  Ellipsis,
+  Printer,
   Pin,
   RotateCcw,
   Trash2,
@@ -16,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Modal } from "@/features/lists/components/overlays";
+import { Modal, Popover } from "@/features/lists/components/overlays";
 import { ListSelect } from "@/features/lists/components/list-select";
 import { PageEditor } from "@/features/pages/components/page-editor";
 import { PageIconPicker } from "@/features/pages/components/page-icon-picker";
@@ -98,7 +100,9 @@ export function NoteEditor({
     [showHistory, setShowHistory] = useState(false),
     [tag, setTag] = useState(""),
     [focused, setFocused] = useState(false),
-    [expanded, setExpanded] = useState(false);
+    [expanded, setExpanded] = useState(false),
+    [actionsOpen, setActionsOpen] = useState(false);
+  const actionsAnchor = useRef<HTMLButtonElement>(null);
   const current = useRef(draft),
     lastServer = useRef(fields(note)),
     pending = useRef<{ signature: string; op: NoteOperation } | null>(null),
@@ -266,6 +270,73 @@ export function NoteEditor({
         n.tags.some((label) => draft.fields.tags.includes(label)),
     )
     .slice(0, 4);
+  const actions = (
+    <>
+      <button
+        disabled={busy || actionBusy || readOnly}
+        onClick={() => edit({ archived: true, pinned: false })}
+      >
+        <Archive aria-hidden="true" />
+        {t("archive")}
+      </button>
+      {readOnly && (
+        <button
+          disabled={busy || actionBusy}
+          onClick={() => edit({ archived: false, trashed: false })}
+        >
+          <RotateCcw aria-hidden="true" />
+          {t("restore")}
+        </button>
+      )}
+      {note.trashed ? (
+        <button
+          className="lists-danger"
+          disabled={busy || actionBusy}
+          onClick={() => setConfirm("delete")}
+        >
+          <Trash2 aria-hidden="true" />
+          {t("delete")}
+        </button>
+      ) : (
+        <button
+          disabled={busy || actionBusy}
+          onClick={() => edit({ trashed: true, pinned: false })}
+        >
+          <Trash2 aria-hidden="true" />
+          {t("trash")}
+        </button>
+      )}
+      <button
+        disabled={busy || actionBusy}
+        onClick={() => void run("duplicate")}
+      >
+        <Copy aria-hidden="true" />
+        {t("duplicate")}
+      </button>
+      <button
+        disabled={busy || actionBusy || readOnly}
+        onClick={() => void run("promote")}
+      >
+        <FileText aria-hidden="true" />
+        {t(note.pageId ? "openPage" : "toPage")}
+      </button>
+      <button
+        onClick={() => setShowHistory(!showHistory)}
+        aria-expanded={showHistory}
+      >
+        <History aria-hidden="true" />
+        {t("history")}
+      </button>
+      <button onClick={exportDraft}>
+        <Download aria-hidden="true" />
+        {t("export")}
+      </button>
+      <button onClick={() => window.print()}>
+        <Printer aria-hidden="true" />
+        {t("exportPdf")}
+      </button>
+    </>
+  );
   return (
     <Modal
       className={`notes-dialog${expanded ? " notes-expanded" : ""}`}
@@ -554,65 +625,36 @@ export function NoteEditor({
           )}
         </div>
         <footer className="notes-editor-actions">
+          <div className="note-actions-inline">{actions}</div>
           <button
-            disabled={busy || actionBusy || readOnly}
-            onClick={() => edit({ archived: true, pinned: false })}
+            type="button"
+            className="note-actions-toggle"
+            ref={actionsAnchor}
+            aria-expanded={actionsOpen}
+            onClick={() => setActionsOpen(!actionsOpen)}
           >
-            <Archive aria-hidden="true" />
-            {t("archive")}
+            <Ellipsis aria-hidden="true" />
+            {t("noteActions")}
           </button>
-          {readOnly && (
-            <button
-              disabled={busy || actionBusy}
-              onClick={() => edit({ archived: false, trashed: false })}
+          {actionsOpen && !focused && (
+            <Popover
+              anchor={actionsAnchor}
+              label={t("noteActions")}
+              onClose={() => setActionsOpen(false)}
             >
-              <RotateCcw aria-hidden="true" />
-              {t("restore")}
-            </button>
+              <div
+                className="note-actions-menu"
+                onClick={(event) => {
+                  const button = (event.target as Element).closest("button");
+                  if (!button || button.disabled) return;
+                  setActionsOpen(false);
+                  actionsAnchor.current?.focus();
+                }}
+              >
+                {actions}
+              </div>
+            </Popover>
           )}
-          {note.trashed ? (
-            <button
-              className="lists-danger"
-              disabled={busy || actionBusy}
-              onClick={() => setConfirm("delete")}
-            >
-              <Trash2 aria-hidden="true" />
-              {t("delete")}
-            </button>
-          ) : (
-            <button
-              disabled={busy || actionBusy}
-              onClick={() => edit({ trashed: true, pinned: false })}
-            >
-              <Trash2 aria-hidden="true" />
-              {t("trash")}
-            </button>
-          )}
-          <button
-            disabled={busy || actionBusy}
-            onClick={() => void run("duplicate")}
-          >
-            <Copy aria-hidden="true" />
-            {t("duplicate")}
-          </button>
-          <button
-            disabled={busy || actionBusy || readOnly}
-            onClick={() => void run("promote")}
-          >
-            <FileText aria-hidden="true" />
-            {t(note.pageId ? "openPage" : "toPage")}
-          </button>
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            aria-expanded={showHistory}
-          >
-            <History aria-hidden="true" />
-            {t("history")}
-          </button>
-          <button onClick={exportDraft}>
-            <Download aria-hidden="true" />
-            {t("export")}
-          </button>
         </footer>
         {showHistory && (
           <section className="notes-history">

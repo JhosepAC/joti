@@ -293,3 +293,50 @@
 .note-style-panel button:is(:hover, [aria-pressed="true"]) {
   border-color: #7487a4;
 }
+.note-actions-inline {
+  display: flex;
+  gap: 4px;
+}
+
+.note-workbench .notes-editor-actions > .note-actions-toggle {
+  display: none;
+}
+
+.note-actions-menu {
+  display: grid;
+  gap: 2px;
+  min-width: 185px;
+}
+
+.note-actions-menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  text-align: start;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #202124;
+  font: inherit;
+  cursor: pointer;
+}
+
+.note-actions-menu button:hover:not(:disabled) {
+  background: #f1f3f4;
+}
+
+.note-actions-menu svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 780px) {
+  .note-actions-inline {
+    display: none;
+  }
+
+  .note-workbench .notes-editor-actions > .note-actions-toggle {
+    display: inline-flex;
+  }
+}
