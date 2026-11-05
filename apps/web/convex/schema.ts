@@ -63,6 +63,7 @@ export default defineSchema({
     space_id: v.id("spaces"),
     count: v.number(),
     bytes: v.number(),
+    tags: v.optional(v.array(v.string())),
   }).index("by_space", ["space_id"]),
   space_notes: defineTable({
     ...noteFields,

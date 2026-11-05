@@ -19,6 +19,7 @@ export const overview = query({
       return {
         status: "expired" as const,
         albums: [],
+        tags: [],
         preferences: DEFAULT_PREFERENCES,
         count: 0,
         bytes: 0,
@@ -39,6 +40,7 @@ export const overview = query({
       .first();
     return {
       status: "ready" as const,
+      tags: usage?.tags ?? [],
       albums: albums.map(({ _id, name, description, color }) => ({
         id: _id,
         name,
@@ -59,6 +61,36 @@ export const overview = query({
       count: usage?.count ?? 0,
       bytes: usage?.bytes ?? 0,
     };
+  },
+});
+export const createTag = mutation({
+  args: { ticket: v.string(), name: v.string() },
+  handler: async (ctx, { ticket, name }) => {
+    const auth = await authorize(ctx, ticket);
+    if (!auth) fail("UNAUTHORIZED");
+    if (name.length > 382) fail("VALIDATION_ERROR");
+    const additions = cleanTags(
+      name
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    );
+    if (!additions.length) fail("VALIDATION_ERROR");
+    const usage = await ctx.db
+      .query("gallery_usage")
+      .withIndex("by_space", (q) => q.eq("space_id", auth.space._id))
+      .first();
+    const tags = [...new Set([...(usage?.tags ?? []), ...additions])];
+    if (tags.length > 200) fail("LIMIT_REACHED");
+    if (usage) await ctx.db.patch(usage._id, { tags });
+    else
+      await ctx.db.insert("gallery_usage", {
+        space_id: auth.space._id,
+        count: 0,
+        bytes: 0,
+        tags,
+      });
+    return additions;
   },
 });
 export const detail = query({

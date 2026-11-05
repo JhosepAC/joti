@@ -1,4 +1,5 @@
 "use client";
+import { GalleryTagPicker } from "./gallery-dialogs";
 import { useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
@@ -44,7 +45,7 @@ export function GalleryLightbox({
   const savedDate = useRef(initialDate);
   const [title, setTitle] = useState(image.title),
     [description, setDescription] = useState(image.description),
-    [tags, setTags] = useState(image.tags.join(", ")),
+    [tags, setTags] = useState(image.tags),
     [albums, setAlbums] = useState(image.albumIds),
     [date, setDate] = useState(initialDate),
     [revision, setRevision] = useState(image.revision),
@@ -52,7 +53,7 @@ export function GalleryLightbox({
       JSON.stringify([
         image.title,
         image.description,
-        image.tags.join(", "),
+        image.tags,
         image.albumIds,
         initialDate,
       ]),
@@ -293,10 +294,7 @@ export function GalleryLightbox({
                     revision,
                     title,
                     description,
-                    tags: tags
-                      .split(",")
-                      .map((v) => v.trim())
-                      .filter(Boolean),
+                    tags,
                     albumIds: albums,
                     ...(date !== savedDate.current
                       ? {
@@ -340,7 +338,7 @@ export function GalleryLightbox({
                     onClick={() => {
                       setTitle(current.title);
                       setDescription(current.description);
-                      setTags(current.tags.join(", "));
+                      setTags(current.tags);
                       setAlbums(current.albumIds);
                       const nextDate = current.hasCaptureDate
                         ? new Date(current.capturedAt)
@@ -354,7 +352,7 @@ export function GalleryLightbox({
                         JSON.stringify([
                           current.title,
                           current.description,
-                          current.tags.join(", "),
+                          current.tags,
                           current.albumIds,
                           nextDate,
                         ]),
@@ -384,15 +382,15 @@ export function GalleryLightbox({
                   placeholder={t("descriptionPlaceholder")}
                 />
               </label>
-              <label>
-                {t("tags")}
-                <input
-                  value={tags}
-                  maxLength={380}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder={t("tagsPlaceholder")}
-                />
-              </label>
+              <GalleryTagPicker
+                available={[
+                  ...(model.overview?.tags ?? []),
+                  ...model.images.flatMap((item) => item.tags),
+                  ...current.tags,
+                ]}
+                selected={tags}
+                onChange={setTags}
+              />
               <div>
                 <span className="gallery-field-label">{t("captureDate")}</span>
                 <DatePicker

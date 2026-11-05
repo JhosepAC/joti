@@ -2,9 +2,135 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/features/lists/components/overlays";
+import { ListSelect } from "@/features/lists/components/list-select";
 import { GalleryIcon } from "./gallery-icon";
 import type { GalleryAlbum, GalleryModel } from "../hooks/use-gallery";
 import { galleryError } from "../hooks/use-gallery";
+
+export function GalleryTagPicker({
+  available,
+  selected,
+  onChange,
+}: {
+  available: string[];
+  selected: string[];
+  onChange: (tags: string[]) => void;
+}) {
+  const t = useTranslations("gallery");
+  const options = [...new Set(available)]
+    .filter((tag) => !selected.includes(tag))
+    .sort((a, b) => a.localeCompare(b))
+    .map((value) => ({ value, label: value }));
+  return (
+    <div className="gallery-tag-picker">
+      <span className="gallery-field-label">{t("tags")}</span>
+      {!!selected.length && (
+        <div className="gallery-tags">
+          {selected.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              aria-label={t("removeTag", { tag })}
+              onClick={() =>
+                onChange(selected.filter((value) => value !== tag))
+              }
+            >
+              {tag} <GalleryIcon name="close" />
+            </button>
+          ))}
+        </div>
+      )}
+      {selected.length < 12 && options.length > 0 && (
+        <ListSelect
+          label={t("tags")}
+          value=""
+          placeholder={t("chooseTag")}
+          options={options}
+          onChange={(tag) => onChange([...selected, tag])}
+        />
+      )}
+      {!selected.length && !options.length && <p>{t("noTags")}</p>}
+    </div>
+  );
+}
+
+export function NewTagDialog({
+  model,
+  onClose,
+}: {
+  model: GalleryModel;
+  onClose: () => void;
+}) {
+  const t = useTranslations("gallery");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  return (
+    <Modal
+      label={t("newTag")}
+      className="gallery-dialog"
+      onClose={() => {
+        if (!busy) onClose();
+      }}
+    >
+      <form
+        onSubmit={async (event) => {
+          event.preventDefault();
+          if (busy || !name.trim()) return;
+          setBusy(true);
+          setError("");
+          try {
+            await model.createTag(name);
+            onClose();
+          } catch (cause) {
+            setError(t(`errors.${galleryError(cause)}`));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <div className="gallery-queue-heading">
+          <h2>{t("newTag")}</h2>
+          <button
+            type="button"
+            className="gallery-icon-button"
+            aria-label={t("close")}
+            disabled={busy}
+            onClick={onClose}
+          >
+            <GalleryIcon name="close" />
+          </button>
+        </div>
+        <label>
+          {t("tagName")}
+          <input
+            autoFocus
+            required
+            maxLength={382}
+            placeholder="etiqueta1, etiqueta2"
+            aria-describedby="gallery-tag-batch-hint"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </label>
+        <p id="gallery-tag-batch-hint">{t("tagBatchHint")}</p>
+        {error && (
+          <p role="alert" className="gallery-error">
+            {error}
+          </p>
+        )}
+        <div className="gallery-dialog-actions">
+          <button type="button" onClick={onClose} disabled={busy}>
+            {t("cancel")}
+          </button>
+          <button className="lists-primary" disabled={busy || !name.trim()}>
+            {t(busy ? "working" : "save")}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
 export function GalleryConfirm({
   count,
   busy,
@@ -110,7 +236,11 @@ export function AlbumDialog({
             maxLength={80}
             value={name}
             onChange={(e) => setName(e.target.value)}
+            aria-describedby="gallery-album-name-limit"
           />
+          <span className="gallery-input-count" id="gallery-album-name-limit">
+            {name.length} / 80
+          </span>
         </label>
         <label>
           {t("description")}

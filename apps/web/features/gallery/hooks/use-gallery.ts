@@ -101,6 +101,7 @@ export function useGallery(slug: string, filters: GalleryFilters) {
         );
     }),
     album = useMutation(api.gallery.data.album),
+    createTag = useMutation(api.gallery.data.createTag),
     edit = useMutation(api.gallery.data.edit),
     bulk = useMutation(api.gallery.data.bulk),
     move = useMutation(api.gallery.data.move),
@@ -134,6 +135,7 @@ export function useGallery(slug: string, filters: GalleryFilters) {
       send(() => preferences({ ticket, value })),
     album: (a: Omit<Parameters<typeof album>[0], "ticket">) =>
       send(() => album({ ...a, ticket })),
+    createTag: (name: string) => send(() => createTag({ ticket, name })),
     edit: (a: Omit<Parameters<typeof edit>[0], "ticket">) =>
       send(() => edit({ ...a, ticket })),
     bulk: (a: Omit<Parameters<typeof bulk>[0], "ticket">) =>

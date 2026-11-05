@@ -14,11 +14,16 @@ import {
 import { GalleryIcon } from "./gallery-icon";
 import { GalleryPicture } from "./gallery-image";
 import { GalleryLightbox } from "./gallery-lightbox";
-import { AlbumDialog, GalleryConfirm } from "./gallery-dialogs";
+import {
+  AlbumDialog,
+  GalleryConfirm,
+  NewTagDialog,
+  GalleryTagPicker,
+} from "./gallery-dialogs";
 import { UploadQueue } from "./upload-queue";
 import { GalleryMasonry } from "./gallery-masonry";
 import "./gallery.css";
-const VIEWS = ["grid", "masonry", "compact", "list", "timeline"];
+const VIEWS = ["grid", "masonry", "compact", "list"];
 export function GalleryModule({ slug }: { slug: string }) {
   const t = useTranslations("gallery"),
     locale = useLocale();
@@ -42,7 +47,11 @@ export function GalleryModule({ slug }: { slug: string }) {
     );
   const model = useGallery(slug, filters),
     overview = model.overview,
-    p = overview?.preferences;
+    storedPreferences = overview?.preferences,
+    p =
+      storedPreferences?.view === "timeline"
+        ? { ...storedPreferences, view: "grid" }
+        : storedPreferences;
   const [selected, setSelected] = useState<string[]>([]),
     [opened, setOpened] = useState<GalleryImage | null>(null),
     [files, setFiles] = useState<File[]>([]),
@@ -56,7 +65,8 @@ export function GalleryModule({ slug }: { slug: string }) {
     [deleteImages, setDeleteImages] = useState(false),
     [bulkDialog, setBulkDialog] = useState<"album" | "tags" | null>(null),
     [targetAlbum, setTargetAlbum] = useState(""),
-    [bulkTags, setBulkTags] = useState(""),
+    [bulkTags, setBulkTags] = useState<string[]>([]),
+    [tagDialog, setTagDialog] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
@@ -68,6 +78,13 @@ export function GalleryModule({ slug }: { slug: string }) {
     dragKey = useRef("");
   const activeAlbum = overview?.albums.find((a) => a.id === album),
     images = model.images;
+  const availableTags = [
+    ...new Set([
+      ...(overview?.tags ?? []),
+      ...images.flatMap((image) => image.tags),
+      ...(tag ? [tag] : []),
+    ]),
+  ].sort((a, b) => a.localeCompare(b, locale));
   const message = (e: unknown) => t(`errors.${galleryError(e)}`);
   const run = async (action: () => Promise<unknown>, success?: () => void) => {
     if (busy) return;
@@ -195,7 +212,10 @@ export function GalleryModule({ slug }: { slug: string }) {
       </button>
       {((p?.info && p?.view !== "compact") || p?.view === "list") && (
         <div className="gallery-item-info">
-          <button onClick={(e) => open(image, e.currentTarget)}>
+          <button
+            className="gallery-image-title"
+            onClick={(e) => open(image, e.currentTarget)}
+          >
             {image.title}
           </button>
           <span>
@@ -232,25 +252,6 @@ export function GalleryModule({ slug }: { slug: string }) {
       )}
     </article>
   );
-  const groups = useMemo(() => {
-    if (p?.view !== "timeline") return [];
-    const grouped = new Map<string, GalleryImage[]>();
-    const format = new Intl.DateTimeFormat(
-      locale,
-      p.group === "year"
-        ? { year: "numeric" }
-        : p.group === "day"
-          ? { day: "numeric", month: "long", year: "numeric" }
-          : { month: "long", year: "numeric" },
-    );
-    for (const image of images) {
-      const label = format.format(
-        p.sort === "uploaded" ? image.uploadedAt : image.capturedAt,
-      );
-      grouped.set(label, [...(grouped.get(label) ?? []), image]);
-    }
-    return [...grouped];
-  }, [images, p, locale]);
   if (!overview)
     return (
       <section className="gallery-module lists-surface">
@@ -346,6 +347,13 @@ export function GalleryModule({ slug }: { slug: string }) {
             <GalleryIcon name="plus" />
             {t("newAlbum")}
           </button>
+          <button
+            className="gallery-new-album"
+            onClick={() => setTagDialog(true)}
+          >
+            <GalleryIcon name="tag" />
+            {t("newTag")}
+          </button>
         </div>
         {activeAlbum && (
           <button
@@ -393,15 +401,7 @@ export function GalleryModule({ slug }: { slug: string }) {
               title={t(`views.${v}`)}
               aria-label={t(`views.${v}`)}
               aria-pressed={p?.view === v}
-              onClick={() =>
-                preferences({
-                  view: v,
-                  ...(v === "timeline" &&
-                  !["uploaded", "captured"].includes(p?.sort ?? "")
-                    ? { sort: "captured" }
-                    : {}),
-                })
-              }
+              onClick={() => preferences({ view: v })}
             >
               <GalleryIcon name={v} />
               <span>{t(`views.${v}`)}</span>
@@ -451,7 +451,7 @@ export function GalleryModule({ slug }: { slug: string }) {
         >
           <div className="gallery-options">
             <h2>{t("displayOptions")}</h2>
-            {["grid", "masonry", "timeline"].includes(p.view) && (
+            {["grid", "masonry"].includes(p.view) && (
               <>
                 <label>
                   {t("thumbnailSize")}
@@ -490,10 +490,9 @@ export function GalleryModule({ slug }: { slug: string }) {
                     ...(sort === "manual" ? { direction: "asc" } : {}),
                   })
                 }
-                options={(p.view === "timeline"
-                  ? ["uploaded", "captured"]
-                  : ["uploaded", "captured", "name", "manual"]
-                ).map((value) => ({ value, label: t(`sorts.${value}`) }))}
+                options={["uploaded", "captured", "name", "manual"].map(
+                  (value) => ({ value, label: t(`sorts.${value}`) }),
+                )}
               />
             </label>
             {p.sort !== "manual" && (
@@ -506,20 +505,6 @@ export function GalleryModule({ slug }: { slug: string }) {
                   options={["desc", "asc"].map((value) => ({
                     value,
                     label: t(`directions.${value}`),
-                  }))}
-                />
-              </label>
-            )}
-            {p.view === "timeline" && (
-              <label>
-                {t("group")}
-                <ListSelect
-                  label={t("group")}
-                  value={p.group}
-                  onChange={(group) => preferences({ group })}
-                  options={["day", "month", "year"].map((value) => ({
-                    value,
-                    label: t(`groups.${value}`),
                   }))}
                 />
               </label>
@@ -548,14 +533,17 @@ export function GalleryModule({ slug }: { slug: string }) {
             <h2>{t("filters")}</h2>
             <label>
               {t("tagFilter")}
-              <input
+              <ListSelect
+                label={t("tagFilter")}
                 value={tag}
-                maxLength={30}
-                onChange={(e) => {
-                  setTag(e.target.value.toLocaleLowerCase());
+                options={[
+                  { value: "", label: t("allTags") },
+                  ...availableTags.map((value) => ({ value, label: value })),
+                ]}
+                onChange={(value) => {
+                  setTag(value);
                   setSelected([]);
                 }}
-                placeholder={t("tagPlaceholder")}
               />
             </label>
             <label>
@@ -720,27 +708,6 @@ export function GalleryModule({ slug }: { slug: string }) {
             {t(filtered ? "clearFilters" : "upload")}
           </button>
         </div>
-      ) : p?.view === "timeline" ? (
-        <div className="gallery-timeline">
-          {groups.length > 1 && (
-            <nav aria-label={t("periods")}>
-              {groups.map(([label], index) => (
-                <a key={label} href={`#gallery-period-${index}`}>
-                  {label}
-                </a>
-              ))}
-            </nav>
-          )}
-          {groups.map(([label, items], index) => (
-            <section key={label} id={`gallery-period-${index}`}>
-              <h2>
-                {label}
-                <span>{items.length}</span>
-              </h2>
-              <div className="gallery-grid">{items.map(item)}</div>
-            </section>
-          ))}
-        </div>
       ) : p?.view === "masonry" ? (
         <GalleryMasonry
           images={images}
@@ -800,6 +767,9 @@ export function GalleryModule({ slug }: { slug: string }) {
           }}
         />
       )}
+      {tagDialog && (
+        <NewTagDialog model={model} onClose={() => setTagDialog(false)} />
+      )}
       {albumDialog && (
         <AlbumDialog
           album={albumDialog === "new" ? undefined : albumDialog}
@@ -854,16 +824,11 @@ export function GalleryModule({ slug }: { slug: string }) {
           <h2>{t(bulkDialog === "tags" ? "assignTags" : "organize")}</h2>
           <p>{t("selected", { count: selected.length })}</p>
           {bulkDialog === "tags" ? (
-            <label>
-              {t("tags")}
-              <input
-                autoFocus
-                value={bulkTags}
-                maxLength={380}
-                onChange={(e) => setBulkTags(e.target.value)}
-                placeholder={t("tagsPlaceholder")}
-              />
-            </label>
+            <GalleryTagPicker
+              available={availableTags}
+              selected={bulkTags}
+              onChange={setBulkTags}
+            />
           ) : (
             <label>
               {t("album")}
@@ -932,7 +897,7 @@ export function GalleryModule({ slug }: { slug: string }) {
               className="lists-primary"
               disabled={
                 busy ||
-                (bulkDialog === "album" ? !targetAlbum : !bulkTags.trim())
+                (bulkDialog === "album" ? !targetAlbum : !bulkTags.length)
               }
               onClick={() =>
                 void run(
@@ -942,16 +907,13 @@ export function GalleryModule({ slug }: { slug: string }) {
                       keys: selected,
                       ...(bulkDialog === "tags"
                         ? {
-                            tags: bulkTags
-                              .split(",")
-                              .map((v) => v.trim())
-                              .filter(Boolean),
+                            tags: bulkTags,
                           }
                         : { albumId: targetAlbum as GalleryAlbum["id"] }),
                     }),
                   () => {
                     setBulkDialog(null);
-                    setBulkTags("");
+                    setBulkTags([]);
                   },
                 )
               }

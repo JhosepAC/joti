@@ -1,5 +1,4 @@
 import {
-  CalendarDays,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -29,7 +28,6 @@ const icons: Readonly<Partial<Record<string, LucideIcon>>> = {
   masonry: Columns3,
   compact: Grid3X3,
   list: List,
-  timeline: CalendarDays,
   upload: Upload,
   download: Download,
   album: Images,

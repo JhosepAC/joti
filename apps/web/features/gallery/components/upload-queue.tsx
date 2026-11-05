@@ -111,15 +111,20 @@ export function UploadQueue({
     await Promise.all([worker(), worker()]);
     if (active.current) setRunning(false);
   };
-  const completed = items.filter((i) => i.state === "done").length,
-    progress = Math.round(
-      items.reduce(
-        (n, i) =>
-          n +
-          (i.state === "done" ? 100 : i.state === "uploading" ? i.progress : 0),
-        0,
-      ) / Math.max(1, items.length),
-    );
+  const completed = items.filter((i) => i.state === "done").length;
+  const batchComplete = !running && completed > 0 && completed === items.length;
+  useEffect(() => {
+    if (batchComplete) onClear();
+  }, [batchComplete, onClear]);
+
+  const progress = Math.round(
+    items.reduce(
+      (n, i) =>
+        n +
+        (i.state === "done" ? 100 : i.state === "uploading" ? i.progress : 0),
+      0,
+    ) / Math.max(1, items.length),
+  );
   return (
     <aside className="gallery-upload-queue" aria-label={t("uploads")}>
       <div className="gallery-queue-heading">
