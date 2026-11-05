@@ -1,4 +1,5 @@
 "use client";
+import { X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Modal } from "@/features/lists/components/overlays";
@@ -158,7 +159,7 @@ export function EventDialog({
             disabled={busy}
             onClick={onClose}
           >
-            ×
+            <X size={16} strokeWidth={1.7} aria-hidden="true" />
           </button>
         </header>
         {deleting ? (

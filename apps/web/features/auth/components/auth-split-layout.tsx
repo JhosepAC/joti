@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  ArrowRight,
+  CalendarDays,
+  Check,
+  FileText,
+  Grid2X2,
+  Plus,
+  SquareCheck,
+} from "lucide-react";
 import { JotiLogo } from "@/components/ui/joti-logo";
 import {
   useEffect,
@@ -14,52 +23,18 @@ import { useLocaleSwitcher } from "@/i18n/use-locale-switcher";
 import "./auth.css";
 
 type IconName = "grid" | "check" | "note" | "calendar" | "plus" | "arrow";
+const icons = {
+  grid: Grid2X2,
+  check: SquareCheck,
+  note: FileText,
+  calendar: CalendarDays,
+  plus: Plus,
+  arrow: ArrowRight,
+};
+
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
-  const paths: Record<IconName, ReactNode> = {
-    grid: (
-      <>
-        <rect x="3" y="3" width="7" height="7" rx="2" />
-        <rect x="14" y="3" width="7" height="7" rx="2" />
-        <rect x="3" y="14" width="7" height="7" rx="2" />
-        <rect x="14" y="14" width="7" height="7" rx="2" />
-      </>
-    ),
-    check: (
-      <>
-        <rect x="3" y="3" width="18" height="18" rx="5" />
-        <path d="m7 12 3 3 7-7" />
-      </>
-    ),
-    note: (
-      <>
-        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" />
-        <path d="M14 3v6h6M8 13h8M8 17h5" />
-      </>
-    ),
-    calendar: (
-      <>
-        <rect x="3" y="5" width="18" height="16" rx="3" />
-        <path d="M7 3v4m10-4v4M3 11h18m-13 4h1m6 0h1" />
-      </>
-    ),
-    plus: <path d="M12 5v14M5 12h14" />,
-    arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
-  };
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.65"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {paths[name]}
-    </svg>
-  );
+  const Glyph = icons[name];
+  return <Glyph size={size} strokeWidth={1.7} aria-hidden="true" />;
 }
 
 function useTabSpring(target: number) {
@@ -273,16 +248,11 @@ export function AuthSplitLayout({
                               }
                             />
                             <span className="studio-check" aria-hidden="true">
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 16 16"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                              >
-                                <path d="m3 8 3 3 7-7" />
-                              </svg>
+                              <Check
+                                size="12"
+                                strokeWidth={1.7}
+                                aria-hidden="true"
+                              />
                             </span>
                             <span>{t(`${selected}.task${index}`)}</span>
                           </label>

@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -64,17 +65,7 @@ export function AuthProfileFields({ data, errors, disabled, onChange }: Props) {
       <details className="auth-personalize" ref={details}>
         <summary>
           {ui("personalize")}
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            aria-hidden="true"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          <ChevronDown size="16" strokeWidth={1.7} aria-hidden="true" />
         </summary>
         <div>
           <div className="auth-field">

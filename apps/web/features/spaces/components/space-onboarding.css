@@ -555,13 +555,34 @@
   padding: 24px;
 }
 .setup-document-art {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 8px;
+  min-height: 100px;
   margin: 0 0 20px;
 }
-.setup-document-art > svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 112px;
+.setup-document-art > .setup-art-leaf {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  color: var(--setup-accent);
+  background: var(--setup-blue-soft);
+}
+.setup-document-art > .setup-art-leaf:nth-child(2) {
+  color: var(--setup-ink);
+  background: var(--setup-surface);
+}
+.setup-document-art > .setup-art-leaf:nth-child(3) {
+  color: var(--setup-green);
+  background: var(--setup-green-soft);
+}
+.setup-art-leaf > svg {
+  width: 26px;
+  height: 26px;
+  stroke-width: 1.7;
 }
 .setup-example-label {
   margin: 0 0 8px;
@@ -825,8 +846,8 @@
   .setup-workspace-body {
     min-height: 340px;
   }
-  .setup-document-art > svg {
-    max-height: 84px;
+  .setup-document-art {
+    min-height: 76px;
   }
   .setup-document h2 {
     font-size: 22px;

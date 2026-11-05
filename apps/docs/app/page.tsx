@@ -1,3 +1,4 @@
+import { Globe, PanelsTopLeft } from "lucide-react";
 import Image, { type ImageProps } from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@repo/ui/button";
@@ -68,7 +69,11 @@ export default async function Home() {
             {t("readDocs")}
           </a>
         </div>
-        <Button appName="docs" className={styles.secondary} alertMessage={t("alertMessage")}>
+        <Button
+          appName="docs"
+          className={styles.secondary}
+          alertMessage={t("alertMessage")}
+        >
           {t("openAlert")}
         </Button>
       </main>
@@ -78,13 +83,7 @@ export default async function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt={t("windowAlt")}
-            width={16}
-            height={16}
-          />
+          <PanelsTopLeft size="16" strokeWidth={1.7} aria-hidden="true" />
           {t("examples")}
         </a>
         <a
@@ -92,13 +91,7 @@ export default async function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt={t("globeAlt")}
-            width={16}
-            height={16}
-          />
+          <Globe size="16" strokeWidth={1.7} aria-hidden="true" />
           {t("goToDocs")}
         </a>
       </footer>

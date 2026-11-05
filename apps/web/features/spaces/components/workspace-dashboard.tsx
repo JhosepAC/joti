@@ -1,4 +1,5 @@
 "use client";
+import { ChevronRight, X } from "lucide-react";
 import { SpaceSettings, SPACE_MODULES } from "./space-settings";
 
 import { JotiLogo } from "@/components/ui/joti-logo";
@@ -357,7 +358,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                 aria-label={t("closeNavigation")}
                 onClick={() => setDrawer(false)}
               >
-                ×
+                <X size={16} strokeWidth={1.7} aria-hidden="true" />
               </button>
             )}
           </header>
@@ -616,7 +617,9 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
           <div className="workspace-breadcrumb">
             <WorkspaceSpaceBadge space={data.space} />
             <span>{data.space.name}</span>
-            <span aria-hidden="true">/</span>
+            <span aria-hidden="true">
+              <ChevronRight size={13} strokeWidth={1.7} />
+            </span>
             <strong>
               {home
                 ? t("home")

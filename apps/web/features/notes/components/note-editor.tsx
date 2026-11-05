@@ -1,4 +1,5 @@
 "use client";
+import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Modal } from "@/features/lists/components/overlays";
@@ -352,7 +353,7 @@ export function NoteEditor({
                 }
               >
                 #{label}
-                <span aria-hidden="true"> ×</span>
+                <X size={12} strokeWidth={1.7} aria-hidden="true" />
               </button>
             ))}
             {!readOnly && (

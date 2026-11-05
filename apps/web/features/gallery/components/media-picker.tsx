@@ -1,4 +1,5 @@
 "use client";
+import { X } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/features/lists/components/overlays";
@@ -115,7 +116,7 @@ export function MediaPicker({
           disabled={busy}
           onClick={onClose}
         >
-          ×
+          <X size={16} strokeWidth={1.7} aria-hidden="true" />
         </button>
       </header>
       <nav aria-label={t("source")}>

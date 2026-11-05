@@ -1,4 +1,5 @@
 "use client";
+import { Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -440,7 +441,7 @@ export function ListsModule({
                   disabled={list.archived}
                   onClick={() => setViewEditor({ mode: "view" })}
                 >
-                  +
+                  <ListGlyph name="plus" />
                 </button>
               </div>
               <div className="lists-view-tools">
@@ -494,18 +495,7 @@ export function ListsModule({
             </div>
             <div className="lists-search-row">
               <label>
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  aria-hidden="true"
-                >
-                  <circle cx="10.5" cy="10.5" r="7" />
-                  <path d="m16 16 5 5" />
-                </svg>
+                <Search size="16" strokeWidth={1.7} aria-hidden="true" />
                 <input
                   type="search"
                   value={search}

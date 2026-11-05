@@ -1,5 +1,7 @@
 "use client";
 
+import { CircleCheck, FileText, ListTodo } from "lucide-react";
+
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { SpaceSymbol } from "./space-symbol";
@@ -77,68 +79,15 @@ export function SpacePreviewCard({
             ) : (
               <div key={sampleKey} className="setup-document-content">
                 <div className="setup-document-art" aria-hidden="true">
-                  <svg viewBox="0 0 320 112" fill="none">
-                    <path
-                      d="M56 56h208"
-                      stroke="var(--setup-border)"
-                      strokeWidth="2"
-                    />
-                    <g className="setup-art-leaf">
-                      <rect
-                        x="24"
-                        y="20"
-                        width="64"
-                        height="72"
-                        rx="6"
-                        fill="var(--setup-blue-soft)"
-                      />
-                      <path
-                        d="M42 40h28m-28 10h22m-22 10h28m-28 10h16"
-                        stroke="var(--setup-accent)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </g>
-                    <g className="setup-art-leaf">
-                      <rect
-                        x="128"
-                        y="20"
-                        width="64"
-                        height="72"
-                        rx="6"
-                        fill="var(--setup-surface)"
-                      />
-                      <path
-                        d="m144 43 4 4 7-8m4 5h17m-32 19 4 4 7-8m4 5h17"
-                        stroke="var(--setup-ink)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </g>
-                    <g className="setup-art-leaf">
-                      <rect
-                        x="232"
-                        y="20"
-                        width="64"
-                        height="72"
-                        rx="6"
-                        fill="var(--setup-green-soft)"
-                      />
-                      <circle
-                        cx="264"
-                        cy="56"
-                        r="16"
-                        stroke="var(--setup-green)"
-                        strokeWidth="2"
-                      />
-                      <path
-                        d="m256 56 6 6 10-12"
-                        stroke="var(--setup-green)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </g>
-                  </svg>
+                  <span className="setup-art-leaf">
+                    <FileText />
+                  </span>
+                  <span className="setup-art-leaf">
+                    <ListTodo />
+                  </span>
+                  <span className="setup-art-leaf">
+                    <CircleCheck />
+                  </span>
                 </div>
                 <p className="setup-example-label">{t("example")}</p>
                 <h2>{t(`samples.${purpose}.title`)}</h2>

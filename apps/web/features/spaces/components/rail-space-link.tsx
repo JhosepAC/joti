@@ -1,4 +1,5 @@
 "use client";
+import { Image, Settings } from "lucide-react";
 import Link, { useLinkStatus } from "next/link";
 import { createPortal } from "react-dom";
 import { useState, useRef, useEffect } from "react";
@@ -123,17 +124,7 @@ export function RailSpaceLink({
                 onAction("icon");
               }}
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                aria-hidden="true"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="5" />
-                <circle cx="8" cy="8" r="1.5" />
-                <path d="m4 17 5-5 4 4 3-3 5 5" />
-              </svg>
+              <Image size="1em" strokeWidth={1.7} aria-hidden="true" />
               {t("icon")}
             </button>
             <button
@@ -142,19 +133,7 @@ export function RailSpaceLink({
                 onAction("all");
               }}
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                aria-hidden="true"
-              >
-                <path
-                  d="m9 3-.5 3-3 1L3 6l-2 4 2.5 2v2L1 16l2 4 3-1 2.5 1 .5 3h5l.5-3 3-1 2.5 1 2-4-2.5-2v-2L22 10l-2-4-3 1-2.5-1L14 3Z"
-                  transform="translate(1 -1) scale(.9)"
-                />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
+              <Settings size="1em" strokeWidth={1.7} aria-hidden="true" />
               {t("settings")}
             </button>
             <hr />

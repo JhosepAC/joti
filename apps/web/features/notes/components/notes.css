@@ -421,6 +421,9 @@
   margin: 12px 0 24px;
 }
 .notes-tag-editor > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border: 0;
   background: #f1f3f4;
   border-radius: 4px;
