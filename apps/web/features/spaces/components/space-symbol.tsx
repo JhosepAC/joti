@@ -1,7 +1,9 @@
 "use client";
-import { ListIcon } from "@/features/lists/components/list-icon";
+import { LIST_ICONS, ListIcon } from "@/features/lists/components/list-icon";
 import type { ReactNode } from "react";
-import { SPACE_ICON_CHOICES, type SpaceIconChoice } from "../types/space.types";
+import { SPACE_ICON_CHOICES } from "../types/space.types";
+import { spaceTileStyle } from "../utils/space-colors";
+import type { DashboardSpace } from "../types/dashboard.types";
 import {
   BlankIcon,
   BriefcaseIcon,
@@ -13,8 +15,39 @@ import {
 // Existing stored identifiers stay compatible; the UI uses one vector language.
 const [ROCKET, HOME, WORK, STUDY, IDEA, ENERGY, PIN, ART, HEART] =
   SPACE_ICON_CHOICES;
-export function SpaceSymbol({ value }: { value: SpaceIconChoice | string }) {
-  if (value.startsWith("symbol:")) return <ListIcon name={value.slice(7)} />;
+export const workspaceIconChoices = [
+  { value: ROCKET, key: "rocket" },
+  { value: HOME, key: "home" },
+  { value: WORK, key: "briefcase" },
+  { value: STUDY, key: "study" },
+  { value: IDEA, key: "idea" },
+  { value: ENERGY, key: "bolt" },
+  { value: PIN, key: "pin" },
+  { value: ART, key: "art" },
+  { value: HEART, key: "heart" },
+  ...["table", "check", "basket", "plane", "book", "tag"].map((key) => ({
+    value: `symbol:${key}`,
+    key,
+  })),
+];
+
+const equivalentIcons: Record<string, string> = {
+  "symbol:briefcase": WORK,
+  "symbol:bolt": ENERGY,
+  "symbol:pin": PIN,
+  "symbol:heart": HEART,
+};
+
+export function normalizeWorkspaceIcon(value: string): string {
+  return equivalentIcons[value] ?? value;
+}
+
+export function SpaceSymbol({ value }: { value: string }) {
+  value = normalizeWorkspaceIcon(value);
+  if (value.startsWith("symbol:")) {
+    const name = value.slice(7);
+    return LIST_ICONS.includes(name) ? <ListIcon name={name} /> : <BlankIcon />;
+  }
   if (value.startsWith("media:")) {
     const [, slug, key] =
       value.split(":"); /* eslint-disable-next-line @next/next/no-img-element */
@@ -77,5 +110,21 @@ export function SpaceSymbol({ value }: { value: SpaceIconChoice | string }) {
     </svg>
   ) : (
     <BlankIcon />
+  );
+}
+
+export function WorkspaceSpaceBadge({
+  space,
+}: {
+  space: Pick<DashboardSpace, "icon" | "background" | "iconColor">;
+}) {
+  return (
+    <span
+      className="workspace-space-badge"
+      style={spaceTileStyle(space.background, space.iconColor)}
+      aria-hidden="true"
+    >
+      <SpaceSymbol value={space.icon} />
+    </span>
   );
 }

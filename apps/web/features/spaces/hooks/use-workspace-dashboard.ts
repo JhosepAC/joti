@@ -322,6 +322,7 @@ export function useWorkspaceDashboard(slug: string) {
   async function configureSpace(
     input: {
       background?: string;
+      iconColor?: string;
       favorite?: boolean;
       order?: string[];
       name?: string;

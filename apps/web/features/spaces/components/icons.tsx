@@ -3,18 +3,14 @@
 import * as React from "react";
 import type { SpacePurposeKey } from "../types/space.types";
 
-/**
- * Inline SVG icons.
- *
- * The design rules allow emoji only for the space's own icon; everything else
- * in the onboarding is an icon. They are hand-written rather than pulled from an
- * icon package: the set is small, fixed and has no runtime, no extra dependency
- * and no supply-chain surface to audit.
- */
+/** Inline SVG icons that inherit the surrounding text color. */
 
 type IconProps = React.SVGProps<SVGSVGElement>;
 
-function Svg({ children, ...props }: IconProps & { children: React.ReactNode }) {
+function Svg({
+  children,
+  ...props
+}: IconProps & { children: React.ReactNode }) {
   return (
     <svg
       viewBox="0 0 24 24"

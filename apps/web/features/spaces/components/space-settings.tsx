@@ -7,11 +7,13 @@ import {
 } from "@/features/gallery/components/media-picker";
 import { prepareSpaceIcon, readIconResponse } from "../utils/prepare-icon";
 import { Modal } from "@/features/lists/components/overlays";
-import { SPACE_ICON_CHOICES } from "../types/space.types";
-import { LIST_ICONS } from "@/features/lists/components/list-icon";
 import { SpaceColorPicker } from "./space-color-picker";
 import { spaceTileStyle } from "../utils/space-colors";
-import { SpaceSymbol } from "./space-symbol";
+import {
+  SpaceSymbol,
+  normalizeWorkspaceIcon,
+  workspaceIconChoices,
+} from "./space-symbol";
 import type { DashboardSpace } from "../types/dashboard.types";
 export const SPACE_MODULES = [
   "pages",
@@ -30,6 +32,7 @@ export function SpaceSettings({
   space: DashboardSpace;
   save: (input: {
     background?: string;
+    iconColor?: string;
     name: string;
     description: string;
     icon?: string;
@@ -39,8 +42,10 @@ export function SpaceSettings({
 }) {
   const [media, setMedia] = useState(false),
     [picture, setPicture] = useState<File | null>(null),
-    [background, setBackground] = useState(space.background ?? "");
+    [background, setBackground] = useState(space.background ?? ""),
+    [iconColor, setIconColor] = useState(space.iconColor ?? "");
   const t = useTranslations("spaceSettings");
+  const iconLabel = useTranslations("spaceIcons");
   const [name, setName] = useState(space.name),
     [description, setDescription] = useState(space.description ?? ""),
     [icon, setIcon] = useState(space.icon),
@@ -71,7 +76,7 @@ export function SpaceSettings({
               if (!response.ok) throw new Error("upload failed");
             }
             await save({
-              background,
+              ...(mode !== "name" ? { background, iconColor } : {}),
               name,
               description,
               modules,
@@ -108,16 +113,16 @@ export function SpaceSettings({
         <fieldset hidden={mode === "name"}>
           <legend>{t("icon")}</legend>
           <div className="space-settings-icons">
-            {[
-              ...SPACE_ICON_CHOICES,
-              ...LIST_ICONS.map((key) => `symbol:${key}`),
-            ].map((value) => (
+            {workspaceIconChoices.map(({ value, key }) => (
               <button
                 type="button"
                 key={value}
-                aria-label={value}
-                aria-pressed={value === icon}
-                style={spaceTileStyle(background)}
+                aria-label={iconLabel(key)}
+                title={iconLabel(key)}
+                aria-pressed={
+                  !picture && value === normalizeWorkspaceIcon(icon)
+                }
+                style={spaceTileStyle(background, iconColor)}
                 onClick={() => {
                   setIcon(value);
                   setPicture(null);
@@ -131,19 +136,12 @@ export function SpaceSettings({
             {t("chooseImage")}
           </button>
           {picture && <p role="status">{picture.name}</p>}
-          <label>
-            {t("background")}
-            <input
-              value={background}
-              placeholder="#d3e3fd"
-              maxLength={7}
-              pattern="#[a-fA-F0-9]{6}|"
-              onChange={(e) => setBackground(e.target.value)}
-            />
-          </label>
           <SpaceColorPicker
             value={background}
             onChange={setBackground}
+            iconColor={iconColor}
+            onIconColorChange={setIconColor}
+            image={Boolean(picture) || icon.startsWith("media:")}
             disabled={busy}
           />
         </fieldset>

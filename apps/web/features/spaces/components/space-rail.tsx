@@ -11,6 +11,7 @@ type Input = {
   modules?: string[];
   favorite?: boolean;
   background?: string;
+  iconColor?: string;
   order?: string[];
 };
 export function SpaceRail({

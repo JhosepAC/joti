@@ -23,6 +23,7 @@ export const operate = action({
       v.literal("icon"),
     ),
     background: v.optional(v.string()),
+    iconColor: v.optional(v.string()),
     order: v.optional(v.array(v.string())),
     name: v.optional(v.string()),
     description: v.optional(v.string()),

@@ -15,6 +15,7 @@ export interface DashboardSpace {
   icon: string;
   purpose: string;
   background?: string;
+  iconColor?: string;
   favorite?: boolean;
   editedAt?: number;
   editedBy?: string;

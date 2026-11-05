@@ -15,6 +15,7 @@ export const create = internalMutation({
     locale: v.string(),
     icon: v.optional(v.string()),
     background: v.optional(v.string()),
+    iconColor: v.optional(v.string()),
   },
   handler: async (ctx, a) => {
     function fail(code: string): never {
@@ -72,6 +73,8 @@ export const create = internalMutation({
     const space = await ctx.db.insert("spaces", {
       owner_id: user._id,
       icon_background: background,
+      icon_color:
+        validateSpaceBackground(a.iconColor ?? "", "icon") || undefined,
       name,
       slug,
       icon: a.icon

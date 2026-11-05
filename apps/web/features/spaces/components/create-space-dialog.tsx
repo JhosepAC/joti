@@ -3,13 +3,9 @@ import { useRef, useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Modal, Popover } from "@/features/lists/components/overlays";
-import {
-  ListIcon,
-  ListGlyph,
-  LIST_ICONS,
-} from "@/features/lists/components/list-icon";
+import { ListIcon, ListGlyph } from "@/features/lists/components/list-icon";
 import { SPACE_ICON_CHOICES } from "../types/space.types";
-import { SpaceSymbol } from "./space-symbol";
+import { SpaceSymbol, workspaceIconChoices } from "./space-symbol";
 import {
   MediaPicker,
   uploadMedia,
@@ -19,6 +15,7 @@ import "./create-space-dialog.css";
 import { SpaceColorPicker } from "./space-color-picker";
 import { spaceTileStyle } from "../utils/space-colors";
 export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
+  const iconLabel = useTranslations("spaceIcons");
   const t = useTranslations("spaces.create"),
     router = useRouter(),
     [name, setName] = useState(""),
@@ -28,6 +25,7 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
   const params = useParams(),
     currentSlug = String(params.slug ?? "");
   const [background, setBackground] = useState("");
+  const [iconColor, setIconColor] = useState("");
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const iconButton = useRef<HTMLButtonElement>(null);
   const [mediaOpen, setMediaOpen] = useState(false);
@@ -81,6 +79,7 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
                 template,
                 icon,
                 background,
+                iconColor,
                 key: key.current,
               }),
               signal: AbortSignal.timeout(25000),
@@ -135,7 +134,7 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
           <button
             ref={iconButton}
             className="space-create-icon-trigger"
-            style={spaceTileStyle(background)}
+            style={spaceTileStyle(background, iconColor)}
             type="button"
             aria-label={t("editIcon")}
             aria-haspopup="dialog"
@@ -262,14 +261,12 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
                 }
               }}
             >
-              {[
-                ...SPACE_ICON_CHOICES,
-                ...LIST_ICONS.map((v) => "symbol:" + v),
-              ].map((v) => (
+              {workspaceIconChoices.map(({ value: v, key }) => (
                 <button
                   key={v}
                   type="button"
-                  aria-label={t("chooseIcon", { icon: v })}
+                  aria-label={t("chooseIcon", { icon: iconLabel(key) })}
+                  title={iconLabel(key)}
                   aria-pressed={!picture && icon === v}
                   data-popover-focus={!picture && icon === v ? "" : undefined}
                   disabled={busy}
@@ -280,7 +277,12 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
                     iconButton.current?.focus();
                   }}
                 >
-                  <SpaceSymbol value={v} />
+                  <span
+                    className="space-icon-sample"
+                    style={spaceTileStyle(background, iconColor)}
+                  >
+                    <SpaceSymbol value={v} />
+                  </span>
                 </button>
               ))}
             </div>
@@ -288,6 +290,9 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
             <SpaceColorPicker
               value={background}
               onChange={setBackground}
+              iconColor={iconColor}
+              onIconColorChange={setIconColor}
+              image={Boolean(picture)}
               disabled={busy}
             />
             <div className="space-create-icon-actions">
@@ -326,7 +331,6 @@ export function CreateSpaceDialog({ onClose }: { onClose: () => void }) {
                 </button>
               )}
             </div>
-            <p>{t("iconHint")}</p>
           </div>
         </Popover>
       )}

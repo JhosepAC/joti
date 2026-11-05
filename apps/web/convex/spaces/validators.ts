@@ -104,8 +104,11 @@ export function validateSlug(slug: string): string {
 }
 
 /** Empty uses the default palette; never allow CSS expressions or alpha colors. */
-export function validateSpaceBackground(value: string): string {
+export function validateSpaceBackground(
+  value: string,
+  target = "background",
+): string {
   if (value !== "" && !/^#[a-fA-F0-9]{6}$/.test(value))
-    fail("Choose a valid six-digit hex background color.");
+    fail(`Choose a valid six-digit hex ${target} color.`);
   return value.toLowerCase();
 }

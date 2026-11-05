@@ -356,6 +356,7 @@ export default defineSchema({
     favorite: v.optional(v.boolean()),
     rail_position: v.optional(v.number()),
     icon_background: v.optional(v.string()),
+    icon_color: v.optional(v.string()),
     edited_at: v.optional(v.number()),
     description: v.optional(v.string()),
   })

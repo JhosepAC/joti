@@ -24,6 +24,7 @@ export const operate = internalMutation({
       v.literal("icon"),
     ),
     background: v.optional(v.string()),
+    iconColor: v.optional(v.string()),
     order: v.optional(v.array(v.string())),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -72,11 +73,15 @@ export const operate = internalMutation({
       }
       if (args.background !== undefined)
         space.icon_background = validateSpaceBackground(args.background);
+      if (args.iconColor !== undefined)
+        space.icon_color =
+          validateSpaceBackground(args.iconColor, "icon") || undefined;
       if (args.favorite !== undefined) space.favorite = args.favorite;
       if (
         args.name !== undefined ||
         args.icon !== undefined ||
         args.background !== undefined ||
+        args.iconColor !== undefined ||
         args.description !== undefined ||
         args.modules !== undefined
       )
@@ -111,6 +116,7 @@ export const operate = internalMutation({
       }
       await ctx.db.patch(space._id, {
         icon_background: space.icon_background,
+        icon_color: space.icon_color,
         favorite: space.favorite,
         edited_at: space.edited_at,
         name: space.name,
@@ -293,6 +299,7 @@ export const operate = internalMutation({
         description: space.description ?? "",
         favorite: space.favorite ?? false,
         background: space.icon_background ?? "",
+        iconColor: space.icon_color ?? "",
         editedAt: space.edited_at,
         editedBy: space.edited_at
           ? profile?.display_name || profile?.username || user.email
@@ -313,6 +320,7 @@ export const operate = internalMutation({
           modules: item.enabled_modules ?? [],
           favorite: item.favorite ?? false,
           background: item.icon_background ?? "",
+          iconColor: item.icon_color ?? "",
           editedAt: item.edited_at,
           editedBy: item.edited_at
             ? profile?.display_name || profile?.username || user.email

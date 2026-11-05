@@ -6,7 +6,7 @@ export function luminance(hex: string): number {
   });
   return values[0]! * 0.2126 + values[1]! * 0.7152 + values[2]! * 0.0722;
 }
-export function spaceTileStyle(background?: string) {
+export function spaceTileStyle(background?: string, iconColor?: string) {
   const color =
     background && /^#[0-9a-f]{6}$/i.test(background) ? background : "#dfe5ed";
   const l = luminance(color),
@@ -15,7 +15,12 @@ export function spaceTileStyle(background?: string) {
     lightContrast = 1.05 / (l + 0.05);
   return {
     background: color,
-    color: darkContrast >= lightContrast ? "#000000" : "#ffffff",
+    color:
+      iconColor && /^#[0-9a-f]{6}$/i.test(iconColor)
+        ? iconColor
+        : darkContrast >= lightContrast
+          ? "#000000"
+          : "#ffffff",
   };
 }
 export const SPACE_COLORS = [

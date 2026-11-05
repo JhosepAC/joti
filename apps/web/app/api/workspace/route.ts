@@ -24,6 +24,7 @@ async function operate(
     return reply({ code: "VALIDATION_ERROR" }, 400);
   let input: {
     background?: string;
+    iconColor?: string;
     order?: string[];
     name?: string;
     description?: string;
@@ -91,6 +92,7 @@ async function operate(
         ...(operation === "configure"
           ? {
               background: input.background,
+              iconColor: input.iconColor,
               order: input.order,
               favorite: input.favorite,
               name: input.name,

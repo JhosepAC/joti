@@ -678,7 +678,6 @@
         }
       },
       "icon": "Icono del espacio",
-      "iconHint": "Elige un icono o una imagen ligera.",
       "uploadIcon": "Subir imagen",
       "removeIcon": "Quitar imagen",
       "chooseIcon": "Elegir icono {icon}",
@@ -1500,16 +1499,35 @@
     "down": "Mover abajo",
     "error": "No se guardó el cambio. Inténtalo de nuevo."
   },
+  "spaceIcons": {
+    "rocket": "Cohete",
+    "home": "Casa",
+    "briefcase": "Maletín",
+    "study": "Estudios",
+    "idea": "Ideas",
+    "bolt": "Rayo",
+    "pin": "Marcador",
+    "art": "Paleta",
+    "heart": "Corazón",
+    "table": "Tabla",
+    "check": "Casilla",
+    "basket": "Cesta",
+    "plane": "Avión",
+    "book": "Libro",
+    "tag": "Etiqueta"
+  },
   "spaceColors": {
+    "appearance": "Apariencia",
+    "icon": "Color del icono",
+    "automatic": "Automático",
+    "imageColor": "Las imágenes conservan sus colores.",
+    "lowContrast": "Poco contraste entre el icono y el fondo.",
     "label": "Color del espacio",
     "default": "Predeterminado",
-    "blue": "Azul",
-    "green": "Verde",
-    "pink": "Rosa",
-    "yellow": "Amarillo",
-    "gray": "Gris",
-    "navy": "Azul profundo",
-    "graphite": "Grafito",
-    "black": "Negro"
+    "hue": "Tono",
+    "hex": "Color hexadecimal",
+    "plane": "Saturación {saturation} %, brillo {brightness} %",
+    "planeKeys": "Usa izquierda y derecha para la saturación, y arriba y abajo para el brillo.",
+    "invalidHex": "Escribe seis dígitos hexadecimales, como #3867D6."
   }
 }

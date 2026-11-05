@@ -89,7 +89,7 @@
   background: transparent;
   border: 0;
   border-radius: 8px;
-  padding: 8px !important;
+  padding: 0 !important;
   cursor: pointer;
   color: #3c4043;
 }
@@ -98,8 +98,7 @@
   height: 22px;
 }
 .space-create-icon-popover .space-icon-options button[aria-pressed="true"] {
-  background: #e8f0fe;
-  color: #174ea6;
+  background: #fff;
 }
 .space-create-icon-popover button:focus-visible {
   outline: 2px solid #0b57d0;
@@ -134,12 +133,12 @@
   height: 15px;
   flex: none;
 }
-.space-create-icon-popover > p {
-  font-size: 11px;
-  line-height: 1.5;
-  color: #5f6368;
-  margin: 10px 6px 2px;
-  max-width: 36ch;
+.space-icon-sample {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
 }
 @media (prefers-reduced-motion: no-preference) {
   .space-create-icon-trigger {

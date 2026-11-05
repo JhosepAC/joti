@@ -18,7 +18,7 @@ import {
   SearchIcon,
   SpinnerIcon,
 } from "./icons";
-import { SpaceSymbol } from "./space-symbol";
+import { WorkspaceSpaceBadge } from "./space-symbol";
 import { useWorkspaceDashboard } from "../hooks/use-workspace-dashboard";
 import type { SpacePage } from "../types/dashboard.types";
 import { ListsModule } from "@/features/lists/components/lists-module";
@@ -347,7 +347,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
           inert={!mobile && sidebarCollapsed ? true : undefined}
         >
           <header>
-            <SpaceSymbol value={data.space.icon} />
+            <WorkspaceSpaceBadge space={data.space} />
             <strong title={data.space.name}>{data.space.name}</strong>
             {mobile && (
               <button
@@ -612,7 +612,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             <LayersIcon />
           </button>
           <div className="workspace-breadcrumb">
-            <SpaceSymbol value={data.space.icon} />
+            <WorkspaceSpaceBadge space={data.space} />
             <span>{data.space.name}</span>
             <span aria-hidden="true">/</span>
             <strong>
@@ -715,7 +715,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
             ) : isLists ? null : home ? (
               <div className="space-overview">
                 <header>
-                  <SpaceSymbol value={data.space.icon} />
+                  <WorkspaceSpaceBadge space={data.space} />
                   <div>
                     <h1>{data.space.name}</h1>
                     <p>{data.space.description || ts("intro")}</p>

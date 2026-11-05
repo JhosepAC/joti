@@ -28,9 +28,12 @@ export async function POST(r: NextRequest) {
       typeof d.name !== "string" ||
       typeof d.template !== "string" ||
       typeof d.key !== "string" ||
-      (d.background !== undefined &&
-        (typeof d.background !== "string" ||
-          (d.background !== "" && !/^#[a-f0-9]{6}$/i.test(d.background))))
+      [d.background, d.iconColor].some(
+        (value) =>
+          value !== undefined &&
+          (typeof value !== "string" ||
+            (value !== "" && !/^#[a-f0-9]{6}$/i.test(value))),
+      )
     )
       return reply({ code: "VALIDATION_ERROR" }, 400);
     return reply(
@@ -42,6 +45,7 @@ export async function POST(r: NextRequest) {
           template: d.template,
           ...(typeof d.icon === "string" ? { icon: d.icon } : {}),
           ...(d.background !== undefined ? { background: d.background } : {}),
+          ...(d.iconColor !== undefined ? { iconColor: d.iconColor } : {}),
           key: d.key,
           locale: r.cookies.get("joti-locale")?.value === "en" ? "en" : "es",
         },

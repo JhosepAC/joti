@@ -259,10 +259,10 @@
   width: 20px;
   height: 20px;
 }
-.space-overview > header > svg {
-  width: 32px;
-  height: 32px;
-  flex: none;
+.space-overview > header > .workspace-space-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
 }
 @media (max-width: 1000px) {
   .space-overview-modules {

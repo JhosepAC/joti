@@ -12,6 +12,7 @@ export const create = action({
     locale: v.string(),
     icon: v.optional(v.string()),
     background: v.optional(v.string()),
+    iconColor: v.optional(v.string()),
   },
   handler: async (ctx, { token, ...args }): Promise<{ slug: string }> =>
     ctx.runMutation(internal.spaces.create.create, {

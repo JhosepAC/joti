@@ -678,7 +678,6 @@
         }
       },
       "icon": "Space icon",
-      "iconHint": "Choose an icon or a lightweight image.",
       "uploadIcon": "Upload image",
       "removeIcon": "Remove image",
       "chooseIcon": "Choose icon {icon}",
@@ -1500,16 +1499,35 @@
     "down": "Move down",
     "error": "Could not save. Please try again."
   },
+  "spaceIcons": {
+    "rocket": "Rocket",
+    "home": "Home",
+    "briefcase": "Briefcase",
+    "study": "Study",
+    "idea": "Ideas",
+    "bolt": "Lightning",
+    "pin": "Pin",
+    "art": "Palette",
+    "heart": "Heart",
+    "table": "Table",
+    "check": "Checkbox",
+    "basket": "Basket",
+    "plane": "Plane",
+    "book": "Book",
+    "tag": "Tag"
+  },
   "spaceColors": {
+    "appearance": "Appearance",
+    "icon": "Icon color",
+    "automatic": "Automatic",
+    "imageColor": "Images keep their own colors.",
+    "lowContrast": "Low contrast between the icon and background.",
     "label": "Space color",
     "default": "Default",
-    "blue": "Blue",
-    "green": "Green",
-    "pink": "Pink",
-    "yellow": "Yellow",
-    "gray": "Gray",
-    "navy": "Deep blue",
-    "graphite": "Graphite",
-    "black": "Black"
+    "hue": "Hue",
+    "hex": "Hex color",
+    "plane": "Saturation {saturation}%, brightness {brightness}%",
+    "planeKeys": "Use Left and Right for saturation, and Up and Down for brightness.",
+    "invalidHex": "Enter six hex digits, such as #3867D6."
   }
 }

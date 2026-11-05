@@ -31,7 +31,7 @@ export function RailSpaceLink({
     const r = el.getBoundingClientRect();
     setPosition({ left: Math.max(8, r.left), top: r.top - 8 });
   };
-  const tileStyle = spaceTileStyle(space.background);
+  const tileStyle = spaceTileStyle(space.background, space.iconColor);
   return (
     <div
       className="rail-space-item"
