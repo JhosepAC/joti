@@ -39,6 +39,7 @@ async function fixture(purpose: "personal" | "blank" = "personal") {
     input: {
       operation?:
         | "configure"
+        | "deleteSpace"
         | "load"
         | "create"
         | "save"
@@ -59,6 +60,63 @@ async function fixture(purpose: "personal" | "blank" = "personal") {
     } as never) as Promise<DashboardData>;
   return { t, token, rows, call };
 }
+
+describe("workspace management", () => {
+  test("checks the current name and ownership before removing a space from access", async () => {
+    const { t, rows, call } = await fixture();
+    await t.run(async (ctx) => {
+      await ctx.db.insert("spaces", {
+        owner_id: rows.user,
+        name: "Second space",
+        slug: "second-space",
+        icon: "🏠",
+        purpose: "personal",
+        is_private: true,
+        created_at: Date.now(),
+      });
+      const outsider = await ctx.db.insert("auth_users", {
+        email: "outsider@example.com",
+        email_verified_at: 1,
+        failed_login_attempts: 0,
+      });
+      await ctx.db.insert("auth_sessions", {
+        user_id: outsider,
+        token_hash: sha256Hex("outsider-session"),
+        created_at: Date.now(),
+        expires_at: Date.now() + 60000,
+      });
+    });
+    await expect(
+      call({ operation: "deleteSpace", name: "Old name" }),
+    ).rejects.toThrow("CONFLICT");
+    await expect(
+      call({
+        operation: "deleteSpace",
+        name: "My space",
+        token: "outsider-session",
+      }),
+    ).rejects.toThrow("NOT_FOUND");
+    await expect(
+      call({ operation: "deleteSpace", name: "My space" }),
+    ).resolves.toEqual({ nextSlug: "second-space" });
+    await expect(call()).rejects.toThrow("NOT_FOUND");
+    expect(
+      (await call({ slug: "second-space" })).spaces.map((space) => space.slug),
+    ).toEqual(["second-space"]);
+  });
+
+  test("rejects unowned or missing icon media without saving partial changes", async () => {
+    const { call } = await fixture();
+    await expect(
+      call({
+        operation: "configure",
+        name: "New name",
+        icon: "media:my-space:missing",
+      }),
+    ).rejects.toThrow("INVALID_IMAGE");
+    expect((await call()).space.name).toBe("My space");
+  });
+});
 
 describe("workspace pages", () => {
   test("icons persist on copies and deletion respects revisions without recreating the starter", async () => {

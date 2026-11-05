@@ -954,7 +954,6 @@
   inset: auto;
   margin: 0;
   min-width: 260px;
-  width: 300px;
   max-width: calc(100vw - 24px);
   max-height: min(600px, calc(100dvh - 24px));
   padding: 12px;

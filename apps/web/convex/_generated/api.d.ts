@@ -63,6 +63,7 @@ import type * as spaces_create from "../spaces/create.js";
 import type * as spaces_creation from "../spaces/creation.js";
 import type * as spaces_dashboard from "../spaces/dashboard.js";
 import type * as spaces_dashboardStore from "../spaces/dashboardStore.js";
+import type * as spaces_iconMedia from "../spaces/iconMedia.js";
 import type * as spaces_icons from "../spaces/icons.js";
 import type * as spaces_mutations from "../spaces/mutations.js";
 import type * as spaces_queries from "../spaces/queries.js";
@@ -131,6 +132,7 @@ declare const fullApi: ApiFromModules<{
   "spaces/creation": typeof spaces_creation;
   "spaces/dashboard": typeof spaces_dashboard;
   "spaces/dashboardStore": typeof spaces_dashboardStore;
+  "spaces/iconMedia": typeof spaces_iconMedia;
   "spaces/icons": typeof spaces_icons;
   "spaces/mutations": typeof spaces_mutations;
   "spaces/queries": typeof spaces_queries;

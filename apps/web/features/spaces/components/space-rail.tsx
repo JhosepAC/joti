@@ -147,6 +147,7 @@ export function SpaceRail({
         <SpaceSettings
           space={editor.space}
           mode={editor.mode}
+          activeSlug={slug}
           save={(input) => configure(input, editor.space.slug)}
           onClose={() => setEditor(null)}
         />

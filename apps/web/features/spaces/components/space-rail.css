@@ -120,8 +120,6 @@
 .rail-menu-identity {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 8px 16px;
 }
 .rail-menu-identity > span {
   width: 36px;

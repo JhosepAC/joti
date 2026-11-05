@@ -14,6 +14,7 @@ export const operate = action({
     operation: v.union(
       v.literal("load"),
       v.literal("configure"),
+      v.literal("deleteSpace"),
       v.literal("create"),
       v.literal("save"),
       v.literal("duplicate"),

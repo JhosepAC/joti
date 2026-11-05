@@ -49,7 +49,9 @@ import "./space-rail.css";
 export function WorkspaceDashboard({ slug }: { slug: string }) {
   const t = useTranslations("spaces.dashboard");
   const ts = useTranslations("spaceSettings");
-  const [spaceSettings, setSpaceSettings] = useState(false);
+  const [spaceSettings, setSpaceSettings] = useState<"design" | "tools" | null>(
+    null,
+  );
   const tLists = useTranslations("lists");
   const locale = useLocale();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -166,7 +168,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
         ? null
         : "pages";
     if (module && !data?.space.modules?.includes(module)) {
-      setSpaceSettings(true);
+      setSpaceSettings("tools");
       return;
     }
     model.select(next);
@@ -417,7 +419,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                   {t("gallery")}
                 </button>
               )}
-              <button onClick={() => setSpaceSettings(true)}>
+              <button onClick={() => setSpaceSettings("tools")}>
                 <PlusIcon />
                 {ts("manage")}
               </button>
@@ -720,14 +722,14 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                     <h1>{data.space.name}</h1>
                     <p>{data.space.description || ts("intro")}</p>
                   </div>
-                  <button onClick={() => setSpaceSettings(true)}>
+                  <button onClick={() => setSpaceSettings("design")}>
                     {ts("title")}
                   </button>
                 </header>
                 <section>
                   <div className="space-overview-heading">
                     <h2>{ts("modules")}</h2>
-                    <button onClick={() => setSpaceSettings(true)}>
+                    <button onClick={() => setSpaceSettings("tools")}>
                       <PlusIcon />
                       {ts("add")}
                     </button>
@@ -739,7 +741,7 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
                       <p>{ts("emptyHint")}</p>
                       <button
                         className="workspace-primary"
-                        onClick={() => setSpaceSettings(true)}
+                        onClick={() => setSpaceSettings("tools")}
                       >
                         {ts("add")}
                       </button>
@@ -874,7 +876,8 @@ export function WorkspaceDashboard({ slug }: { slug: string }) {
         <SpaceSettings
           space={data.space}
           save={model.configureSpace}
-          onClose={() => setSpaceSettings(false)}
+          initialSection={spaceSettings}
+          onClose={() => setSpaceSettings(null)}
         />
       )}
       {createSpace && (

@@ -5,6 +5,7 @@ import {
 } from "./validators";
 import { internalMutation } from "../_generated/server";
 import { ConvexError, v } from "convex/values";
+import { requireSpaceIcon } from "./iconMedia";
 
 /** Every operation authorizes the durable session and space owner in one transaction. */
 export const operate = internalMutation({
@@ -15,6 +16,7 @@ export const operate = internalMutation({
     operation: v.union(
       v.literal("load"),
       v.literal("configure"),
+      v.literal("deleteSpace"),
       v.literal("create"),
       v.literal("save"),
       v.literal("duplicate"),
@@ -57,6 +59,16 @@ export const operate = internalMutation({
     ).filter((space) => !space.deleted_at);
     const space = owned.find((space) => space.slug === args.slug);
     if (!space) return fail("NOT_FOUND");
+    if (args.operation === "deleteSpace") {
+      if (args.name !== space.name) return fail("CONFLICT");
+      await ctx.db.patch(space._id, { deleted_at: Date.now() });
+      const remaining = owned.filter((item) => item._id !== space._id);
+      remaining.sort(
+        (a, b) =>
+          (a.rail_position ?? a.created_at) - (b.rail_position ?? b.created_at),
+      );
+      return { nextSlug: remaining[0]?.slug ?? null };
+    }
     if (args.operation === "configure") {
       if (args.order !== undefined) {
         if (
@@ -95,13 +107,24 @@ export const operate = internalMutation({
           return fail("VALIDATION_ERROR");
         space.description = args.description.trim();
       }
-      if (args.icon !== undefined)
-        space.icon =
-          /^symbol:(table|check|basket|plane|book|briefcase|heart|bolt|pin|tag)$/.test(
-            args.icon,
-          )
-            ? args.icon
-            : validateSpaceIcon(args.icon);
+      if (args.icon !== undefined) {
+        const mediaPrefix = `media:${space.slug}:`;
+        if (args.icon.startsWith(mediaPrefix)) {
+          const image = await requireSpaceIcon(
+            ctx,
+            space._id,
+            args.icon.slice(mediaPrefix.length),
+          );
+          space.icon = `${mediaPrefix}${image.key}`;
+        } else {
+          space.icon =
+            /^symbol:(table|check|basket|plane|book|briefcase|heart|bolt|pin|tag)$/.test(
+              args.icon,
+            )
+              ? args.icon
+              : validateSpaceIcon(args.icon);
+        }
+      }
       if (args.modules !== undefined) {
         if (
           args.modules.length > 5 ||

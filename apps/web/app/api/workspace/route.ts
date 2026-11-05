@@ -9,7 +9,7 @@ const reply = (value: unknown, status = 200) =>
   NextResponse.json(value, { status, headers });
 async function operate(
   request: NextRequest,
-  operation: "load" | "create" | "save" | "item" | "configure",
+  operation: "load" | "create" | "save" | "item" | "configure" | "deleteSpace",
 ) {
   if (
     request.headers.get("sec-fetch-site") === "cross-site" ||
@@ -40,7 +40,8 @@ async function operate(
   if (
     operation === "save" ||
     operation === "item" ||
-    operation === "configure"
+    operation === "configure" ||
+    operation === "deleteSpace"
   ) {
     if (
       !request.headers.get("content-type")?.startsWith("application/json") ||
@@ -54,7 +55,10 @@ async function operate(
     }
     if (
       !input ||
-      (operation !== "configure" && typeof input.pageId !== "string") ||
+      ((operation === "save" || operation === "item") &&
+        typeof input.pageId !== "string") ||
+      (operation === "deleteSpace" &&
+        (typeof input.name !== "string" || input.name.length > 50)) ||
       (operation === "save" &&
         (typeof input.title !== "string" ||
           typeof input.body !== "string" ||
@@ -100,26 +104,30 @@ async function operate(
               modules: input.modules,
               icon: input.icon,
             }
-          : operation === "save"
-            ? {
-                pageId: input.pageId as Id<"space_pages">,
-                title: input.title,
-                body: input.body,
-                revision: input.revision,
-              }
-            : operation === "item"
+          : operation === "deleteSpace"
+            ? { name: input.name }
+            : operation === "save"
               ? {
                   pageId: input.pageId as Id<"space_pages">,
-                  ...(input.title !== undefined ? { title: input.title } : {}),
-                  ...(input.icon !== undefined ? { icon: input.icon } : {}),
-                  ...(input.revision !== undefined
-                    ? { revision: input.revision }
-                    : {}),
-                  ...(input.favorite !== undefined
-                    ? { favorite: input.favorite }
-                    : {}),
+                  title: input.title,
+                  body: input.body,
+                  revision: input.revision,
                 }
-              : {}),
+              : operation === "item"
+                ? {
+                    pageId: input.pageId as Id<"space_pages">,
+                    ...(input.title !== undefined
+                      ? { title: input.title }
+                      : {}),
+                    ...(input.icon !== undefined ? { icon: input.icon } : {}),
+                    ...(input.revision !== undefined
+                      ? { revision: input.revision }
+                      : {}),
+                    ...(input.favorite !== undefined
+                      ? { favorite: input.favorite }
+                      : {}),
+                  }
+                : {}),
       },
     );
     return reply(result);
@@ -136,7 +144,9 @@ async function operate(
           ? 404
           : code === "CONFLICT"
             ? 409
-            : code === "VALIDATION_ERROR" || code === "PAGE_LIMIT"
+            : code === "VALIDATION_ERROR" ||
+                code === "PAGE_LIMIT" ||
+                code === "INVALID_IMAGE"
               ? 400
               : 503;
     return reply({ code }, status);
@@ -151,4 +161,5 @@ export const POST = (request: NextRequest) =>
       : "create",
   );
 export const PATCH = (request: NextRequest) => operate(request, "save");
+export const DELETE = (request: NextRequest) => operate(request, "deleteSpace");
 export const PUT = (request: NextRequest) => operate(request, "item");

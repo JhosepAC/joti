@@ -128,95 +128,6 @@
   background: #f7f8fa;
   border-radius: 12px;
 }
-.space-settings-form {
-  display: grid;
-  gap: 20px;
-  max-width: 580px;
-}
-.space-settings-form > label {
-  display: grid;
-  gap: 8px;
-  font-size: 14px;
-}
-.space-settings-form input:not([type="checkbox"]),
-.space-settings-form textarea {
-  font: inherit;
-  border: 1px solid #dadce0;
-  border-radius: 8px;
-  padding: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  background: transparent;
-  color: inherit;
-}
-.space-settings-form fieldset {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  min-width: 0;
-}
-.space-settings-form legend {
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-.space-settings-form fieldset > p {
-  font-size: 13px;
-  line-height: 1.5;
-  color: #5f6368;
-}
-.space-settings-icons {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.space-settings-icons button {
-  border: 0;
-  background: #f1f3f4;
-  border-radius: 8px;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-.space-settings-icons button[aria-pressed="true"] {
-  outline: 2px solid #3973e8;
-}
-.space-module-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 12px 0;
-  cursor: pointer;
-}
-.space-module-toggle small {
-  display: block;
-  font-size: 12px;
-  color: #5f6368;
-  margin-top: 4px;
-}
-.space-module-toggle input {
-  accent-color: #3973e8;
-  width: 18px;
-  height: 18px;
-  flex: none;
-}
-.space-settings-form footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-.space-settings-form footer button {
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 0;
-  cursor: pointer;
-}
-.space-settings-form button:disabled {
-  opacity: 0.5;
-  cursor: wait;
-}
 @media (max-width: 600px) {
   .space-overview {
     padding: 24px 18px;
@@ -255,10 +166,6 @@
 .space-overview > header > button {
   margin-left: auto;
 }
-.space-settings-icons svg {
-  width: 20px;
-  height: 20px;
-}
 .space-overview > header > .workspace-space-badge {
   width: 44px;
   height: 44px;
@@ -276,12 +183,6 @@
   .space-overview > header > div {
     flex-basis: 200px;
   }
-}
-
-.space-settings-form h2 {
-  margin: 0;
-  font-size: 20px;
-  letter-spacing: -0.02em;
 }
 
 @media (max-width: 760px) {
@@ -425,41 +326,6 @@
   color: #b3261e;
   overflow-wrap: anywhere;
 }
-.space-color-swatches {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-.space-color-swatches button {
-  border: 1px solid #dadce0;
-  border-radius: 6px;
-  min-width: 28px;
-  height: 28px;
-  font-size: 11px;
-}
-.space-color-swatches button[aria-pressed="true"] {
-  outline: 2px solid #202124;
-  outline-offset: 2px;
-}
-.space-settings-form [hidden] {
-  display: none !important;
-}
-.space-settings-form > fieldset > label {
-  display: grid;
-  gap: 8px;
-  margin-top: 18px;
-}
-.space-settings-form > fieldset > button {
-  margin-top: 14px;
-  border: 0;
-  border-radius: 6px;
-  padding: 8px 12px;
-  background: #f1f3f4;
-  cursor: pointer;
-}
-@media (hover: none) {
-}
 @media (prefers-reduced-motion: no-preference) {
   .rail-space-slot,
   .rail-space-item > a {
@@ -479,4 +345,352 @@
 .rail-space-slot[data-drop="after"]::before {
   top: auto;
   bottom: -8px;
+}
+
+.lists-modal.space-settings-dialog {
+  --space-line: #e3e7ed;
+  --space-muted: #526073;
+  --space-accent: #1654ad;
+  width: 720px;
+  max-height: min(660px, calc(100dvh - 28px));
+  padding: 0;
+  overflow: hidden;
+  border-radius: 16px;
+}
+.lists-modal.space-settings-dialog:has([data-compact="true"]) {
+  width: 440px;
+}
+.space-settings-form {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  color: #202a39;
+}
+.space-settings-header,
+.space-settings-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+}
+.space-settings-header {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--space-line);
+}
+.space-settings-header h2,
+.space-settings-confirm h2 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.space-settings-header p {
+  margin: 4px 0 0;
+  color: var(--space-muted);
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.space-settings-header > button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+}
+.space-settings-header svg,
+.space-settings-nav svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.space-settings-body {
+  display: grid;
+  grid-template-columns: 174px minmax(0, 1fr);
+  min-height: 0;
+}
+[data-compact="true"] .space-settings-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+.space-settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 13px 10px;
+  background: #f4f6f9;
+  border-inline-end: 1px solid var(--space-line);
+}
+.space-settings-nav > button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  min-height: 40px;
+  text-align: start;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.space-settings-nav > button[aria-current] {
+  background: #e3e9f3;
+  color: #174579;
+  font-weight: 650;
+}
+.space-settings-panel {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 20px 24px;
+  min-height: min(360px, 52dvh);
+}
+[data-compact="true"] .space-settings-panel {
+  min-height: 0;
+}
+.space-settings-panel h3 {
+  margin: 0 0 9px;
+  font-size: 16px;
+}
+.space-settings-panel p,
+.space-settings-confirm p {
+  margin: 0;
+  color: #526073;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.space-settings-design {
+  display: grid;
+  gap: 14px;
+}
+.space-settings-design h3 {
+  margin: 0;
+}
+.space-settings-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f4f6f9;
+}
+.space-settings-preview > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  overflow-wrap: anywhere;
+}
+.space-settings-preview .workspace-space-image {
+  width: 100%;
+  height: 100%;
+}
+.space-settings-form button:not(.space-create-icon-trigger),
+.space-settings-confirm button {
+  font: inherit;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.space-settings-header button,
+.space-settings-nav button,
+.space-settings-form button.space-settings-text-button {
+  color: inherit;
+  background: transparent;
+}
+.space-settings-form button.space-settings-text-button {
+  justify-self: start;
+  padding: 3px 0;
+  color: var(--space-accent);
+  font-size: 13px;
+}
+.space-settings-header button:hover,
+.space-settings-nav button:not([aria-current]):hover {
+  background: #e8edf4;
+}
+.space-settings-text-button:hover {
+  text-decoration: underline;
+}
+.space-settings-field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.space-settings-field :is(input, textarea) {
+  width: 100%;
+  border: 1px solid #cfd7e2;
+  border-radius: 8px;
+  padding: 9px 11px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+.space-settings-field textarea {
+  resize: vertical;
+}
+.space-settings-tools {
+  display: grid;
+  margin-top: 9px;
+}
+.space-module-toggle {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 53px;
+  padding: 7px 3px;
+  cursor: pointer;
+}
+.space-module-toggle + .space-module-toggle {
+  border-top: 1px solid var(--space-line);
+}
+.space-module-toggle > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--space-muted);
+}
+.space-module-toggle strong {
+  font-size: 13px;
+}
+.space-module-toggle small {
+  display: block;
+  margin-top: 2px;
+  color: var(--space-muted);
+  font-size: 12px;
+}
+.space-settings-form .space-module-toggle input[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  display: block;
+  width: 36px;
+  height: 22px;
+  margin: 0;
+  padding: 2px;
+  border: 0;
+  border-radius: 14px;
+  background: #d1d9e4;
+  cursor: pointer;
+}
+.space-settings-form .space-module-toggle input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px #20212435;
+}
+.space-settings-form .space-module-toggle input[type="checkbox"]:checked {
+  background: var(--space-accent);
+}
+.space-settings-form
+  .space-module-toggle
+  input[type="checkbox"]:checked::after {
+  content: none;
+}
+.space-settings-form
+  .space-module-toggle
+  input[type="checkbox"]:checked::before {
+  transform: translateX(14px);
+}
+.space-settings-footer {
+  justify-content: flex-end;
+  border-top: 1px solid var(--space-line);
+  background: #fafbfd;
+}
+.space-settings-footer > span {
+  flex: 1;
+  color: var(--space-muted);
+  font-size: 12px;
+}
+.space-settings-footer > span[role="alert"],
+.space-settings-confirm [role="alert"] {
+  color: #a32227;
+}
+.space-settings-footer button,
+.space-settings-danger button,
+.space-settings-confirm-actions button {
+  min-height: 36px;
+  padding: 7px 12px;
+  background: #eaf0f6;
+  color: #26384b;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.space-settings-footer .space-settings-save {
+  background: var(--space-accent);
+  color: #fff;
+}
+.space-settings-danger {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 9px;
+  background: #fff3f2;
+}
+.space-settings-danger button {
+  justify-self: start;
+  background: #f9dfdd;
+  color: #942326;
+}
+.space-settings-confirm form {
+  display: grid;
+  gap: 14px;
+}
+.space-settings-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.space-settings-confirm-actions .space-settings-delete {
+  background: #a32227;
+  color: #fff;
+}
+.space-settings-form :is(button, input):disabled,
+.space-settings-confirm button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.space-settings-form :is(button, input, textarea):focus-visible,
+.space-settings-confirm :is(button, input):focus-visible {
+  outline: 2px solid #2b6bcd;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .space-settings-form .space-module-toggle input[type="checkbox"]::before {
+    transition: transform 150ms ease-out;
+  }
+}
+@media (max-width: 620px) {
+  .space-settings-header,
+  .space-settings-footer,
+  .space-settings-panel {
+    padding-inline: 14px;
+  }
+  .space-settings-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .space-settings-panel {
+    min-height: 0;
+  }
+  .space-settings-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 6px 8px;
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--space-line);
+  }
+  .space-settings-nav > button {
+    flex: 1 0 auto;
+    justify-content: center;
+    padding-inline: 7px;
+  }
+  .space-settings-footer {
+    flex-wrap: wrap;
+  }
+  .space-settings-footer > span:not(:empty) {
+    flex-basis: 100%;
+  }
 }
