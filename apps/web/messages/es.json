@@ -1203,22 +1203,22 @@
     "writingTools": "Herramientas de escritura",
     "findBlock": "Buscar un bloque",
     "noBlocks": "No hay bloques que coincidan",
-    "writingStats": "{words} palabras · {characters} caracteres · {minutes} min de lectura",
+    "writingStats": "{words} palabras · {characters} caracteres",
     "template": "Usar una plantilla",
     "createdAt": "Creada el {date}",
     "updatedAt": "Editada el {date}",
     "templates": {
       "meeting": {
         "label": "Reunión",
-        "body": "## Agenda\n\n## Decisiones\n\n## Próximos pasos\n\n- [ ] "
+        "body": "## Contexto\n- **Fecha:**\n- **Participantes:**\n- **Objetivo:**\n\n## Orden del día\n1. Revisar acuerdos anteriores\n2. Tema principal\n3. Próximos pasos\n\n## Decisiones\n| Decisión | Responsable | Fecha |\n| --- | --- | --- |\n|  |  |  |\n\n## Acciones\n- [ ] \n- [ ] \n\n## Notas y dudas\n> Cifras, citas literales y lo que quedó sin resolver."
       },
       "project": {
         "label": "Proyecto",
-        "body": "## Objetivo\n\n## Hitos\n\n## Próximos pasos\n\n- [ ] "
+        "body": "## Resultado\n*Una frase: cómo se ve el proyecto terminado.*\n\n## Alcance\n- **Incluye:**\n- **No incluye:**\n\n## Plan\n| Etapa | Entregable | Responsable | Fecha |\n| --- | --- | --- | --- |\n|  |  |  |  |\n\n## Tareas\n- [ ] \n\n## Riesgos y decisiones\n- **Riesgo:** impacto y mitigación.\n- **Decisión:** qué se eligió y por qué."
       },
       "journal": {
         "label": "Diario",
-        "body": "## Hoy\n\n## Qué aprendí\n\n## Mañana"
+        "body": "## Enfoque del día\n- [ ] \n\n## Notas\n*Qué pasó, con quién y qué decidí.*\n\n## Lo que funcionó\n*Escribe una cosa concreta, por pequeña que sea.*\n\n## Lo que aprendí\n*Una idea que quiero recordar la próxima semana.*\n\n## Mañana\n- [ ] "
       }
     },
     "blockHints": {
@@ -1327,7 +1327,8 @@
       "green": "Verde",
       "rose": "Rosa"
     },
-    "addTag": "Añadir etiqueta y pulsar Enter",
+    "addTag": "Añadir etiqueta",
+    "tagPlaceholder": "Nueva etiqueta",
     "removeTag": "Quitar etiqueta {tag}",
     "related": "Ideas conectadas por tus etiquetas",
     "restore": "Restaurar nota",

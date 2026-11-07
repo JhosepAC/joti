@@ -557,7 +557,6 @@ export function PageEditor({
             return tn("writingStats", {
               words,
               characters: content.length,
-              minutes: Math.ceil(words / 220),
             });
           })()}
         </div>

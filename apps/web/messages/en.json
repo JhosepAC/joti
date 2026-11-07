@@ -1203,22 +1203,22 @@
     "writingTools": "Writing tools",
     "findBlock": "Find a block",
     "noBlocks": "No matching blocks",
-    "writingStats": "{words} words · {characters} characters · {minutes} min read",
+    "writingStats": "{words} words · {characters} characters",
     "template": "Use a template",
     "createdAt": "Created {date}",
     "updatedAt": "Edited {date}",
     "templates": {
       "meeting": {
         "label": "Meeting",
-        "body": "## Agenda\n\n## Decisions\n\n## Next steps\n\n- [ ] "
+        "body": "## Context\n- **Date:**\n- **Attendees:**\n- **Goal:**\n\n## Agenda\n1. Review open commitments\n2. Main topic\n3. Next steps\n\n## Decisions\n| Decision | Owner | Date |\n| --- | --- | --- |\n|  |  |  |\n\n## Action items\n- [ ] \n- [ ] \n\n## Notes and open questions\n> Figures, quotes, and anything left unresolved."
       },
       "project": {
         "label": "Project",
-        "body": "## Goal\n\n## Milestones\n\n## Next steps\n\n- [ ] "
+        "body": "## Outcome\n*One sentence: what done looks like.*\n\n## Scope\n- **In:**\n- **Out:**\n\n## Plan\n| Stage | Deliverable | Owner | Date |\n| --- | --- | --- | --- |\n|  |  |  |  |\n\n## Tasks\n- [ ] \n\n## Risks and decisions\n- **Risk:** impact and mitigation.\n- **Decision:** what was chosen and why."
       },
       "journal": {
         "label": "Journal",
-        "body": "## Today\n\n## What I learned\n\n## Tomorrow"
+        "body": "## Focus\n- [ ] \n\n## Notes\n*What happened, with whom, and what I decided.*\n\n## What worked\n*Name one concrete thing, however small.*\n\n## What I learned\n*One idea worth keeping for next week.*\n\n## Tomorrow\n- [ ] "
       }
     },
     "blockHints": {
@@ -1327,7 +1327,8 @@
       "green": "Green",
       "rose": "Rose"
     },
-    "addTag": "Add a tag and press Enter",
+    "addTag": "Add tag",
+    "tagPlaceholder": "New tag",
     "removeTag": "Remove tag {tag}",
     "related": "Ideas connected by your tags",
     "restore": "Restore note",

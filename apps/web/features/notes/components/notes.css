@@ -484,6 +484,45 @@
   background: transparent;
   color: #202124;
 }
+.notes-tag-editor form {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+/* Keycap standing in for the Enter key, so adding a tag reads as a keystroke. */
+.notes-tag-editor .note-tag-add {
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #dadce0;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 0 1px 0 #dadce0;
+  color: #5f6368;
+  cursor: pointer;
+  transition:
+    color 120ms ease-out,
+    border-color 120ms ease-out,
+    background-color 120ms ease-out,
+    box-shadow 120ms ease-out;
+}
+.notes-tag-editor .note-tag-add[data-ready="true"] {
+  color: #202124;
+}
+.notes-tag-editor .note-tag-add:is(:hover, :focus-visible) {
+  background: #f1f3f4;
+}
+.notes-tag-editor .note-tag-add:active {
+  box-shadow: none;
+  transform: translateY(1px);
+}
+.notes-tag-editor .note-tag-add svg {
+  width: 13px;
+  height: 13px;
+}
 .notes-editor .page-prose {
   min-height: 250px;
   padding-bottom: 40px;

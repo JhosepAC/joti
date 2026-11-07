@@ -3,6 +3,7 @@ import {
   Archive,
   Check,
   Copy,
+  CornerDownLeft,
   Download,
   FileText,
   Focus,
@@ -567,13 +568,22 @@ export function NoteEditor({
                 }}
               >
                 <input
-                  aria-label={t("addTag")}
-                  placeholder={t("addTag")}
+                  aria-label={t("tagPlaceholder")}
+                  placeholder={t("tagPlaceholder")}
                   value={tag}
                   maxLength={30}
                   list="note-known-tags"
                   onChange={(e) => setTag(e.target.value)}
                 />
+                <button
+                  type="submit"
+                  className="note-tag-add"
+                  title={t("addTag")}
+                  aria-label={t("addTag")}
+                  data-ready={tag.trim() ? "true" : "false"}
+                >
+                  <CornerDownLeft aria-hidden="true" />
+                </button>
                 <datalist id="note-known-tags">
                   {[...new Set(notes.flatMap((item) => item.tags))]
                     .filter(
